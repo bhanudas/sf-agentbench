@@ -1,0 +1,12 @@
+id: case-escalation-flow
+name: Case Escalation Screen Flow
+description: Build a screen flow that uses an invocable Apex action for case escalation
+tier: tier-2
+categories:
+  - flow
+  - apex-class
+  - apex-test
+time_limit_minutes: 30
+scratch_def: config/project-scratch-def.json
+evaluation_tests:
+  - CaseEscalationTest

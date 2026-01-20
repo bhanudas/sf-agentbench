@@ -44,10 +44,14 @@ class TaskLoader:
         tier_str = data.get("tier", "tier-1")
         tier = TaskTier(tier_str)
 
-        # Parse categories
-        categories = [
-            TaskCategory(c) for c in data.get("categories", [])
-        ]
+        # Parse categories (handle both valid enum values and unknown strings)
+        categories = []
+        for c in data.get("categories", []):
+            try:
+                categories.append(TaskCategory(c))
+            except ValueError:
+                # Keep as string if not a valid enum value
+                pass
 
         # Resolve paths relative to task directory
         scratch_def = data.get("scratch_def")

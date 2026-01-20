@@ -78,16 +78,19 @@ class TasksScreen(Screen):
         )
 
         for task in self.tasks:
-            categories = ", ".join(c.value for c in task.categories[:2])
+            # Handle both enum and string categories
+            cat_list = [c.value if hasattr(c, 'value') else str(c) for c in task.categories[:2]]
+            categories = ", ".join(cat_list)
             if len(task.categories) > 2:
                 categories += "..."
 
+            tier_value = task.tier.value if hasattr(task.tier, 'value') else str(task.tier)
             tier_display = {
                 "tier-1": "🟢 Tier 1",
                 "tier-2": "🟡 Tier 2",
                 "tier-3": "🟠 Tier 3",
                 "tier-4": "🔴 Tier 4",
-            }.get(task.tier.value, task.tier.value)
+            }.get(tier_value, tier_value)
 
             table.add_row(
                 task.id,
@@ -116,13 +119,16 @@ class TasksScreen(Screen):
         task = self.selected_task
         readme = self.loader.get_task_readme(task)
 
-        categories = ", ".join(f"`{c.value}`" for c in task.categories)
+        cat_list = [c.value if hasattr(c, 'value') else str(c) for c in task.categories]
+        categories = ", ".join(f"`{c}`" for c in cat_list)
+
+        tier_value = task.tier.value if hasattr(task.tier, 'value') else str(task.tier)
 
         details = f"""## {task.name}
 
 **ID:** `{task.id}`
 
-**Tier:** {task.tier.value}
+**Tier:** {tier_value}
 
 **Time Limit:** {task.time_limit_minutes} minutes
 

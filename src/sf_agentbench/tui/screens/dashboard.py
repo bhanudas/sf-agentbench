@@ -57,7 +57,7 @@ class DashboardScreen(Screen):
 
                 tier_counts = {}
                 for task in tasks:
-                    tier = task.tier.value
+                    tier = task.tier.value if hasattr(task.tier, 'value') else str(task.tier)
                     tier_counts[tier] = tier_counts.get(tier, 0) + 1
 
                 with Container(classes="stat-box"):

@@ -58,11 +58,16 @@ def list_tasks(ctx: click.Context) -> None:
     table.add_column("Time Limit")
 
     for task in tasks:
-        categories = ", ".join(c.value for c in task.categories) if task.categories else "-"
+        # Handle both enum and string categories
+        if task.categories:
+            cat_list = [c.value if hasattr(c, 'value') else str(c) for c in task.categories]
+            categories = ", ".join(cat_list)
+        else:
+            categories = "-"
         table.add_row(
             task.id,
             task.name,
-            task.tier.value,
+            task.tier.value if hasattr(task.tier, 'value') else str(task.tier),
             categories,
             f"{task.time_limit_minutes}m",
         )
