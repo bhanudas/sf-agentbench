@@ -76,6 +76,7 @@ venv.bak/
 **/.sfdx/
 
 # SF-AgentBench specific
+sf-agentbench.yaml      # User config (use sf-agentbench.yaml.example as template)
 results/
 logs/
 *.log
