@@ -69,9 +69,11 @@ venv.bak/
 # macOS
 .DS_Store
 
-# Salesforce
+# Salesforce (including nested in tasks/)
 .sf/
 .sfdx/
+**/.sf/
+**/.sfdx/
 
 # SF-AgentBench specific
 results/
