@@ -20,6 +20,7 @@ class SFDeploy(ACITool):
         source_path: str = "force-app",
         wait_minutes: int = 10,
         ignore_warnings: bool = False,
+        ignore_conflicts: bool = True,
         run_tests: str | None = None,
         **kwargs: Any,
     ) -> ACIToolResult:
@@ -30,6 +31,7 @@ class SFDeploy(ACITool):
             source_path: Path to source directory (default: force-app)
             wait_minutes: Minutes to wait for deployment (default: 10)
             ignore_warnings: Whether to ignore warnings (default: False)
+            ignore_conflicts: Whether to ignore conflicts (default: True)
             run_tests: Test level - NoTestRun, RunSpecifiedTests, RunLocalTests, RunAllTestsInOrg
 
         Returns:
@@ -47,6 +49,9 @@ class SFDeploy(ACITool):
 
         if ignore_warnings:
             args.append("--ignore-warnings")
+        
+        if ignore_conflicts:
+            args.append("--ignore-conflicts")
 
         if run_tests:
             args.extend(["--test-level", run_tests])
