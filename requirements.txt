@@ -8,6 +8,7 @@ httpx>=0.25.0
 python-dotenv>=1.0.0
 deepdiff>=6.0.0
 lxml>=5.0.0
+textual>=0.47.0
 
 # Development dependencies
 pytest>=7.4.0

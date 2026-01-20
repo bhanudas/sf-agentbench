@@ -40,6 +40,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "deepdiff>=6.0.0",
     "lxml>=5.0.0",
+    "textual>=0.47.0",
 ]
 
 [project.optional-dependencies]
@@ -54,6 +55,7 @@ dev = [
 
 [project.scripts]
 sf-agentbench = "sf_agentbench.cli:main"
+sf-agentbench-tui = "sf_agentbench.tui:run"
 
 [project.urls]
 Homepage = "https://github.com/bhanudas/sf-agentbench"
