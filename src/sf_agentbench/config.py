@@ -60,6 +60,43 @@ class RubricConfig(BaseModel):
     num_evaluations: int = Field(default=1, description="Number of evaluations to average")
 
 
+class AgentConfig(BaseModel):
+    """Configuration for the AI agent being benchmarked."""
+
+    id: str = Field(default="claude-code", description="Agent identifier for results tracking")
+    type: str = Field(
+        default="claude",
+        description="Agent type: claude, openai, gemini, custom",
+    )
+    model: str = Field(
+        default="claude-sonnet-4-20250514",
+        description="Model to use for the agent",
+    )
+    api_key_env: str = Field(
+        default="ANTHROPIC_API_KEY",
+        description="Environment variable containing the API key",
+    )
+    max_iterations: int = Field(
+        default=50,
+        ge=1,
+        le=500,
+        description="Maximum agent iterations per task",
+    )
+    timeout_seconds: int = Field(
+        default=1800,
+        ge=60,
+        description="Timeout per task in seconds",
+    )
+
+    # Optional agent-specific settings
+    temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    max_tokens: int = Field(default=8192, ge=256)
+    system_prompt: str | None = Field(
+        default=None,
+        description="Custom system prompt for the agent",
+    )
+
+
 class BenchmarkConfig(BaseModel):
     """Main configuration for SF-AgentBench."""
 
@@ -67,6 +104,9 @@ class BenchmarkConfig(BaseModel):
     tasks_dir: Path = Field(default=Path("tasks"))
     results_dir: Path = Field(default=Path("results"))
     logs_dir: Path = Field(default=Path("logs"))
+
+    # Agent configuration
+    agent: AgentConfig = Field(default_factory=AgentConfig)
 
     # Salesforce CLI
     sf_cli_path: str = Field(default="sf")
