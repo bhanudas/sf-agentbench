@@ -17,7 +17,7 @@ agent:
 
 # Salesforce CLI configuration
 sf_cli_path: sf
-devhub_username: null  # Set to your DevHub username
+devhub_username: tnoxprod  # DevHub for scratch org creation
 
 # Scratch Org settings
 scratch_org:

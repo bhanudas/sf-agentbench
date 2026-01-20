@@ -69,11 +69,14 @@ class SFOrgCreate(ACITool):
         self.target_org = old_target
 
         if result.success and result.data:
+            # SF CLI returns nested structure with authFields
+            auth_fields = result.data.get("authFields", {})
+            
             result.data = {
-                "org_id": result.data.get("orgId"),
-                "username": result.data.get("username"),
-                "instance_url": result.data.get("instanceUrl"),
-                "login_url": result.data.get("loginUrl"),
+                "org_id": result.data.get("orgId") or auth_fields.get("orgId"),
+                "username": result.data.get("username") or auth_fields.get("username"),
+                "instance_url": auth_fields.get("instanceUrl") or result.data.get("instanceUrl", ""),
+                "login_url": auth_fields.get("loginUrl") or result.data.get("loginUrl", ""),
                 "status": "active",
                 "expires_at": (
                     datetime.utcnow() + timedelta(days=duration_days)
