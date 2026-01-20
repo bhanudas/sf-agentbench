@@ -17,6 +17,7 @@ from sf_agentbench.models import (
     EvaluationResult,
     ScratchOrgInfo,
 )
+from sf_agentbench.storage import ResultsStore
 
 console = Console()
 
@@ -38,6 +39,7 @@ class BenchmarkHarness:
             verbose=config.verbose,
         )
         self._results: list[TaskResult] = []
+        self.results_store = ResultsStore(config.results_dir)
 
     def discover_tasks(self) -> list[Task]:
         """Discover all available benchmark tasks."""
@@ -242,15 +244,14 @@ class BenchmarkHarness:
         self._save_results(results)
 
     def _save_results(self, results: list[TaskResult]) -> None:
-        """Save results to disk."""
-        import json
-
-        results_file = self.config.results_dir / "benchmark_results.json"
-        results_file.parent.mkdir(parents=True, exist_ok=True)
-
-        data = [r.model_dump(mode="json") for r in results]
-
-        with open(results_file, "w") as f:
-            json.dump(data, f, indent=2, default=str)
-
-        console.print(f"\n[dim]Results saved to: {results_file}[/dim]")
+        """Save results to the persistent store."""
+        saved_ids = []
+        for result in results:
+            run_id = self.results_store.save_run(result)
+            saved_ids.append(run_id)
+        
+        console.print(f"\n[dim]Saved {len(saved_ids)} run(s) to database[/dim]")
+        
+        # Also export summary JSON for backwards compatibility
+        summary_file = self.config.results_dir / "benchmark_results.json"
+        self.results_store.export_to_json(summary_file)

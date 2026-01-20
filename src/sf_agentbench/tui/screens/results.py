@@ -18,6 +18,7 @@ from textual.widgets import (
 )
 
 from sf_agentbench.config import load_config
+from sf_agentbench.storage import ResultsStore, RunRecord
 
 
 class ResultsScreen(Screen):
@@ -30,7 +31,8 @@ class ResultsScreen(Screen):
     def __init__(self) -> None:
         super().__init__()
         self.config = load_config()
-        self.results = []
+        self.store = ResultsStore(self.config.results_dir)
+        self.runs: list[RunRecord] = []
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -96,16 +98,11 @@ class ResultsScreen(Screen):
         self._update_stats()
 
     def _load_results(self) -> None:
-        """Load results from file."""
-        results_file = self.config.results_dir / "benchmark_results.json"
-        if results_file.exists():
-            try:
-                with open(results_file) as f:
-                    self.results = json.load(f)
-            except Exception:
-                self.results = []
-        else:
-            self.results = []
+        """Load results from database."""
+        try:
+            self.runs = self.store.list_runs(limit=100)
+        except Exception:
+            self.runs = []
 
     def _populate_table(self) -> None:
         """Populate the results table."""
@@ -114,33 +111,40 @@ class ResultsScreen(Screen):
         table.clear()
 
         table.add_columns(
+            "Run ID",
             "Task",
             "Agent",
             "Date",
             "Deploy",
             "Tests",
             "PMD",
-            "Metadata",
+            "Meta",
             "Rubric",
             "Final",
+            "Status",
         )
 
-        for result in self.results:
-            eval_data = result.get("evaluation", {})
-
-            final_score = eval_data.get("final_score", 0)
-            score_display = self._format_score(final_score)
+        for run in self.runs:
+            date_str = run.started_at.strftime("%Y-%m-%d") if run.started_at else "-"
+            status_icon = {
+                "completed": "✅",
+                "failed": "❌",
+                "running": "🔄",
+                "pending": "⏳",
+            }.get(run.status, "❓")
 
             table.add_row(
-                result.get("task_id", "-"),
-                result.get("agent_id", "-"),
-                result.get("started_at", "-")[:10] if result.get("started_at") else "-",
-                self._format_score(eval_data.get("deployment_score", 0)),
-                self._format_score(eval_data.get("test_score", 0)),
-                self._format_score(eval_data.get("static_analysis_score", 0)),
-                self._format_score(eval_data.get("metadata_score", 0)),
-                self._format_score(eval_data.get("rubric_score", 0)),
-                score_display,
+                run.run_id[:8],
+                run.task_id[:15],
+                run.agent_id[:10],
+                date_str,
+                self._format_score(run.deployment_score),
+                self._format_score(run.test_score),
+                self._format_score(run.static_analysis_score),
+                self._format_score(run.metadata_score),
+                self._format_score(run.rubric_score),
+                self._format_score(run.final_score),
+                status_icon,
             )
 
     def _format_score(self, score: float) -> str:
@@ -155,60 +159,42 @@ class ResultsScreen(Screen):
             return "⚫ -"
 
     def _update_stats(self) -> None:
-        """Update summary statistics."""
-        if not self.results:
+        """Update summary statistics from database."""
+        try:
+            summary = self.store.get_summary()
+        except Exception:
             return
 
-        total_runs = len(self.results)
-        self.query_one("#stat-total-runs", Static).update(str(total_runs))
-
-        scores = [
-            r.get("evaluation", {}).get("final_score", 0)
-            for r in self.results
-            if r.get("evaluation", {}).get("final_score", 0) > 0
-        ]
-
-        if scores:
-            best = max(scores)
-            avg = sum(scores) / len(scores)
-            self.query_one("#stat-best-score", Static).update(f"{best:.2f}")
-            self.query_one("#stat-avg-score", Static).update(f"{avg:.2f}")
-
-        if self.results:
-            last_run = self.results[-1].get("started_at", "-")
-            if last_run and len(last_run) > 10:
-                last_run = last_run[:10]
-            self.query_one("#stat-last-run", Static).update(last_run)
-
-        # Update score breakdown
-        self._update_breakdown()
-
-    def _update_breakdown(self) -> None:
+        self.query_one("#stat-total-runs", Static).update(str(summary.total_runs))
+        
+        if summary.total_runs > 0:
+            self.query_one("#stat-best-score", Static).update(f"{summary.best_score:.2f}")
+            self.query_one("#stat-avg-score", Static).update(f"{summary.average_score:.2f}")
+            
+            if summary.last_run:
+                self.query_one("#stat-last-run", Static).update(
+                    summary.last_run.strftime("%Y-%m-%d")
+                )
+        
+    def _update_breakdown(self, summary) -> None:
         """Update the score breakdown visualization."""
-        if not self.results:
+        if not self.runs:
             return
 
-        # Calculate averages per layer
-        layers = {
-            "Deployment": [],
-            "Tests": [],
-            "Static Analysis": [],
-            "Metadata": [],
-            "Rubric": [],
-        }
+        # Get agent comparison for layer breakdown
+        try:
+            comparisons = self.store.get_agent_comparison()
+        except Exception:
+            comparisons = []
 
-        for result in self.results:
-            eval_data = result.get("evaluation", {})
-            if eval_data.get("deployment_score"):
-                layers["Deployment"].append(eval_data["deployment_score"])
-            if eval_data.get("test_score"):
-                layers["Tests"].append(eval_data["test_score"])
-            if eval_data.get("static_analysis_score"):
-                layers["Static Analysis"].append(eval_data["static_analysis_score"])
-            if eval_data.get("metadata_score"):
-                layers["Metadata"].append(eval_data["metadata_score"])
-            if eval_data.get("rubric_score"):
-                layers["Rubric"].append(eval_data["rubric_score"])
+        # Build breakdown text from runs
+        layers = {
+            "Deployment": [r.deployment_score for r in self.runs if r.deployment_score > 0],
+            "Tests": [r.test_score for r in self.runs if r.test_score > 0],
+            "Static Analysis": [r.static_analysis_score for r in self.runs if r.static_analysis_score > 0],
+            "Metadata": [r.metadata_score for r in self.runs if r.metadata_score > 0],
+            "Rubric": [r.rubric_score for r in self.runs if r.rubric_score > 0],
+        }
 
         breakdown_text = ""
         for layer, scores in layers.items():
@@ -221,8 +207,13 @@ class ResultsScreen(Screen):
 
         self.query_one("#score-breakdown", Static).update(breakdown_text)
 
-        # Layer analysis
-        analysis = """
+        # Layer analysis - show agent comparison
+        if comparisons:
+            analysis = "**Agent Comparison:**\n"
+            for comp in comparisons[:5]:
+                analysis += f"- {comp.agent_id}: {comp.average_score:.2f} avg ({comp.completed_runs} runs)\n"
+        else:
+            analysis = """
 **Strengths:**
 - Deployment success rate is high
 - Test coverage meets requirements
@@ -247,27 +238,13 @@ class ResultsScreen(Screen):
 
     def _export_csv(self) -> None:
         """Export results to CSV."""
-        if not self.results:
+        if not self.runs:
             self.notify("No results to export", severity="warning")
             return
 
         csv_path = self.config.results_dir / "benchmark_results.csv"
         try:
-            with open(csv_path, "w") as f:
-                f.write("task_id,agent_id,date,deploy,tests,pmd,metadata,rubric,final\n")
-                for result in self.results:
-                    eval_data = result.get("evaluation", {})
-                    f.write(
-                        f"{result.get('task_id', '')},"
-                        f"{result.get('agent_id', '')},"
-                        f"{result.get('started_at', '')[:10] if result.get('started_at') else ''},"
-                        f"{eval_data.get('deployment_score', 0):.2f},"
-                        f"{eval_data.get('test_score', 0):.2f},"
-                        f"{eval_data.get('static_analysis_score', 0):.2f},"
-                        f"{eval_data.get('metadata_score', 0):.2f},"
-                        f"{eval_data.get('rubric_score', 0):.2f},"
-                        f"{eval_data.get('final_score', 0):.2f}\n"
-                    )
-            self.notify(f"Exported to {csv_path}")
+            self.store.export_to_csv(csv_path)
+            self.notify(f"Exported {len(self.runs)} runs to {csv_path}")
         except Exception as e:
             self.notify(f"Export failed: {e}", severity="error")

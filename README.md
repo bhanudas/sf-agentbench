@@ -145,13 +145,20 @@ sf-agentbench/
 │   │   ├── static_analysis.py  # Layer 3
 │   │   ├── metadata_diff.py    # Layer 4
 │   │   └── rubric.py           # Layer 5
+│   ├── storage/                # Results persistence
+│   │   ├── store.py            # SQLite-based ResultsStore
+│   │   └── models.py           # RunRecord, RunSummary, AgentComparison
 │   └── tui/                    # Terminal User Interface
 │       ├── app.py              # Main TUI application
 │       └── screens/            # Dashboard, Tasks, Run, Results, Config
 ├── tasks/                      # Benchmark tasks
 │   ├── tier-1/
 │   └── tier-2/
-├── results/                    # Run outputs
+├── results/                    # Run outputs & database
+│   ├── benchmark_results.db    # SQLite database with all runs
+│   ├── runs/                   # Per-run detailed JSON files
+│   ├── benchmark_results.json  # Exported summary JSON
+│   └── benchmark_results.csv   # Exported CSV (optional)
 └── tests/                      # Test suite
 ```
 
@@ -208,6 +215,55 @@ sf-agentbench run lead-scoring-validation --agent claude-code
 # Validate your setup
 sf-agentbench validate
 ```
+
+## 💾 Results Storage
+
+SF-AgentBench uses a robust storage system for benchmark results:
+
+### SQLite Database
+
+All runs are persisted to a SQLite database (`results/benchmark_results.db`) with:
+- **Run metadata**: task, agent, timestamps, status
+- **Layer scores**: deployment, tests, static analysis, metadata, rubric
+- **Final composite score**
+
+### Per-Run Detail Files
+
+Each run creates a directory (`results/runs/{run_id}/`) containing:
+- `result.json` — Full evaluation details
+- `agent_output.txt` — Agent's raw output
+
+### Querying Results
+
+```python
+from sf_agentbench.storage import ResultsStore
+from pathlib import Path
+
+store = ResultsStore(Path("results"))
+
+# Get summary statistics
+summary = store.get_summary()
+print(f"Total runs: {summary.total_runs}")
+print(f"Average score: {summary.average_score:.2f}")
+
+# List recent runs
+runs = store.list_runs(limit=10)
+for run in runs:
+    print(f"{run.run_id}: {run.task_id} -> {run.final_score:.2f}")
+
+# Compare agents
+comparisons = store.get_agent_comparison()
+for agent in comparisons:
+    print(f"{agent.agent_id}: {agent.average_score:.2f} avg")
+
+# Export to CSV
+store.export_to_csv(Path("results/export.csv"))
+```
+
+### Export Formats
+
+- **JSON**: `sf-agentbench export --format json`
+- **CSV**: `sf-agentbench export --format csv` or use the TUI export button
 
 ## ⚙️ Configuration
 
