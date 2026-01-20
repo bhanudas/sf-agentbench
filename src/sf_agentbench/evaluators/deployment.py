@@ -51,11 +51,29 @@ class DeploymentEvaluator:
             verbose=self.verbose,
         )
 
+        # Try deployment with retry for transient SF CLI errors
         result = deployer.execute(
             source_path="force-app",
             wait_minutes=10,
             ignore_warnings=False,
+            ignore_conflicts=True,
         )
+
+        # Handle known SF CLI bugs (version 2.5.8 locale error)
+        if not result.success:
+            error_msgs = [str(e.get("message", "")) for e in result.errors]
+            is_cli_bug = any("locale" in msg or "Finalizing" in msg for msg in error_msgs)
+            
+            if is_cli_bug:
+                # Retry once for transient SF CLI issues
+                import time
+                time.sleep(2)
+                result = deployer.execute(
+                    source_path="force-app",
+                    wait_minutes=10,
+                    ignore_warnings=False,
+                    ignore_conflicts=True,
+                )
 
         if result.success:
             deployment = DeploymentResult(

@@ -18,6 +18,7 @@ from sf_agentbench.models import (
     ScratchOrgInfo,
 )
 from sf_agentbench.storage import ResultsStore
+from sf_agentbench.logging import BenchmarkLogger, init_logger
 
 console = Console()
 
@@ -40,6 +41,12 @@ class BenchmarkHarness:
         )
         self._results: list[TaskResult] = []
         self.results_store = ResultsStore(config.results_dir)
+        
+        # Initialize logger
+        self.logger = init_logger(
+            logs_dir=config.logs_dir,
+            verbose=config.verbose,
+        )
 
     def discover_tasks(self) -> list[Task]:
         """Discover all available benchmark tasks."""
@@ -65,6 +72,18 @@ class BenchmarkHarness:
         """
         run_id = str(uuid.uuid4())[:8]
         started_at = datetime.utcnow()
+        
+        # Initialize run-specific logger
+        self.logger = init_logger(
+            logs_dir=self.config.logs_dir,
+            run_id=run_id,
+            verbose=self.config.verbose,
+        )
+        
+        tier_str = task.tier.value if hasattr(task.tier, 'value') else str(task.tier)
+        self.logger.task_start(task.id, task.name, tier_str)
+        self.logger.info(f"Agent: {agent_id}")
+        self.logger.info(f"Run ID: {run_id}")
 
         console.print(f"\n[bold blue]═══ Running Task: {task.name} ═══[/bold blue]")
         console.print(f"[dim]ID: {task.id} | Tier: {task.tier} | Agent: {agent_id}[/dim]")
@@ -79,8 +98,10 @@ class BenchmarkHarness:
         try:
             # Create work directory for agent
             work_dir = self._create_work_directory(task, run_id)
+            self.logger.info(f"Work directory: {work_dir}")
 
             # Create and set up Scratch Org
+            self.logger.info("Creating scratch org...")
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
@@ -90,6 +111,7 @@ class BenchmarkHarness:
                 org_info = self.org_manager.create_org_for_task(task, run_id)
 
             result.scratch_org = org_info
+            self.logger.org_created(org_info.username, org_info.org_id)
 
             # Set up org with prerequisites
             self.org_manager.setup_org(task, org_info)
@@ -101,6 +123,7 @@ class BenchmarkHarness:
 
             # Evaluate the agent's work
             console.print("\n[bold cyan]Evaluating Results...[/bold cyan]")
+            self.logger.info("Starting evaluation pipeline...")
             from sf_agentbench.evaluators import EvaluationPipeline
 
             pipeline = EvaluationPipeline(
@@ -120,9 +143,22 @@ class BenchmarkHarness:
                 metadata_weight=self.config.evaluation_weights.metadata_diff,
                 rubric_weight=self.config.evaluation_weights.rubric,
             )
+            
+            # Log evaluation results
+            self.logger.evaluation_complete(
+                scores={
+                    "Deployment": evaluation.deployment_score,
+                    "Tests": evaluation.test_score,
+                    "Static Analysis": evaluation.static_analysis_score,
+                    "Metadata": evaluation.metadata_score,
+                    "Rubric": evaluation.rubric_score,
+                },
+                final_score=evaluation.final_score,
+            )
 
         except Exception as e:
             console.print(f"[red]Error during task execution: {e}[/red]")
+            self.logger.error(f"Task execution failed: {e}")
             result.error = str(e)
 
         finally:
@@ -134,9 +170,17 @@ class BenchmarkHarness:
             # Cleanup org if configured
             if self.config.cleanup_orgs and result.scratch_org:
                 try:
+                    self.logger.info("Cleaning up scratch org...")
                     self.org_manager.delete_org(result.scratch_org)
+                    self.logger.org_deleted(result.scratch_org.username)
                 except Exception as e:
                     console.print(f"[yellow]Warning: Failed to cleanup org: {e}[/yellow]")
+                    self.logger.warning(f"Failed to cleanup org: {e}")
+            
+            # Log final results
+            final_score = result.evaluation.final_score if result.evaluation else 0.0
+            self.logger.task_end(task.id, final_score, result.duration_seconds)
+            self.logger.info(f"Log file: {self.logger.get_log_path()}")
 
         # Store and display result
         self._results.append(result)
