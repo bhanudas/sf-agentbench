@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SF-AgentBench Test Bank Schema",
+  "description": "Schema for defining question banks to test LLM knowledge and reasoning",
+  "type": "object",
+  "required": ["metadata", "questions"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["version", "id", "name", "description"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Schema version (semver)"
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this test bank"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what this test bank covers"
+        },
+        "created": {
+          "type": "string",
+          "format": "date",
+          "description": "Creation date"
+        },
+        "authors": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of authors/contributors"
+        },
+        "domains": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Knowledge domains covered"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced", "expert", "mixed"],
+          "description": "Overall difficulty level"
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Searchable tags"
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "question", "correct_answer"],
+        "properties": {
+          "id": {
+            "type": ["integer", "string"],
+            "description": "Unique question identifier"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["multiple_choice", "true_false", "short_answer", "code", "scenario"],
+            "description": "Question type"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Knowledge domain this question tests"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard", "expert"],
+            "description": "Question difficulty"
+          },
+          "question": {
+            "type": "string",
+            "description": "The question text"
+          },
+          "context": {
+            "type": "string",
+            "description": "Optional context or scenario setup"
+          },
+          "choices": {
+            "type": "object",
+            "description": "Answer choices for multiple choice (A, B, C, D, etc.)",
+            "additionalProperties": {"type": "string"}
+          },
+          "correct_answer": {
+            "type": ["string", "array"],
+            "description": "The correct answer (letter for MC, text for short answer, array for multiple correct)"
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Explanation of why the answer is correct"
+          },
+          "tags": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Question-specific tags"
+          },
+          "points": {
+            "type": "number",
+            "default": 1,
+            "description": "Point value for scoring"
+          }
+        }
+      }
+    }
+  }
+}

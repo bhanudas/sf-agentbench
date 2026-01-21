@@ -818,6 +818,271 @@ def list_cli_agents():
     console.print("  sf-agentbench run-cli gemini-cli <task> -m gemini-3-thinking\n")
 
 
+# =============================================================================
+# Q&A TESTING COMMANDS
+# =============================================================================
+
+@main.command("qa-list")
+def qa_list_banks():
+    """List available Q&A test banks."""
+    from sf_agentbench.qa import TestBankLoader
+    
+    loader = TestBankLoader()
+    banks = loader.list_available()
+    
+    console.print("\n[bold]Available Q&A Test Banks[/bold]\n")
+    
+    if not banks:
+        console.print("[yellow]No test banks found in docs/data/[/yellow]")
+        return
+    
+    table = Table()
+    table.add_column("File", style="cyan")
+    table.add_column("Name")
+    table.add_column("Questions", justify="right")
+    table.add_column("Domains")
+    
+    for bank_file in banks:
+        try:
+            bank = loader.load(bank_file)
+            domains = ", ".join(bank.domains[:3])
+            if len(bank.domains) > 3:
+                domains += f" (+{len(bank.domains) - 3})"
+            table.add_row(bank_file, bank.name, str(len(bank.questions)), domains)
+        except Exception as e:
+            table.add_row(bank_file, f"[red]Error: {e}[/red]", "-", "-")
+    
+    console.print(table)
+
+
+@main.command("qa-run")
+@click.argument("test_bank")
+@click.option("--cli", "-c", default="gemini-cli", help="CLI to use (gemini-cli, claude-code)")
+@click.option("--model", "-m", help="Model to use (overrides CLI default)")
+@click.option("--sample", "-n", type=int, help="Run only N random questions")
+@click.option("--domain", "-d", help="Filter by domain")
+@click.option("--workers", "-w", type=int, default=1, help="Parallel workers (default: 1 = sequential)")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output")
+@click.option("--output", "-o", type=click.Path(), help="Save results to JSON file")
+def qa_run(
+    test_bank: str,
+    cli: str,
+    model: str | None,
+    sample: int | None,
+    domain: str | None,
+    workers: int,
+    verbose: bool,
+    output: str | None,
+):
+    """Run Q&A tests against an LLM.
+    
+    TEST_BANK is the filename of the test bank (e.g., salesforce_admin_test_bank.json)
+    
+    \b
+    Examples:
+      sf-agentbench qa-run salesforce_admin_test_bank.json -n 5
+      sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 4  # 4 parallel workers
+      sf-agentbench qa-run salesforce_admin_test_bank.json -c claude-code -m sonnet
+    """
+    from sf_agentbench.qa import TestBankLoader, QARunner
+    import json
+    
+    # Load test bank
+    loader = TestBankLoader()
+    try:
+        bank = loader.load(test_bank)
+    except FileNotFoundError:
+        console.print(f"[red]Test bank not found: {test_bank}[/red]")
+        console.print(f"[dim]Available: {', '.join(loader.list_available())}[/dim]")
+        return
+    
+    # Filter questions
+    questions = bank.questions
+    if domain:
+        questions = bank.filter_by_domain(domain)
+        if not questions:
+            console.print(f"[yellow]No questions found for domain: {domain}[/yellow]")
+            return
+    
+    if sample:
+        questions = bank.sample(sample, domain)
+    
+    # Create runner
+    try:
+        runner = QARunner(cli_id=cli, model=model, verbose=verbose, workers=workers)
+    except ValueError as e:
+        console.print(f"[red]{e}[/red]")
+        return
+    
+    # Run tests
+    summary = runner.run_test_bank(bank, questions)
+    
+    # Print summary
+    runner.print_summary(summary)
+    
+    # Save results
+    if output:
+        output_path = Path(output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            json.dump(summary.to_dict(), f, indent=2)
+        console.print(f"\n[green]Results saved to: {output_path}[/green]")
+
+
+@main.command("qa-history")
+@click.option("--model", "-m", help="Filter by model")
+@click.option("--bank", "-b", help="Filter by test bank")
+@click.option("--limit", "-n", type=int, default=20, help="Number of runs to show")
+@click.pass_context
+def qa_history(ctx: click.Context, model: str | None, bank: str | None, limit: int):
+    """Show Q&A run history."""
+    from sf_agentbench.qa import QAResultsStore
+    
+    config: BenchmarkConfig = ctx.obj["config"]
+    store = QAResultsStore(config.results_dir)
+    
+    runs = store.list_runs(model_id=model, test_bank_id=bank, limit=limit)
+    
+    if not runs:
+        console.print("[yellow]No Q&A runs found[/yellow]")
+        return
+    
+    console.print(f"\n[bold]Q&A Run History[/bold] (last {len(runs)} runs)\n")
+    
+    table = Table()
+    table.add_column("Run ID", style="cyan")
+    table.add_column("Model", style="magenta")
+    table.add_column("Test Bank")
+    table.add_column("Score", justify="right")
+    table.add_column("Accuracy", justify="right")
+    table.add_column("Duration", justify="right")
+    table.add_column("Date")
+    
+    for run in runs:
+        acc = run.get("accuracy", 0)
+        acc_color = "green" if acc >= 80 else "yellow" if acc >= 60 else "red"
+        table.add_row(
+            run["run_id"],
+            run["model_id"],
+            run["test_bank_id"][:20],
+            f"{run['correct_answers']}/{run['total_questions']}",
+            f"[{acc_color}]{acc:.1f}%[/{acc_color}]",
+            f"{run['duration_seconds']:.0f}s",
+            run["started_at"][:16] if run["started_at"] else "-",
+        )
+    
+    console.print(table)
+
+
+@main.command("qa-compare")
+@click.option("--bank", "-b", help="Filter by test bank")
+@click.pass_context
+def qa_compare(ctx: click.Context, bank: str | None):
+    """Compare model performance on Q&A tests."""
+    from sf_agentbench.qa import QAResultsStore
+    
+    config: BenchmarkConfig = ctx.obj["config"]
+    store = QAResultsStore(config.results_dir)
+    
+    comparison = store.get_model_comparison(test_bank_id=bank)
+    
+    if not comparison:
+        console.print("[yellow]No Q&A runs found for comparison[/yellow]")
+        return
+    
+    console.print("\n[bold]Model Comparison - Q&A Performance[/bold]\n")
+    
+    table = Table()
+    table.add_column("Model", style="magenta")
+    table.add_column("Runs", justify="right")
+    table.add_column("Avg Accuracy", justify="right")
+    table.add_column("Best", justify="right")
+    table.add_column("Total Q's", justify="right")
+    table.add_column("Correct", justify="right")
+    
+    for m in comparison:
+        avg_acc = m.get("avg_accuracy", 0)
+        acc_color = "green" if avg_acc >= 80 else "yellow" if avg_acc >= 60 else "red"
+        table.add_row(
+            m["model_id"],
+            str(m["run_count"]),
+            f"[{acc_color}]{avg_acc:.1f}%[/{acc_color}]",
+            f"{m['best_accuracy']:.1f}%",
+            str(m["total_questions"]),
+            str(m["total_correct"]),
+        )
+    
+    console.print(table)
+
+
+@main.command("qa-domains")
+@click.option("--model", "-m", help="Filter by model")
+@click.option("--bank", "-b", help="Filter by test bank")
+@click.pass_context
+def qa_domains(ctx: click.Context, model: str | None, bank: str | None):
+    """Analyze Q&A performance by domain."""
+    from sf_agentbench.qa import QAResultsStore
+    
+    config: BenchmarkConfig = ctx.obj["config"]
+    store = QAResultsStore(config.results_dir)
+    
+    analysis = store.get_domain_analysis(model_id=model, test_bank_id=bank)
+    
+    if not analysis:
+        console.print("[yellow]No Q&A data found[/yellow]")
+        return
+    
+    console.print("\n[bold]Q&A Performance by Domain[/bold]\n")
+    
+    table = Table()
+    table.add_column("Domain", style="cyan")
+    table.add_column("Model", style="magenta")
+    table.add_column("Questions", justify="right")
+    table.add_column("Correct", justify="right")
+    table.add_column("Accuracy", justify="right")
+    table.add_column("Avg Time", justify="right")
+    
+    for d in analysis:
+        acc = d.get("accuracy", 0)
+        acc_color = "green" if acc >= 80 else "yellow" if acc >= 60 else "red"
+        table.add_row(
+            d["domain"],
+            d["model_id"],
+            str(d["total_questions"]),
+            str(d["correct_answers"]),
+            f"[{acc_color}]{acc:.1f}%[/{acc_color}]",
+            f"{d['avg_response_time']:.1f}s",
+        )
+    
+    console.print(table)
+
+
+@main.command("qa-playback")
+@click.argument("run_id")
+@click.pass_context
+def qa_playback(ctx: click.Context, run_id: str):
+    """Replay a Q&A run showing all prompts and responses."""
+    from sf_agentbench.qa import QAResultsStore
+    
+    config: BenchmarkConfig = ctx.obj["config"]
+    store = QAResultsStore(config.results_dir)
+    
+    store.playback_run(run_id)
+
+
+@main.command("qa-export")
+@click.option("--output", "-o", default="exports/qa", help="Output directory")
+@click.pass_context
+def qa_export(ctx: click.Context, output: str):
+    """Export Q&A results for external analysis (CSV format)."""
+    from sf_agentbench.qa import QAResultsStore
+    
+    config: BenchmarkConfig = ctx.obj["config"]
+    store = QAResultsStore(config.results_dir)
+    
+    store.export_for_analysis(Path(output))
+
+
 @main.command()
 @click.pass_context
 def validate(ctx: click.Context) -> None:

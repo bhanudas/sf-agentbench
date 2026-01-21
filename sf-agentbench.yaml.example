@@ -71,6 +71,11 @@ parallel_runs: 1
 timeout_minutes: 60
 cleanup_orgs: true
 
+# Q&A Testing settings
+qa:
+  workers: 4              # Parallel workers for Q&A tests (1 = sequential)
+  timeout_per_question: 60  # Timeout per question in seconds
+
 # Logging
 verbose: false
 log_level: INFO

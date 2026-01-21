@@ -1,0 +1,673 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-01-21",
+    "description": "Salesforce Administrator Certification Test Bank - Trial Version",
+    "total_questions": 50,
+    "domains": [
+      "Security & Access",
+      "Data Management",
+      "Automation",
+      "Reports & Dashboards",
+      "Sales & Service Cloud"
+    ],
+    "format": "multiple_choice",
+    "future_enhancements": [
+      "non_deterministic_answers",
+      "llm_generated_explanations",
+      "difficulty_scoring"
+    ]
+  },
+  "questions": [
+    {
+      "id": 1,
+      "domain": "Security & Access",
+      "question": "What is the correct order of access evaluation in Salesforce?",
+      "choices": {
+        "A": "Permission Sets → Profiles → Organization-Wide Defaults → Role Hierarchy",
+        "B": "Organization-Wide Defaults → Role Hierarchy → Sharing Rules → Manual Sharing",
+        "C": "Profiles → Organization-Wide Defaults → Sharing Rules → Permission Sets",
+        "D": "Role Hierarchy → Organization-Wide Defaults → Profiles → Sharing Rules"
+      },
+      "correct_answer": "B",
+      "explanation": "Salesforce evaluates record access starting with OWD as the baseline, then opens up access through Role Hierarchy, Sharing Rules, and finally Manual Sharing."
+    },
+    {
+      "id": 2,
+      "domain": "Security & Access",
+      "question": "Which permission cannot be granted through a Permission Set?",
+      "choices": {
+        "A": "Modify All Data",
+        "B": "Page Layout Assignment",
+        "C": "Apex Class Access",
+        "D": "Field-Level Security"
+      },
+      "correct_answer": "B",
+      "explanation": "Page Layout assignments are controlled exclusively through Profiles and cannot be assigned via Permission Sets."
+    },
+    {
+      "id": 3,
+      "domain": "Security & Access",
+      "question": "An administrator needs to restrict login access to specific IP ranges for a group of users. Where should this be configured?",
+      "choices": {
+        "A": "Organization-Wide Defaults",
+        "B": "Profile Login IP Ranges",
+        "C": "Permission Set",
+        "D": "Public Groups"
+      },
+      "correct_answer": "B",
+      "explanation": "Login IP Ranges are configured at the Profile level to restrict which IP addresses users with that profile can log in from."
+    },
+    {
+      "id": 4,
+      "domain": "Security & Access",
+      "question": "What happens when Organization-Wide Defaults for an object are set to 'Private'?",
+      "choices": {
+        "A": "No user can access any records of that object",
+        "B": "Users can only see records they own or that have been shared with them",
+        "C": "Only System Administrators can view records",
+        "D": "Records are hidden from all reports"
+      },
+      "correct_answer": "B",
+      "explanation": "Private OWD means users can only access records they own, plus records shared via role hierarchy, sharing rules, or manual sharing."
+    },
+    {
+      "id": 5,
+      "domain": "Security & Access",
+      "question": "Which type of sharing rule can be used to share records based on field values?",
+      "choices": {
+        "A": "Owner-Based Sharing Rules",
+        "B": "Criteria-Based Sharing Rules",
+        "C": "Manual Sharing Rules",
+        "D": "Implicit Sharing Rules"
+      },
+      "correct_answer": "B",
+      "explanation": "Criteria-Based Sharing Rules allow sharing records based on field values meeting specific criteria, not just record ownership."
+    },
+    {
+      "id": 6,
+      "domain": "Security & Access",
+      "question": "What is the maximum number of Permission Sets that can be assigned to a single user?",
+      "choices": {
+        "A": "10",
+        "B": "100",
+        "C": "1000",
+        "D": "Unlimited"
+      },
+      "correct_answer": "B",
+      "explanation": "Salesforce allows a maximum of 100 Permission Sets to be assigned to a single user."
+    },
+    {
+      "id": 7,
+      "domain": "Security & Access",
+      "question": "Which feature allows administrators to grant temporary elevated permissions to users?",
+      "choices": {
+        "A": "Delegated Administration",
+        "B": "Permission Set Groups",
+        "C": "Session-Based Permission Sets",
+        "D": "Profile Cloning"
+      },
+      "correct_answer": "C",
+      "explanation": "Session-Based Permission Sets allow admins to grant permissions that are only active during specific sessions, providing temporary elevated access."
+    },
+    {
+      "id": 8,
+      "domain": "Security & Access",
+      "question": "What is required to enable Shield Platform Encryption for a custom field?",
+      "choices": {
+        "A": "The field must be a text field only",
+        "B": "A Tenant Secret must be generated first",
+        "C": "The object must have OWD set to Private",
+        "D": "The user must have Modify All Data permission"
+      },
+      "correct_answer": "B",
+      "explanation": "Shield Platform Encryption requires a Tenant Secret to be generated before encryption can be enabled for fields."
+    },
+    {
+      "id": 9,
+      "domain": "Security & Access",
+      "question": "Which users can always see all records regardless of sharing settings?",
+      "choices": {
+        "A": "Users with 'View All' permission on the object",
+        "B": "Users in the CEO role only",
+        "C": "Users with Read permission on the object",
+        "D": "Users assigned to the Standard User profile"
+      },
+      "correct_answer": "A",
+      "explanation": "Users with 'View All' permission on an object bypass sharing settings and can see all records of that object."
+    },
+    {
+      "id": 10,
+      "domain": "Security & Access",
+      "question": "What is the purpose of a Permission Set Group?",
+      "choices": {
+        "A": "To create a backup of Permission Sets",
+        "B": "To bundle multiple Permission Sets for easier assignment",
+        "C": "To replace Profiles entirely",
+        "D": "To share Permission Sets across multiple orgs"
+      },
+      "correct_answer": "B",
+      "explanation": "Permission Set Groups bundle multiple Permission Sets together, making it easier to assign a collection of permissions to users."
+    },
+    {
+      "id": 11,
+      "domain": "Data Management",
+      "question": "What is the maximum number of records that can be processed using Data Loader in a single batch?",
+      "choices": {
+        "A": "100",
+        "B": "200",
+        "C": "2,000",
+        "D": "10,000"
+      },
+      "correct_answer": "B",
+      "explanation": "Data Loader processes records in batches of up to 200 records per batch by default, which aligns with API limits."
+    },
+    {
+      "id": 12,
+      "domain": "Data Management",
+      "question": "Which tool should be used to mass delete records that meet specific criteria?",
+      "choices": {
+        "A": "Import Wizard",
+        "B": "Mass Delete Records",
+        "C": "Data Loader Delete operation",
+        "D": "Both B and C"
+      },
+      "correct_answer": "D",
+      "explanation": "Both Mass Delete Records (for standard objects up to 250 records) and Data Loader (for larger volumes) can be used for mass deletions."
+    },
+    {
+      "id": 13,
+      "domain": "Data Management",
+      "question": "What type of relationship allows a child record to have two parent objects?",
+      "choices": {
+        "A": "Master-Detail Relationship",
+        "B": "Lookup Relationship",
+        "C": "Junction Object with two Master-Detail relationships",
+        "D": "External Lookup Relationship"
+      },
+      "correct_answer": "C",
+      "explanation": "A Junction Object with two Master-Detail relationships creates a many-to-many relationship between two objects."
+    },
+    {
+      "id": 14,
+      "domain": "Data Management",
+      "question": "When converting a Lookup relationship to Master-Detail, what must be true?",
+      "choices": {
+        "A": "All child records must have a value in the lookup field",
+        "B": "The parent object must have Private OWD",
+        "C": "The child object must be a custom object",
+        "D": "Both A and C"
+      },
+      "correct_answer": "D",
+      "explanation": "Converting to Master-Detail requires all child records to have a parent value, and the child must be a custom object."
+    },
+    {
+      "id": 15,
+      "domain": "Data Management",
+      "question": "What is the storage limit for file attachments in Salesforce per organization (base)?",
+      "choices": {
+        "A": "1 GB",
+        "B": "10 GB",
+        "C": "11 GB base plus per-user allocation",
+        "D": "Unlimited"
+      },
+      "correct_answer": "C",
+      "explanation": "Organizations receive 11 GB base file storage plus additional allocation per user license type."
+    },
+    {
+      "id": 16,
+      "domain": "Data Management",
+      "question": "Which field type cannot be used as an External ID?",
+      "choices": {
+        "A": "Text",
+        "B": "Number",
+        "C": "Email",
+        "D": "Picklist"
+      },
+      "correct_answer": "D",
+      "explanation": "External IDs can only be Text, Number, Email, or Auto-Number fields. Picklist fields cannot be External IDs."
+    },
+    {
+      "id": 17,
+      "domain": "Data Management",
+      "question": "How long are deleted records retained in the Recycle Bin?",
+      "choices": {
+        "A": "7 days",
+        "B": "15 days",
+        "C": "30 days",
+        "D": "90 days"
+      },
+      "correct_answer": "B",
+      "explanation": "Deleted records remain in the Recycle Bin for 15 days before being permanently deleted."
+    },
+    {
+      "id": 18,
+      "domain": "Data Management",
+      "question": "What is the maximum number of custom fields allowed on a custom object?",
+      "choices": {
+        "A": "100",
+        "B": "500",
+        "C": "800",
+        "D": "1000"
+      },
+      "correct_answer": "B",
+      "explanation": "Custom objects can have up to 500 custom fields in most editions."
+    },
+    {
+      "id": 19,
+      "domain": "Data Management",
+      "question": "Which import tool supports importing custom objects?",
+      "choices": {
+        "A": "Import Wizard only",
+        "B": "Data Loader only",
+        "C": "Both Import Wizard and Data Loader",
+        "D": "Neither - custom objects require API"
+      },
+      "correct_answer": "C",
+      "explanation": "Both Import Wizard (for up to 50,000 records) and Data Loader support importing data into custom objects."
+    },
+    {
+      "id": 20,
+      "domain": "Data Management",
+      "question": "What happens to child records when a parent record in a Master-Detail relationship is deleted?",
+      "choices": {
+        "A": "Child records are preserved with null parent reference",
+        "B": "Child records are cascade deleted",
+        "C": "Deletion is blocked until child records are removed",
+        "D": "Child records are transferred to another parent"
+      },
+      "correct_answer": "B",
+      "explanation": "Master-Detail relationships enforce cascade delete - deleting the parent automatically deletes all child records."
+    },
+    {
+      "id": 21,
+      "domain": "Automation",
+      "question": "Which automation tool should be used to send an email alert when an Opportunity reaches 'Closed Won'?",
+      "choices": {
+        "A": "Workflow Rule only",
+        "B": "Process Builder only",
+        "C": "Flow only",
+        "D": "Any of the above"
+      },
+      "correct_answer": "D",
+      "explanation": "Email alerts can be triggered by Workflow Rules, Process Builder, or Flows, though Salesforce recommends migrating to Flows."
+    },
+    {
+      "id": 22,
+      "domain": "Automation",
+      "question": "What is the order of execution when a record is saved in Salesforce?",
+      "choices": {
+        "A": "Triggers → Validation Rules → Workflow Rules → Assignment Rules",
+        "B": "Validation Rules → Before Triggers → After Triggers → Workflow Rules",
+        "C": "Before Triggers → Validation Rules → After Triggers → Workflow Rules",
+        "D": "Assignment Rules → Validation Rules → Before Triggers → Workflow Rules"
+      },
+      "correct_answer": "C",
+      "explanation": "The order is: Before Triggers → System Validation → Validation Rules → Duplicate Rules → After Triggers → Assignment Rules → Workflow Rules → Escalation Rules → Processes/Flows."
+    },
+    {
+      "id": 23,
+      "domain": "Automation",
+      "question": "Which Flow type runs when a record is created or updated?",
+      "choices": {
+        "A": "Screen Flow",
+        "B": "Autolaunched Flow",
+        "C": "Record-Triggered Flow",
+        "D": "Schedule-Triggered Flow"
+      },
+      "correct_answer": "C",
+      "explanation": "Record-Triggered Flows automatically execute when records are created, updated, or deleted."
+    },
+    {
+      "id": 24,
+      "domain": "Automation",
+      "question": "What is the maximum number of time-based workflow actions that can be queued?",
+      "choices": {
+        "A": "100",
+        "B": "1,000",
+        "C": "10,000",
+        "D": "1,000,000"
+      },
+      "correct_answer": "D",
+      "explanation": "Salesforce allows up to 1,000,000 time-based workflow actions in the queue at any time."
+    },
+    {
+      "id": 25,
+      "domain": "Automation",
+      "question": "Which automation tool can create multiple records of different object types in a single transaction?",
+      "choices": {
+        "A": "Workflow Rules",
+        "B": "Process Builder",
+        "C": "Flows",
+        "D": "Approval Processes"
+      },
+      "correct_answer": "C",
+      "explanation": "Flows can create, update, and delete multiple records across different objects in a single transaction."
+    },
+    {
+      "id": 26,
+      "domain": "Automation",
+      "question": "In an Approval Process, what determines who can approve a record?",
+      "choices": {
+        "A": "Entry Criteria",
+        "B": "Approval Steps",
+        "C": "Initial Submission Actions",
+        "D": "Final Approval Actions"
+      },
+      "correct_answer": "B",
+      "explanation": "Approval Steps define who can approve the record and the criteria for each step in the approval process."
+    },
+    {
+      "id": 27,
+      "domain": "Automation",
+      "question": "What is the difference between 'Before Save' and 'After Save' Flow triggers?",
+      "choices": {
+        "A": "Before Save cannot access the record ID",
+        "B": "After Save runs before validation rules",
+        "C": "Before Save is faster and doesn't require DML for the triggering record",
+        "D": "There is no difference"
+      },
+      "correct_answer": "C",
+      "explanation": "Before Save Flows are faster because they don't require a separate DML operation to update the triggering record's fields."
+    },
+    {
+      "id": 28,
+      "domain": "Automation",
+      "question": "Which element in Flow is used to loop through a collection of records?",
+      "choices": {
+        "A": "Decision",
+        "B": "Loop",
+        "C": "Assignment",
+        "D": "Get Records"
+      },
+      "correct_answer": "B",
+      "explanation": "The Loop element iterates through each item in a collection, allowing you to process records one at a time."
+    },
+    {
+      "id": 29,
+      "domain": "Automation",
+      "question": "What happens if a Screen Flow encounters an unhandled fault?",
+      "choices": {
+        "A": "The flow silently fails and commits partial changes",
+        "B": "The user sees an error message and all changes are rolled back",
+        "C": "The flow continues to the next element",
+        "D": "An email is automatically sent to the admin"
+      },
+      "correct_answer": "B",
+      "explanation": "Unhandled faults in Screen Flows display an error to the user and roll back all database changes made during the flow interview."
+    },
+    {
+      "id": 30,
+      "domain": "Automation",
+      "question": "Which validation rule function checks if a field value has changed?",
+      "choices": {
+        "A": "CHANGED()",
+        "B": "ISCHANGED()",
+        "C": "PRIORVALUE()",
+        "D": "Both B and C can be used"
+      },
+      "correct_answer": "D",
+      "explanation": "ISCHANGED() returns true if a field value changed, while PRIORVALUE() returns the previous value, allowing comparison logic."
+    },
+    {
+      "id": 31,
+      "domain": "Reports & Dashboards",
+      "question": "Which report format allows grouping by both rows and columns?",
+      "choices": {
+        "A": "Tabular",
+        "B": "Summary",
+        "C": "Matrix",
+        "D": "Joined"
+      },
+      "correct_answer": "C",
+      "explanation": "Matrix reports allow grouping data by both rows and columns, creating a grid-like view of summarized data."
+    },
+    {
+      "id": 32,
+      "domain": "Reports & Dashboards",
+      "question": "What is the maximum number of components that can be added to a dashboard?",
+      "choices": {
+        "A": "10",
+        "B": "20",
+        "C": "25",
+        "D": "50"
+      },
+      "correct_answer": "B",
+      "explanation": "A Salesforce dashboard can contain a maximum of 20 components."
+    },
+    {
+      "id": 33,
+      "domain": "Reports & Dashboards",
+      "question": "Which report type is required to create a dashboard component?",
+      "choices": {
+        "A": "Tabular reports only",
+        "B": "Summary or Matrix reports only",
+        "C": "Any report type",
+        "D": "Joined reports only"
+      },
+      "correct_answer": "B",
+      "explanation": "Dashboard components require Summary or Matrix reports because they need grouped/summarized data. Tabular reports cannot be used."
+    },
+    {
+      "id": 34,
+      "domain": "Reports & Dashboards",
+      "question": "What does the 'Running User' setting on a dashboard control?",
+      "choices": {
+        "A": "Who can view the dashboard",
+        "B": "Whose data access level is used to display data",
+        "C": "Who receives scheduled dashboard refreshes",
+        "D": "Who can edit the dashboard"
+      },
+      "correct_answer": "B",
+      "explanation": "The Running User determines whose security settings and data access are used when displaying dashboard data."
+    },
+    {
+      "id": 35,
+      "domain": "Reports & Dashboards",
+      "question": "How can an administrator allow users to see a dashboard with their own data access?",
+      "choices": {
+        "A": "Create separate dashboards for each user",
+        "B": "Set Running User to 'Log in as specified user'",
+        "C": "Enable Dynamic Dashboards",
+        "D": "Use a tabular report as source"
+      },
+      "correct_answer": "C",
+      "explanation": "Dynamic Dashboards display data based on the viewing user's security settings rather than a fixed Running User."
+    },
+    {
+      "id": 36,
+      "domain": "Reports & Dashboards",
+      "question": "Which feature allows combining data from multiple report types in a single report?",
+      "choices": {
+        "A": "Cross Filters",
+        "B": "Bucket Fields",
+        "C": "Joined Reports",
+        "D": "Custom Report Types"
+      },
+      "correct_answer": "C",
+      "explanation": "Joined Reports combine data from multiple report types (up to 5 blocks) in a single report."
+    },
+    {
+      "id": 37,
+      "domain": "Reports & Dashboards",
+      "question": "What is a Bucket Field used for in reports?",
+      "choices": {
+        "A": "To store report results",
+        "B": "To group report data into categories without creating a formula field",
+        "C": "To create calculated columns",
+        "D": "To filter report results"
+      },
+      "correct_answer": "B",
+      "explanation": "Bucket Fields categorize report data into groups you define, without needing to create custom formula fields on the object."
+    },
+    {
+      "id": 38,
+      "domain": "Reports & Dashboards",
+      "question": "What is the maximum number of filters that can be added to a report?",
+      "choices": {
+        "A": "10",
+        "B": "20",
+        "C": "30",
+        "D": "Unlimited"
+      },
+      "correct_answer": "B",
+      "explanation": "Reports can have a maximum of 20 field filters in addition to the standard filters."
+    },
+    {
+      "id": 39,
+      "domain": "Reports & Dashboards",
+      "question": "Which chart type is best for showing trends over time?",
+      "choices": {
+        "A": "Pie Chart",
+        "B": "Donut Chart",
+        "C": "Line Chart",
+        "D": "Funnel Chart"
+      },
+      "correct_answer": "C",
+      "explanation": "Line Charts are ideal for displaying trends over time, showing how values change across time periods."
+    },
+    {
+      "id": 40,
+      "domain": "Reports & Dashboards",
+      "question": "What is a Cross Filter in reports?",
+      "choices": {
+        "A": "A filter that works across multiple dashboards",
+        "B": "A filter based on related objects with or without related records",
+        "C": "A filter that crosses report blocks",
+        "D": "A filter applied to multiple fields simultaneously"
+      },
+      "correct_answer": "B",
+      "explanation": "Cross Filters filter records based on related objects, such as 'Accounts with Opportunities' or 'Accounts without Cases'."
+    },
+    {
+      "id": 41,
+      "domain": "Sales & Service Cloud",
+      "question": "What is the purpose of a Sales Path in Salesforce?",
+      "choices": {
+        "A": "To define discount approval levels",
+        "B": "To guide users through stages with key fields and guidance",
+        "C": "To route leads to sales representatives",
+        "D": "To calculate sales commissions"
+      },
+      "correct_answer": "B",
+      "explanation": "Sales Path provides visual guidance for each stage of a process, displaying key fields and coaching information to help users move records forward."
+    },
+    {
+      "id": 42,
+      "domain": "Sales & Service Cloud",
+      "question": "Which feature automatically converts web form submissions into Leads?",
+      "choices": {
+        "A": "Lead Assignment Rules",
+        "B": "Web-to-Lead",
+        "C": "Lead Conversion",
+        "D": "Campaign Members"
+      },
+      "correct_answer": "B",
+      "explanation": "Web-to-Lead captures information from your website and automatically creates Lead records in Salesforce."
+    },
+    {
+      "id": 43,
+      "domain": "Sales & Service Cloud",
+      "question": "When converting a Lead, which records can be created?",
+      "choices": {
+        "A": "Account only",
+        "B": "Account and Contact only",
+        "C": "Account, Contact, and Opportunity",
+        "D": "Contact and Opportunity only"
+      },
+      "correct_answer": "C",
+      "explanation": "Lead conversion can create an Account, Contact, and optionally an Opportunity from the Lead data."
+    },
+    {
+      "id": 44,
+      "domain": "Sales & Service Cloud",
+      "question": "What is the purpose of Escalation Rules in Service Cloud?",
+      "choices": {
+        "A": "To assign cases to queues",
+        "B": "To automatically escalate cases based on criteria and time",
+        "C": "To create case hierarchies",
+        "D": "To merge duplicate cases"
+      },
+      "correct_answer": "B",
+      "explanation": "Escalation Rules automatically escalate cases when they meet certain criteria and time thresholds, ensuring timely resolution."
+    },
+    {
+      "id": 45,
+      "domain": "Sales & Service Cloud",
+      "question": "Which object is used to track customer issues in Service Cloud?",
+      "choices": {
+        "A": "Opportunity",
+        "B": "Lead",
+        "C": "Case",
+        "D": "Task"
+      },
+      "correct_answer": "C",
+      "explanation": "Cases are the primary object in Service Cloud for tracking customer issues, questions, and feedback."
+    },
+    {
+      "id": 46,
+      "domain": "Sales & Service Cloud",
+      "question": "What does the Service Console provide?",
+      "choices": {
+        "A": "A single-page application for service agents with multiple records visible",
+        "B": "A reporting tool for service metrics",
+        "C": "A customer self-service portal",
+        "D": "An email automation tool"
+      },
+      "correct_answer": "A",
+      "explanation": "Service Console is a tab-based workspace that displays multiple records simultaneously, improving agent productivity."
+    },
+    {
+      "id": 47,
+      "domain": "Sales & Service Cloud",
+      "question": "What is the purpose of an Entitlement in Service Cloud?",
+      "choices": {
+        "A": "To define user permissions",
+        "B": "To specify what support a customer is entitled to receive",
+        "C": "To track product warranties",
+        "D": "To calculate service revenue"
+      },
+      "correct_answer": "B",
+      "explanation": "Entitlements define the level of support customers are entitled to receive, including response times and service levels."
+    },
+    {
+      "id": 48,
+      "domain": "Sales & Service Cloud",
+      "question": "Which feature tracks the stages a deal goes through from prospect to close?",
+      "choices": {
+        "A": "Sales Process",
+        "B": "Opportunity Stage",
+        "C": "Lead Status",
+        "D": "Pipeline Inspection"
+      },
+      "correct_answer": "A",
+      "explanation": "Sales Process defines the stages an Opportunity moves through and is assigned to Opportunity record types."
+    },
+    {
+      "id": 49,
+      "domain": "Sales & Service Cloud",
+      "question": "What is Email-to-Case used for?",
+      "choices": {
+        "A": "Sending mass emails to contacts",
+        "B": "Converting incoming emails into Case records automatically",
+        "C": "Scheduling email reminders for cases",
+        "D": "Creating email templates for agents"
+      },
+      "correct_answer": "B",
+      "explanation": "Email-to-Case automatically creates Cases from incoming customer emails, streamlining case creation."
+    },
+    {
+      "id": 50,
+      "domain": "Sales & Service Cloud",
+      "question": "What is the difference between a Queue and a Group in Salesforce?",
+      "choices": {
+        "A": "Queues can own records; Groups cannot",
+        "B": "Groups can own records; Queues cannot",
+        "C": "They are identical in functionality",
+        "D": "Queues are only for Cases; Groups are for all objects"
+      },
+      "correct_answer": "A",
+      "explanation": "Queues can own records (like Cases or Leads) and have associated list views. Public Groups are used only for sharing and cannot own records."
+    }
+  ]
+}
