@@ -49,6 +49,9 @@ class ConfigScreen(Screen):
                 with TabPane("Agent", id="tab-agent"):
                     yield self._compose_agent_tab()
 
+                with TabPane("Authentication", id="tab-auth"):
+                    yield self._compose_auth_tab()
+
                 with TabPane("Salesforce", id="tab-salesforce"):
                     yield self._compose_salesforce_tab()
 
@@ -114,6 +117,53 @@ class ConfigScreen(Screen):
                     id="agent-timeout",
                     placeholder="1800",
                 )
+
+    def _compose_auth_tab(self) -> ComposeResult:
+        """Compose the authentication configuration tab."""
+        from sf_agentbench.agents.auth import get_auth_details
+        
+        details = get_auth_details()
+        
+        with Container(classes="panel"):
+            yield Static("🔐 API Authentication", classes="title")
+            yield Static(
+                "Configure API keys for AI providers",
+                classes="muted",
+            )
+            
+            for provider, info in details.items():
+                with Container(classes="auth-provider"):
+                    status = "✅" if info["authenticated"] else "❌"
+                    method = f" ({info['method']})" if info.get("method") else ""
+                    yield Static(f"{status} {info['name']}{method}", classes="provider-name")
+                    
+                    with Grid(id=f"auth-{provider}-grid"):
+                        yield Label(f"{info['env_var']}:")
+                        yield Input(
+                            value="",
+                            id=f"auth-{provider}-key",
+                            placeholder="Enter API key to update",
+                            password=True,
+                        )
+                    
+                    with Horizontal():
+                        yield Button(
+                            f"Save {provider.title()} Key",
+                            id=f"btn-save-{provider}",
+                            variant="primary" if not info["authenticated"] else "default",
+                        )
+                        if info["supports_oauth"] and provider == "google":
+                            yield Button(
+                                "OAuth Login",
+                                id="btn-oauth-google",
+                                variant="success",
+                            )
+            
+            yield Rule()
+            yield Static(
+                "💡 API keys are stored securely in your system keychain and ~/.sf-agentbench/credentials/",
+                classes="muted",
+            )
 
     def _compose_salesforce_tab(self) -> ComposeResult:
         """Compose the Salesforce configuration tab."""
@@ -276,6 +326,59 @@ class ConfigScreen(Screen):
             self._save_config()
         elif event.button.id == "btn-reset":
             self._reset_config()
+        elif event.button.id and event.button.id.startswith("btn-save-"):
+            provider = event.button.id.replace("btn-save-", "")
+            self._save_api_key(provider)
+        elif event.button.id == "btn-oauth-google":
+            self._start_oauth_google()
+    
+    def _save_api_key(self, provider: str) -> None:
+        """Save an API key for a provider."""
+        from sf_agentbench.agents.auth import store_api_key, test_api_key
+        
+        try:
+            input_widget = self.query_one(f"#auth-{provider}-key", Input)
+            api_key = input_widget.value.strip()
+            
+            if not api_key:
+                self.notify(f"Enter an API key for {provider}", severity="warning")
+                return
+            
+            # Test the key
+            valid, message = test_api_key(provider, api_key)
+            
+            if not valid:
+                self.notify(f"Invalid API key: {message}", severity="error")
+                return
+            
+            # Store it
+            if store_api_key(provider, api_key):
+                self.notify(f"✓ {provider.title()} API key saved!", severity="information")
+                input_widget.value = ""
+                # Refresh to update status
+                self.refresh()
+            else:
+                self.notify(f"Failed to save {provider} API key", severity="error")
+                
+        except Exception as e:
+            self.notify(f"Error: {e}", severity="error")
+    
+    def _start_oauth_google(self) -> None:
+        """Start Google OAuth flow."""
+        from sf_agentbench.agents.auth import setup_google_oauth
+        
+        self.notify("Opening browser for Google OAuth...", severity="information")
+        
+        # Note: This is a blocking call that opens a browser
+        # In a real TUI, we'd want to run this in a worker thread
+        try:
+            if setup_google_oauth():
+                self.notify("✓ Google OAuth completed!", severity="information")
+                self.refresh()
+            else:
+                self.notify("Google OAuth was not completed", severity="warning")
+        except Exception as e:
+            self.notify(f"OAuth error: {e}", severity="error")
 
     def _save_config(self) -> None:
         """Save configuration to file."""
