@@ -4,12 +4,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/bhanudas/sf-agentbench)
 
 ---
 
 ## Overview
 
-SF-AgentBench is a rigorous benchmarking framework designed to evaluate AI agents—such as Claude Code, Codex, or Gemini Orchestrator—on their ability to design and build Salesforce solutions. While existing benchmarks like SWE-bench effectively assess code generation in file-based languages (Python, Java), they fail to capture the architectural complexity of Platform-as-a-Service (PaaS) environments like Salesforce.
+SF-AgentBench is a rigorous benchmarking framework designed to evaluate AI agents—such as Claude Code, Gemini CLI, or Aider—on their ability to design and build Salesforce solutions. While existing benchmarks like SWE-bench effectively assess code generation in file-based languages (Python, Java), they fail to capture the architectural complexity of Platform-as-a-Service (PaaS) environments like Salesforce.
 
 Salesforce development is a hybrid practice requiring:
 - **Declarative metadata** orchestration
@@ -19,35 +20,138 @@ Salesforce development is a hybrid practice requiring:
 
 SF-AgentBench addresses these unique challenges with a purpose-built evaluation framework.
 
+## ✨ What's New in v0.2.0
+
+- **🎮 Interactive REPL Mode** — Claude Code-style terminal with real-time log streaming
+- **📚 Q&A Benchmarking** — Test LLM knowledge on Salesforce concepts
+- **⚖️ LLM Judges** — Impartial code evaluation with configurable rubrics
+- **🔄 Parallel Execution** — Worker pools with resource-aware scheduling
+- **💰 Cost Tracking** — Token usage and USD estimation per run
+- **📊 Multi-Model Comparison** — Side-by-side analysis across providers
+
 ## ✨ Features
 
-### 🖥️ Interactive Terminal UI
+### 🎮 Interactive REPL Mode
 
-A beautiful, user-friendly terminal interface built with [Textual](https://textual.textualize.io/):
+A Claude Code-style interface for real-time benchmark monitoring:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    🚀 SF-AgentBench Dashboard                    │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │    5     │ │    2     │ │    2     │ │    1     │            │
-│  │  Total   │ │  Tier 1  │ │  Tier 2  │ │  Tier 3  │            │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘            │
-│  ─────────────────────────────────────────────────────────────  │
-│  [Browse Tasks] [Run Benchmark] [View Results] [Configuration]  │
-└─────────────────────────────────────────────────────────────────┘
-│ D Dashboard │ T Tasks │ R Run │ S Results │ C Config │ Q Quit   │
-└─────────────────────────────────────────────────────────────────┘
+```bash
+sf-agentbench interactive --workers 4
 ```
 
-**5 Interactive Screens:**
-| Screen | Key | Description |
-|--------|-----|-------------|
-| Dashboard | `D` | Overview stats, quick actions, getting started |
-| Tasks | `T` | Browse tasks by tier, view requirements |
-| Run | `R` | Execute benchmarks with real-time progress |
-| Results | `S` | Score history, layer breakdown, CSV export |
-| Config | `C` | Edit all settings with tabbed interface |
+```
+╭─ SF-AgentBench REPL ────────────────────────────────────────╮
+│ Workers: 4 active │ Queue: 12 pending │ Cost: $0.42        │
+├─────────────────────────────────────────────────────────────┤
+│ [14:32:01] ✓ gemini-2.0-flash completed Q001 (0.8s)        │
+│ [14:32:02] → claude-sonnet-4 processing Q002...            │
+│ [14:32:03] ✓ gemini-2.0-flash completed Q003 (1.2s)        │
+╰─────────────────────────────────────────────────────────────╯
+> status
+> logs claude
+> pause
+> help
+```
+
+**Available Commands:**
+| Command | Description |
+|---------|-------------|
+| `status` | Show current benchmark status |
+| `logs [agent]` | Filter logs by agent |
+| `pause [id]` | Pause work unit(s) |
+| `resume [id]` | Resume paused work |
+| `cancel <id>` | Cancel a work unit |
+| `costs` | Show cost breakdown |
+| `workers` | Show worker status |
+| `quit` | Exit the REPL |
+
+### 📚 Q&A Benchmarking
+
+Test LLM knowledge on Salesforce certification topics:
+
+```bash
+# List available test banks
+sf-agentbench qa-list
+
+# Run Q&A tests against a model
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash
+
+# Compare model performance
+sf-agentbench qa-compare
+
+# Replay exact prompts and responses
+sf-agentbench qa-playback <run-id>
+```
+
+**Sample Output:**
+```
+Q&A Benchmark Results: gemini-2.0-flash
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Questions: 50 │ Correct: 42 │ Score: 84.0%
+
+By Domain:
+  Security & Access:    90.0% (9/10)
+  Data Management:      85.0% (17/20)
+  Automation:           80.0% (8/10)
+  Reports & Dashboards: 80.0% (8/10)
+
+Estimated Cost: $0.0234
+```
+
+### ⚖️ LLM Judges with Rubric Scoring
+
+Impartial evaluation of agent-generated code using LLMs like Claude Opus 4.5:
+
+```yaml
+# rubrics/salesforce_best_practices.yaml
+name: Salesforce Best Practices
+version: "1.0"
+judge_model: claude-opus-4-20250514
+
+criteria:
+  - name: Bulkification
+    weight: 2.0
+    description: Code handles bulk operations efficiently
+    scoring_guide:
+      1.0: All DML/SOQL in loops eliminated, uses collections
+      0.5: Partial bulkification, some operations still in loops
+      0.0: No bulkification, SOQL/DML queries inside loops
+
+  - name: Governor Limit Awareness
+    weight: 1.5
+    description: Proper handling of Salesforce limits
+```
+
+**Multi-Judge Consensus:**
+```python
+from sf_agentbench.judges import ConsensusJudge, ClaudeJudge, GeminiJudge
+
+judges = [ClaudeJudge("claude-opus-4"), GeminiJudge("gemini-2.5-pro")]
+consensus = ConsensusJudge(judges, method="average")
+result = consensus.evaluate(code, requirements, rubric)
+```
+
+### 🖥️ CLI-Based Agent Testing
+
+Run real AI coding assistants against Salesforce tasks:
+
+```bash
+# List available CLI agents
+sf-agentbench list-cli-agents
+
+# Run a benchmark with Claude Code
+sf-agentbench run-cli claude-code lead-scoring-validation
+
+# Run with Gemini CLI
+sf-agentbench run-cli gemini-cli case-escalation-flow
+```
+
+**Supported CLI Agents:**
+| Agent | Command | Description |
+|-------|---------|-------------|
+| Claude Code | `claude` | Anthropic's coding assistant |
+| Gemini CLI | `gemini` | Google's AI assistant |
+| Aider | `aider` | Open-source AI pair programmer |
 
 ### 🎯 Curriculum-Aligned Evaluation
 
@@ -55,9 +159,15 @@ Grounded in official Salesforce certifications:
 - **Administrator (ADM-201)** — Schema, automation, security
 - **Platform Developer I & II (PD1/PD2)** — Apex, integrations, LWC
 
-### 🏆 Superbadge Methodology
+### 📊 5-Layer Evaluation Pipeline
 
-Uses complex, scenario-based problem solving as the gold standard—moving beyond atomic code generation to holistic solution architecture.
+| Layer | Weight | Metric | Description |
+|-------|--------|--------|-------------|
+| **1** | 20% | Deployment | Can the solution deploy without errors? |
+| **2** | 40% | Functional Tests | Do Apex tests pass? What's the coverage? |
+| **3** | 10% | Static Analysis | Code quality via PMD/Code Analyzer |
+| **4** | 15% | Metadata Diff | Semantic comparison against golden config |
+| **5** | 15% | LLM Rubric | Design patterns, bulkification, best practices |
 
 ### 🔧 Agent-Computer Interface (ACI)
 
@@ -77,36 +187,45 @@ Uses complex, scenario-based problem solving as the gold standard—moving beyon
 | `sf_org_delete` | Delete Scratch Orgs |
 | `sf_org_open` | Get org login URL |
 
-### 📊 5-Layer Evaluation Pipeline
-
-| Layer | Weight | Metric | Description |
-|-------|--------|--------|-------------|
-| **1** | 20% | Deployment | Can the solution deploy without errors? |
-| **2** | 40% | Functional Tests | Do Apex tests pass? What's the coverage? |
-| **3** | 10% | Static Analysis | Code quality via PMD/Code Analyzer |
-| **4** | 15% | Metadata Diff | Semantic comparison against golden config |
-| **5** | 15% | LLM Rubric | Design patterns, bulkification, best practices |
-
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     SF-AgentBench Harness                       │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │   Task      │  │   Agent     │  │      Evaluation         │  │
-│  │   Loader    │  │   Runner    │  │      Pipeline           │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-├─────────────────────────────────────────────────────────────────┤
-│                    Agent-Computer Interface (ACI)               │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐   │
-│  │sf_deploy │ │sf_query  │ │sf_test   │ │sf_scan_code      │   │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘   │
-├─────────────────────────────────────────────────────────────────┤
-│                     Salesforce CLI (sf)                         │
-├─────────────────────────────────────────────────────────────────┤
-│                   Ephemeral Scratch Org Pool                    │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                      SF-AgentBench v0.2.0                           │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
+│  │    REPL      │  │   Worker     │  │      LLM Judges          │  │
+│  │   Console    │  │    Pool      │  │  (Claude, Gemini)        │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────────┘  │
+│         │                 │                      │                  │
+│         └─────────────────┴──────────────────────┘                  │
+│                           │                                         │
+│                    ┌──────▼──────┐                                  │
+│                    │  Event Bus  │                                  │
+│                    └──────┬──────┘                                  │
+│         ┌─────────────────┼─────────────────┐                       │
+│         ▼                 ▼                 ▼                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │ QA Executor  │  │   Coding     │  │  Validator   │              │
+│  │              │  │  Executor    │  │              │              │
+│  └──────────────┘  └──────────────┘  └──────────────┘              │
+│         │                 │                 │                       │
+│         └─────────────────┴─────────────────┘                       │
+│                           │                                         │
+│                    ┌──────▼──────┐                                  │
+│                    │  Unified    │                                  │
+│                    │   Storage   │                                  │
+│                    └─────────────┘                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                    Agent-Computer Interface (ACI)                   │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐       │
+│  │sf_deploy │ │sf_query  │ │sf_test   │ │sf_scan_code      │       │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘       │
+├─────────────────────────────────────────────────────────────────────┤
+│                     Salesforce CLI (sf)                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                   Ephemeral Scratch Org Pool                        │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 📁 Project Structure
@@ -115,51 +234,88 @@ Uses complex, scenario-based problem solving as the gold standard—moving beyon
 sf-agentbench/
 ├── README.md
 ├── LICENSE
-├── pyproject.toml              # Python package configuration
+├── pyproject.toml
 ├── requirements.txt
-├── sf-agentbench.yaml          # Main configuration file
+├── sf-agentbench.yaml              # Main configuration
+│
 ├── docs/
+│   ├── data/                       # Q&A test banks
+│   │   └── salesforce_admin_test_bank.json
 │   └── development/
-│       ├── Salesforce AI Benchmark Design.md
-│       └── Salesforce AI Benchmark Design.pdf
+│       └── Salesforce AI Benchmark Design.md
+│
+├── rubrics/                        # LLM Judge rubrics
+│   ├── salesforce_best_practices.yaml
+│   ├── security_audit.yaml
+│   └── qa_accuracy.yaml
+│
 ├── src/sf_agentbench/
 │   ├── __init__.py
-│   ├── cli.py                  # CLI entry point
-│   ├── config.py               # Configuration management
-│   ├── models.py               # Data models (Task, Result, etc.)
-│   ├── aci/                    # Agent-Computer Interface
-│   │   ├── base.py             # Base tool class
-│   │   ├── deploy.py           # sf_deploy, sf_retrieve
-│   │   ├── apex.py             # sf_run_apex_tests, sf_run_anonymous
-│   │   ├── data.py             # sf_query, sf_create_record, sf_import_data
-│   │   ├── analysis.py         # sf_scan_code
-│   │   └── org.py              # Scratch org management
-│   ├── harness/                # Benchmark orchestration
-│   │   ├── runner.py           # BenchmarkHarness
-│   │   ├── task_loader.py      # Task discovery
-│   │   └── org_manager.py      # Scratch Org lifecycle
-│   ├── evaluators/             # 5-layer evaluation
-│   │   ├── pipeline.py         # Main pipeline
-│   │   ├── deployment.py       # Layer 1
-│   │   ├── functional.py       # Layer 2
-│   │   ├── static_analysis.py  # Layer 3
-│   │   ├── metadata_diff.py    # Layer 4
-│   │   └── rubric.py           # Layer 5
-│   ├── storage/                # Results persistence
-│   │   ├── store.py            # SQLite-based ResultsStore
-│   │   └── models.py           # RunRecord, RunSummary, AgentComparison
-│   └── tui/                    # Terminal User Interface
-│       ├── app.py              # Main TUI application
-│       └── screens/            # Dashboard, Tasks, Run, Results, Config
-├── tasks/                      # Benchmark tasks
+│   ├── cli.py                      # CLI entry point
+│   ├── config.py                   # Configuration management
+│   ├── models.py                   # Legacy data models
+│   │
+│   ├── domain/                     # Core domain models (v0.2)
+│   │   ├── models.py               # Benchmark, Test, Agent, WorkUnit
+│   │   ├── costs.py                # Token usage & cost tracking
+│   │   └── metrics.py              # Performance metrics
+│   │
+│   ├── events/                     # Event-driven architecture
+│   │   ├── bus.py                  # Pub/sub event bus
+│   │   └── types.py                # Event type definitions
+│   │
+│   ├── workers/                    # Parallel execution
+│   │   ├── pool.py                 # Worker pool management
+│   │   ├── scheduler.py            # Priority scheduling
+│   │   └── base.py                 # Worker base class
+│   │
+│   ├── executors/                  # Test executors
+│   │   ├── qa_executor.py          # Q&A test execution
+│   │   ├── coding_executor.py      # CLI agent execution
+│   │   └── validator.py            # Result validation
+│   │
+│   ├── judges/                     # LLM-as-a-Judge
+│   │   ├── base.py                 # Judge interface & Rubric
+│   │   ├── claude_judge.py         # Claude implementation
+│   │   ├── gemini_judge.py         # Gemini implementation
+│   │   ├── consensus.py            # Multi-judge voting
+│   │   └── logging.py              # Verbose judge logging
+│   │
+│   ├── repl/                       # Interactive terminal
+│   │   ├── console.py              # REPL main loop
+│   │   ├── commands.py             # Command parsing
+│   │   └── renderer.py             # Log & status rendering
+│   │
+│   ├── reports/                    # Report generation
+│   │   ├── generator.py            # Multi-format reports
+│   │   └── comparison.py           # Model comparison views
+│   │
+│   ├── storage/                    # Data persistence
+│   │   ├── store.py                # Legacy SQLite store
+│   │   └── unified.py              # Unified storage (v0.2)
+│   │
+│   ├── aci/                        # Agent-Computer Interface
+│   ├── harness/                    # Benchmark orchestration
+│   ├── evaluators/                 # 5-layer evaluation
+│   ├── agents/                     # API-based agents
+│   ├── qa/                         # Q&A framework
+│   └── auth/                       # Authentication
+│
+├── tasks/                          # Benchmark tasks
 │   ├── tier-1/
 │   └── tier-2/
-├── results/                    # Run outputs & database
-│   ├── benchmark_results.db    # SQLite database with all runs
-│   ├── runs/                   # Per-run detailed JSON files
-│   ├── benchmark_results.json  # Exported summary JSON
-│   └── benchmark_results.csv   # Exported CSV (optional)
-└── tests/                      # Test suite
+│
+├── results/                        # Run outputs
+│   ├── benchmark_results.db
+│   └── runs/
+│
+└── tests/
+    ├── e2e/                        # End-to-end tests
+    │   └── test_runner.py
+    └── fixtures/                   # Test fixtures
+        ├── sample_code/
+        ├── rubrics/
+        └── qa/
 ```
 
 ## 🚀 Getting Started
@@ -169,6 +325,7 @@ sf-agentbench/
 - **Python 3.10+**
 - **Salesforce CLI** (`sf`) — [Install Guide](https://developer.salesforce.com/tools/salesforcecli)
 - **DevHub-enabled Org** — Required for Scratch Org creation
+- **API Keys** (optional) — For LLM-based features
 
 ### Installation
 
@@ -177,6 +334,10 @@ sf-agentbench/
 git clone https://github.com/bhanudas/sf-agentbench.git
 cd sf-agentbench
 
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
 # Install in development mode
 pip install -e .
 
@@ -184,103 +345,109 @@ pip install -e .
 sf-agentbench init
 ```
 
-### Quick Start
-
-#### Launch the Terminal UI (Recommended)
+### Authentication Setup
 
 ```bash
-sf-agentbench-tui
+# Set up API keys for LLM providers
+sf-agentbench auth set anthropic
+sf-agentbench auth set google
+
+# Or use environment variables
+export ANTHROPIC_API_KEY="sk-..."
+export GOOGLE_API_KEY="AIza..."
 ```
 
-Navigate with keyboard shortcuts:
-- `D` - Dashboard
-- `T` - Browse Tasks
-- `R` - Run Benchmark
-- `S` - View Results
-- `C` - Configuration
-- `Q` - Quit
+### Quick Start
 
-#### Use the CLI
+#### 1. Run Q&A Benchmarks
+
+```bash
+# Test LLM knowledge on Salesforce topics
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash
+
+# Compare multiple models
+sf-agentbench qa-run salesforce_admin_test_bank.json -m claude-sonnet-4-20250514
+sf-agentbench qa-compare
+```
+
+#### 2. Run Coding Benchmarks
 
 ```bash
 # List available tasks
 sf-agentbench list-tasks
 
-# Show task details
-sf-agentbench show-task lead-scoring-validation
+# Run with a CLI agent
+sf-agentbench run-cli claude-code lead-scoring-validation
 
-# Run a specific task
-sf-agentbench run lead-scoring-validation --agent claude-code
-
-# Validate your setup
-sf-agentbench validate
+# Run with an API-based agent
+sf-agentbench benchmark lead-scoring-validation -m gemini-2.0-flash
 ```
 
-## 💾 Results Storage
+#### 3. Interactive Mode
 
-SF-AgentBench uses a robust storage system for benchmark results:
-
-### SQLite Database
-
-All runs are persisted to a SQLite database (`results/benchmark_results.db`) with:
-- **Run metadata**: task, agent, timestamps, status
-- **Layer scores**: deployment, tests, static analysis, metadata, rubric
-- **Final composite score**
-
-### Per-Run Detail Files
-
-Each run creates a directory (`results/runs/{run_id}/`) containing:
-- `result.json` — Full evaluation details
-- `agent_output.txt` — Agent's raw output
-
-### Querying Results
-
-```python
-from sf_agentbench.storage import ResultsStore
-from pathlib import Path
-
-store = ResultsStore(Path("results"))
-
-# Get summary statistics
-summary = store.get_summary()
-print(f"Total runs: {summary.total_runs}")
-print(f"Average score: {summary.average_score:.2f}")
-
-# List recent runs
-runs = store.list_runs(limit=10)
-for run in runs:
-    print(f"{run.run_id}: {run.task_id} -> {run.final_score:.2f}")
-
-# Compare agents
-comparisons = store.get_agent_comparison()
-for agent in comparisons:
-    print(f"{agent.agent_id}: {agent.average_score:.2f} avg")
-
-# Export to CSV
-store.export_to_csv(Path("results/export.csv"))
+```bash
+# Launch the REPL for real-time monitoring
+sf-agentbench interactive --workers 4
 ```
 
-### Export Formats
+#### 4. Run E2E Tests
 
-- **JSON**: `sf-agentbench export --format json`
-- **CSV**: `sf-agentbench export --format csv` or use the TUI export button
+```bash
+# Verify the system is working
+sf-agentbench e2e-test -v
+```
+
+## 🤖 Supported Models
+
+### Anthropic (Claude)
+| Model ID | Name | Context |
+|----------|------|---------|
+| `claude-sonnet-4-20250514` | Claude Sonnet 4 | 200K |
+| `claude-opus-4-20250514` | Claude Opus 4 | 200K |
+
+### Google (Gemini)
+| Model ID | Name | Context |
+|----------|------|---------|
+| `gemini-2.0-flash` | Gemini 2.0 Flash | 1M |
+| `gemini-2.5-pro` | Gemini 2.5 Pro | 1M |
+| `gemini-3.0-thinking` | Gemini 3.0 Thinking | 2M |
+
+### OpenAI
+| Model ID | Name | Context |
+|----------|------|---------|
+| `gpt-4o` | GPT-4o | 128K |
+| `o1` | OpenAI o1 | 200K |
+
+List all models: `sf-agentbench list-models`
 
 ## ⚙️ Configuration
 
-Edit `sf-agentbench.yaml` to configure:
+Edit `sf-agentbench.yaml`:
 
 ```yaml
-# Agent configuration
-agent:
-  id: claude-code
-  type: claude
-  model: claude-sonnet-4-20250514
-  api_key_env: ANTHROPIC_API_KEY
+# Active model
+model: gemini-2.5-pro
 
 # Salesforce settings
 devhub_username: admin@mydevhub.org
 
-# Evaluation weights (must sum to 1.0)
+# Worker configuration
+workers:
+  qa_workers: 8          # Parallel Q&A workers
+  coding_workers: 2      # Parallel coding workers
+
+# Cost tracking
+cost_tracking:
+  enabled: true
+  warn_threshold_usd: 1.0
+
+# Judge configuration
+judges:
+  default_model: claude-opus-4-20250514
+  verbose_logging: true
+  consensus_method: average
+
+# Evaluation weights
 evaluation_weights:
   deployment: 0.20
   functional_tests: 0.40
@@ -289,33 +456,67 @@ evaluation_weights:
   rubric: 0.15
 ```
 
-## 📋 Task Difficulty Tiers
+## 📊 Reports
 
-| Tier | Complexity | Example | Skills Tested |
-|------|------------|---------|---------------|
-| **Tier 1** | Single-domain, declarative | Validation Rule + Flow | Schema, Validation Rules, Flows |
-| **Tier 2** | Multi-domain, declarative + code | Screen Flow + Apex Action | Screen Flow, Invocable Apex, Testing |
-| **Tier 3** | Complex code, async processing | Apex Specialist Superbadge | Triggers, Queueable, Bulkification |
-| **Tier 4** | Full-stack, LWC, integrations | LWC Specialist Superbadge | LWC, Apex Services, Wire, Callouts |
+Generate comprehensive reports:
 
-## 📈 Scoring Methodology
+```bash
+# Markdown report
+sf-agentbench report --format markdown -o report.md
 
-The composite score combines all evaluation layers:
+# HTML report with charts
+sf-agentbench report --format html -o report.html
 
-```
-Final_Score = (
-    0.20 × deployment_success +
-    0.40 × apex_test_pass_rate +
-    0.10 × (1 - pmd_penalty) +
-    0.15 × metadata_accuracy +
-    0.15 × rubric_score
-)
+# JSON for programmatic access
+sf-agentbench report --format json -o report.json
 ```
 
-Score indicators:
-- 🟢 **Excellent**: ≥ 0.80
-- 🟡 **Good**: ≥ 0.60
-- 🔴 **Needs Work**: < 0.60
+**Report Contents:**
+- Model comparison tables
+- Score breakdowns by category
+- Cost analysis
+- Rubric drill-down with criterion scores
+- Trend analysis over time
+
+## 📋 CLI Reference
+
+```bash
+sf-agentbench --help
+
+Commands:
+  # Core Benchmarking
+  run              Run a single benchmark task
+  run-all          Run all benchmark tasks
+  run-cli          Run with CLI-based AI agent
+  run-parallel     Run multiple benchmarks in parallel
+  benchmark        Run with API-based agent
+
+  # Q&A Testing
+  qa-list          List available test banks
+  qa-run           Run Q&A tests against an LLM
+  qa-compare       Compare model performance
+  qa-domains       Analyze by domain
+  qa-playback      Replay prompts and responses
+  qa-history       Show run history
+  qa-export        Export results to CSV
+
+  # Interactive
+  interactive      Launch REPL mode
+
+  # Information
+  list-tasks       List all benchmark tasks
+  list-models      List supported AI models
+  list-cli-agents  List CLI-based agents
+  show-task        Show task details
+
+  # Configuration
+  init             Initialize project
+  validate         Validate configuration
+  auth             Manage API authentication
+
+  # Testing
+  e2e-test         Run end-to-end tests
+```
 
 ## 🗺️ Roadmap
 
@@ -323,31 +524,55 @@ Score indicators:
 - [x] ACI tool wrappers for core `sf` commands
 - [x] Basic harness for task loading and evaluation
 - [x] 5-layer evaluation pipeline
-- [x] Terminal UI with Textual
 - [x] Sample Tier 1 & 2 tasks
 
-### Phase 2: Expansion
-- [ ] DevHub setup with Scratch Org pool management
-- [ ] PMD/Code Analyzer deep integration
-- [ ] 10 Tier 3 tasks
-- [ ] Baseline runs with leading AI agents
+### Phase 2: Intelligence ✅ (v0.2.0)
+- [x] Q&A benchmarking framework
+- [x] LLM-as-a-Judge with rubric scoring
+- [x] Multi-model support (Claude, Gemini, OpenAI)
+- [x] Interactive REPL mode
+- [x] Parallel execution with worker pools
+- [x] Cost tracking and estimation
+- [x] Multi-judge consensus
 
-### Phase 3: Maturity
-- [ ] LLM-as-a-Judge with multiple providers
-- [ ] 5 Tier 4 tasks
+### Phase 3: Scale (Planned)
+- [ ] Scratch Org pool management
+- [ ] Distributed worker nodes
+- [ ] Web dashboard
 - [ ] Public leaderboard
+- [ ] 10+ Tier 3 tasks
+
+### Phase 4: Research (Planned)
+- [ ] Agent behavior analysis
+- [ ] Failure pattern detection
+- [ ] Automated task generation
 - [ ] Research paper submission
+
+## 🧪 Testing
+
+```bash
+# Run unit tests
+pytest tests/
+
+# Run E2E tests
+sf-agentbench e2e-test -v
+
+# Run specific category
+sf-agentbench e2e-test --category judges
+```
 
 ## 📚 Documentation
 
-- [Technical Design Document](docs/development/Salesforce%20AI%20Benchmark%20Design.md) — Comprehensive framework architecture and methodology
+- [Technical Design Document](docs/development/Salesforce%20AI%20Benchmark%20Design.md)
+- [Q&A Test Bank Schema](docs/data/README.md)
+- [Rubric Configuration Guide](rubrics/README.md)
 
 ## 🤝 Contributing
 
 Contributions are welcome! Areas for contribution:
 - New benchmark tasks (especially Tier 3 & 4)
-- ACI tool enhancements
-- Evaluation metric refinements
+- Additional LLM provider integrations
+- Rubric templates for different use cases
 - Documentation improvements
 
 ## 📄 License
@@ -363,5 +588,5 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  <strong>SF-AgentBench</strong> — Bridging AI Agents and Enterprise Platform Development
+  <strong>SF-AgentBench v0.2.0</strong> — Bridging AI Agents and Enterprise Platform Development
 </p>
