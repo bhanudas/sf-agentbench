@@ -91,11 +91,21 @@ class ClaudeAgent(BaseAgent):
         task_complete = False
         agent_output = ""
         
+        # Failsafe tracking
+        consecutive_errors = 0
+        consecutive_no_progress = 0
+        last_action = None
+        repeated_action_count = 0
+        
+        MAX_CONSECUTIVE_ERRORS = 3
+        MAX_NO_PROGRESS = 5
+        MAX_REPEATED_ACTIONS = 5
+        
         console.print(f"    [dim]Agent starting with {self.max_iterations} max iterations...[/dim]")
+        console.print(f"    [dim]Failsafes: {MAX_CONSECUTIVE_ERRORS} errors, {MAX_NO_PROGRESS} no-progress, {MAX_REPEATED_ACTIONS} repeated actions[/dim]")
         
         for iteration in range(self.max_iterations):
-            if self.verbose:
-                console.print(f"    [dim]Iteration {iteration + 1}[/dim]")
+            console.print(f"    [dim]Iteration {iteration + 1}/{self.max_iterations}...[/dim]")
             
             try:
                 response = client.messages.create(
@@ -106,12 +116,17 @@ class ClaudeAgent(BaseAgent):
                     messages=messages,
                 )
                 
+                # Reset error counter on successful API call
+                consecutive_errors = 0
+                
                 # Track tokens
                 total_tokens += response.usage.input_tokens + response.usage.output_tokens
                 
                 # Process the response
                 assistant_content = []
                 tool_results = []
+                tool_calls_made = False
+                current_action = None
                 
                 for block in response.content:
                     if block.type == "text":
@@ -121,6 +136,7 @@ class ClaudeAgent(BaseAgent):
                             console.print(f"      [blue]{block.text[:200]}...[/blue]" if len(block.text) > 200 else f"      [blue]{block.text}[/blue]")
                     
                     elif block.type == "tool_use":
+                        tool_calls_made = True
                         assistant_content.append({
                             "type": "tool_use",
                             "id": block.id,
@@ -131,6 +147,9 @@ class ClaudeAgent(BaseAgent):
                         # Execute the tool
                         tool_name = block.name
                         tool_input = block.input
+                        
+                        # Track current action for repeated action detection
+                        current_action = f"{tool_name}:{json.dumps(tool_input, sort_keys=True)}"
                         
                         if self.verbose:
                             console.print(f"      [yellow]→ {tool_name}({json.dumps(tool_input)[:100]})[/yellow]")
@@ -145,6 +164,21 @@ class ClaudeAgent(BaseAgent):
                             "tool_use_id": block.id,
                             "content": result,
                         })
+                        
+                        # Check for errors in tool result
+                        if "error" in result.lower() or "failed" in result.lower():
+                            consecutive_errors += 1
+                            if consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
+                                console.print(f"    [red]✗ FAILSAFE: {MAX_CONSECUTIVE_ERRORS} consecutive errors, stopping early[/red]")
+                                return AgentResult(
+                                    success=False,
+                                    iterations=iteration + 1,
+                                    total_tokens=total_tokens,
+                                    files_created=self._files_created,
+                                    files_modified=self._files_modified,
+                                    error=f"Stopped after {consecutive_errors} consecutive errors",
+                                    agent_output=agent_output,
+                                )
                         
                         # Check if task is complete
                         if tool_name == "task_complete":
@@ -162,22 +196,61 @@ class ClaudeAgent(BaseAgent):
                     console.print(f"    [green]✓ Agent completed in {iteration + 1} iterations[/green]")
                     break
                 
+                if not tool_calls_made:
+                    consecutive_no_progress += 1
+                    if consecutive_no_progress >= MAX_NO_PROGRESS:
+                        console.print(f"    [red]✗ FAILSAFE: {MAX_NO_PROGRESS} iterations with no tool calls, stopping early[/red]")
+                        return AgentResult(
+                            success=False,
+                            iterations=iteration + 1,
+                            total_tokens=total_tokens,
+                            files_created=self._files_created,
+                            files_modified=self._files_modified,
+                            error=f"Stopped after {consecutive_no_progress} iterations with no progress",
+                            agent_output=agent_output,
+                        )
+                    console.print(f"    [yellow]⚠ No tool calls this iteration ({consecutive_no_progress}/{MAX_NO_PROGRESS})[/yellow]")
+                else:
+                    consecutive_no_progress = 0  # Reset on progress
+                
+                # Check for repeated actions
+                if current_action == last_action:
+                    repeated_action_count += 1
+                    if repeated_action_count >= MAX_REPEATED_ACTIONS:
+                        console.print(f"    [red]✗ FAILSAFE: Same action repeated {MAX_REPEATED_ACTIONS} times, stopping early[/red]")
+                        return AgentResult(
+                            success=False,
+                            iterations=iteration + 1,
+                            total_tokens=total_tokens,
+                            files_created=self._files_created,
+                            files_modified=self._files_modified,
+                            error=f"Stopped after repeating same action {repeated_action_count} times",
+                            agent_output=agent_output,
+                        )
+                else:
+                    repeated_action_count = 0
+                last_action = current_action
+                
                 if response.stop_reason == "end_turn" and not tool_results:
                     # Agent stopped without calling task_complete
                     console.print(f"    [yellow]⚠ Agent stopped without completing[/yellow]")
                     break
                     
             except Exception as e:
-                console.print(f"    [red]✗ Agent error: {e}[/red]")
-                return AgentResult(
-                    success=False,
-                    iterations=iteration + 1,
-                    total_tokens=total_tokens,
-                    files_created=self._files_created,
-                    files_modified=self._files_modified,
-                    error=str(e),
-                    agent_output=agent_output,
-                )
+                consecutive_errors += 1
+                console.print(f"    [red]✗ Agent error ({consecutive_errors}/{MAX_CONSECUTIVE_ERRORS}): {e}[/red]")
+                
+                if consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
+                    console.print(f"    [red]✗ FAILSAFE: Too many errors, stopping early[/red]")
+                    return AgentResult(
+                        success=False,
+                        iterations=iteration + 1,
+                        total_tokens=total_tokens,
+                        files_created=self._files_created,
+                        files_modified=self._files_modified,
+                        error=str(e),
+                        agent_output=agent_output,
+                    )
         
         return AgentResult(
             success=task_complete,

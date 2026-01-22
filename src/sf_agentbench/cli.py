@@ -518,7 +518,7 @@ def show_task(ctx: click.Context, task_id: str) -> None:
     console.print(f"[bold]Time Limit:[/bold] {task.time_limit_minutes} minutes")
 
     if task.categories:
-        cats = ", ".join(c.value for c in task.categories)
+        cats = ", ".join(c.value if hasattr(c, 'value') else str(c) for c in task.categories)
         console.print(f"[bold]Categories:[/bold] {cats}")
 
     console.print(f"\n[bold]Description:[/bold]")
