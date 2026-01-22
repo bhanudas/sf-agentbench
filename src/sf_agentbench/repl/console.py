@@ -57,6 +57,7 @@ class REPLConsole:
         scheduler: Any = None,
         storage: Any = None,
         poll_shared_events: bool = True,
+        watch_mode: bool = False,
     ):
         """Initialize the REPL console.
         
@@ -67,6 +68,7 @@ class REPLConsole:
             scheduler: Scheduler instance
             storage: Storage instance
             poll_shared_events: Whether to poll the shared event store
+            watch_mode: If True, only watch events without accepting input
         """
         self.event_bus = event_bus or get_event_bus()
         self.console = console or Console()
@@ -74,6 +76,7 @@ class REPLConsole:
         self.scheduler = scheduler
         self.storage = storage
         self.poll_shared_events = poll_shared_events
+        self.watch_mode = watch_mode
         
         # Components
         self.log_renderer = LogRenderer()
@@ -228,38 +231,110 @@ class REPLConsole:
         self.status_bar.running_work_units = len(self._active_work_units)
     
     def _run_loop(self) -> None:
-        """Main REPL loop."""
+        """Main REPL loop with auto-refresh display."""
+        refresh_interval = 0.5  # Refresh every 500ms
+        
+        # Start input thread only if not in watch mode
+        if not self.watch_mode:
+            self._start_input_thread()
+        
         try:
-            while self._running and not self._should_quit.is_set():
-                # Render current state
-                self._render()
-                
-                # Get command input
-                try:
-                    command = Prompt.ask(
-                        "[bold cyan]>[/bold cyan]",
-                        console=self.console,
-                    )
+            with Live(
+                self._build_display(),
+                console=self.console,
+                refresh_per_second=2,
+                screen=False,
+            ) as live:
+                while self._running and not self._should_quit.is_set():
+                    # Update display
+                    live.update(self._build_display())
                     
-                    if command:
-                        parsed = self.command_parser.parse(command)
-                        self.command_handler.handle(parsed)
+                    # Check for commands from input thread (if not watch mode)
+                    if not self.watch_mode:
+                        try:
+                            while not self._command_queue.empty():
+                                command = self._command_queue.get_nowait()
+                                if command:
+                                    # Stop live display temporarily for command output
+                                    live.stop()
+                                    
+                                    if command.lower() in ("quit", "exit", "q"):
+                                        self._should_quit.set()
+                                        break
+                                    
+                                    parsed = self.command_parser.parse(command)
+                                    self.command_handler.handle(parsed)
+                                    
+                                    # Resume live display
+                                    live.start()
+                        except queue.Empty:
+                            pass
                     
-                except KeyboardInterrupt:
-                    self.console.print("\n[yellow]Use 'quit' to exit[/yellow]")
-                except EOFError:
-                    break
+                    time.sleep(refresh_interval)
                     
+        except KeyboardInterrupt:
+            if self.watch_mode:
+                self.console.print("\n[yellow]Watch mode interrupted[/yellow]")
+            else:
+                self.console.print("\n[yellow]Use 'quit' to exit[/yellow]")
         except Exception as e:
             self.console.print(f"[red]REPL error: {e}[/red]")
         finally:
             self.stop()
     
-    def _render(self) -> None:
-        """Render the current state to console."""
-        # Clear screen for fresh render
-        # self.console.clear()
+    def _start_input_thread(self) -> None:
+        """Start background thread for reading input."""
+        def read_input():
+            while self._running and not self._should_quit.is_set():
+                try:
+                    # Use simple input() - runs in background
+                    line = input()
+                    self._command_queue.put(line)
+                except EOFError:
+                    self._should_quit.set()
+                    break
+                except Exception:
+                    break
         
+        self._input_thread = threading.Thread(
+            target=read_input,
+            daemon=True,
+            name="input-reader",
+        )
+        self._input_thread.start()
+    
+    def _build_display(self) -> Group:
+        """Build the complete display for Live refresh."""
+        from rich.console import Group as RichGroup
+        
+        # Header
+        header = self.status_bar.render_header()
+        header_panel = Panel(header, border_style="magenta")
+        
+        # Logs
+        logs = self.log_renderer.render()
+        log_panel = Panel(
+            logs,
+            title="Logs (auto-refreshing)",
+            border_style="dim",
+            height=min(20, self.log_renderer.max_lines + 2),
+        )
+        
+        # Progress
+        progress = self.status_bar.render()
+        
+        # Input prompt hint or watch mode hint
+        if self.watch_mode:
+            prompt_text = Text("👀 ", style="bold yellow")
+            prompt_text.append("Watch mode - auto-refreshing every 0.5s. Press Ctrl+C to exit.", style="dim")
+        else:
+            prompt_text = Text(">: ", style="bold cyan")
+            prompt_text.append("(type commands here, press Enter)", style="dim")
+        
+        return RichGroup(header_panel, log_panel, progress, prompt_text)
+    
+    def _render(self) -> None:
+        """Render the current state to console (legacy, for non-live mode)."""
         # Render header
         header = self.status_bar.render_header()
         self.console.print(Panel(header, border_style="magenta"))

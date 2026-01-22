@@ -8,6 +8,26 @@
 
 ---
 
+## Table of Contents
+
+- [Overview](#overview)
+- [What's Included](#whats-included)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Running Benchmarks](#running-benchmarks)
+- [Interactive Terminal Monitor](#interactive-terminal-monitor)
+- [The Rubric System](#the-rubric-system)
+- [Configuration](#configuration)
+- [Extending the Framework](#extending-the-framework)
+- [Architecture](#architecture)
+- [CLI Reference](#cli-reference)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
+- [License](#license)
+
+---
+
 ## Overview
 
 SF-AgentBench is a rigorous benchmarking framework designed to evaluate AI agents—such as Claude Code, Gemini CLI, or Aider—on their ability to design and build Salesforce solutions. While existing benchmarks like SWE-bench effectively assess code generation in file-based languages (Python, Java), they fail to capture the architectural complexity of Platform-as-a-Service (PaaS) environments like Salesforce.
@@ -20,7 +40,7 @@ Salesforce development is a hybrid practice requiring:
 
 SF-AgentBench addresses these unique challenges with a purpose-built evaluation framework.
 
-## ✨ What's New in v0.2.0
+### ✨ What's New in v0.2.0
 
 - **🎮 Interactive REPL Mode** — Claude Code-style terminal with real-time log streaming
 - **📚 Q&A Benchmarking** — Test LLM knowledge on Salesforce concepts
@@ -28,166 +48,655 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 - **🔄 Parallel Execution** — Worker pools with resource-aware scheduling
 - **💰 Cost Tracking** — Token usage and USD estimation per run
 - **📊 Multi-Model Comparison** — Side-by-side analysis across providers
+- **🔗 Cross-Process Monitoring** — Watch benchmarks from separate terminals
 
-## ✨ Features
+---
 
-### 🎮 Interactive REPL Mode
+## What's Included
 
-A Claude Code-style interface for real-time benchmark monitoring:
+### Test Banks (Q&A)
+
+| Test Bank | Questions | Domains | Purpose |
+|-----------|-----------|---------|---------|
+| `salesforce_admin_test_bank.json` | 50 | 5 | Salesforce Admin certification topics |
+
+**Domains covered:**
+- Security & Access (CRUD, FLS, Sharing)
+- Data Management (SOQL, DML, Data Loader)
+- Automation (Flow, Process Builder, Triggers)
+- Reports & Dashboards
+- Sales & Service Cloud
+
+### Coding Tasks
+
+| Tier | Task | Description |
+|------|------|-------------|
+| **Tier 1** | `apex-contact-trigger` | Basic trigger with validation |
+| **Tier 2** | `lead-scoring-validation` | Lead assignment with scoring logic |
+| **Tier 2** | `case-escalation-flow` | Screen Flow with escalation rules |
+
+### Rubrics (LLM Judge Criteria)
+
+| Rubric | Criteria | Purpose |
+|--------|----------|---------|
+| `salesforce_best_practices.yaml` | 6 | Bulkification, security, tests, readability |
+| `security_audit.yaml` | 4 | CRUD/FLS, injection, hardcoded IDs |
+| `qa_accuracy.yaml` | 2 | Answer correctness, reasoning quality |
+
+### Supported Models
+
+| Provider | Models | Best For |
+|----------|--------|----------|
+| **Anthropic** | `claude-sonnet-4-20250514`, `claude-opus-4-20250514` | Highest accuracy, code quality |
+| **Google** | `gemini-2.0-flash`, `gemini-2.5-pro`, `gemini-3.0-thinking` | Fast Q&A, cost-effective |
+| **OpenAI** | `gpt-4o`, `o1` | General purpose |
+
+---
+
+## Installation
+
+### Prerequisites
+
+| Requirement | Version | Required For |
+|-------------|---------|--------------|
+| Python | 3.10+ | Core framework |
+| Salesforce CLI (`sf`) | Latest | Coding benchmarks |
+| DevHub Org | - | Scratch org creation |
+| API Keys | - | LLM features |
+
+### Step 1: Clone & Setup Environment
 
 ```bash
+# Clone the repository
+git clone https://github.com/bhanudas/sf-agentbench.git
+cd sf-agentbench
+
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install the package in development mode
+pip install -e .
+```
+
+### Step 2: Verify Installation
+
+```bash
+# Check CLI is available
+sf-agentbench --version
+# Output: sf-agentbench, version 0.2.0
+
+# List available commands
+sf-agentbench --help
+```
+
+### Step 3: Configure API Keys
+
+**Option A: Interactive Setup (Recommended)**
+```bash
+# Set up Anthropic (Claude) API key
+sf-agentbench auth set anthropic
+# Enter your API key when prompted
+
+# Set up Google (Gemini) API key
+sf-agentbench auth set google
+# Enter your API key when prompted
+```
+
+**Option B: Environment Variables**
+```bash
+# Add to your shell profile (.bashrc, .zshrc, etc.)
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+export GOOGLE_API_KEY="AIzaSy..."
+export OPENAI_API_KEY="sk-..."
+```
+
+**Option C: Configuration File**
+```yaml
+# sf-agentbench.yaml
+api_keys:
+  anthropic: "sk-ant-api03-..."
+  google: "AIzaSy..."
+```
+
+### Step 4: Verify API Keys
+
+```bash
+sf-agentbench auth status
+# Output:
+#   ✓ Anthropic: Configured (keychain)
+#   ✓ Google: Configured (environment)
+#   ✗ OpenAI: Not configured
+```
+
+### Step 5: (Optional) Salesforce CLI Setup
+
+Required only for coding benchmarks:
+
+```bash
+# Install Salesforce CLI
+npm install -g @salesforce/cli
+
+# Authenticate to DevHub
+sf org login web --set-default-dev-hub --alias mydevhub
+
+# Verify
+sf org list
+```
+
+---
+
+## Quick Start
+
+### 1. Run Your First Q&A Benchmark
+
+```bash
+# Test Gemini's Salesforce knowledge (fastest)
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash
+
+# Test with 4 parallel workers for speed
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 4
+
+# Test a subset (10 random questions)
+sf-agentbench qa-run salesforce_admin_test_bank.json -m claude-sonnet-4-20250514 -n 10
+```
+
+### 2. Compare Multiple Models
+
+```bash
+# Run all models sequentially
+for model in gemini-2.0-flash claude-sonnet-4-20250514 claude-opus-4-20250514; do
+  sf-agentbench qa-run salesforce_admin_test_bank.json -m $model -o results/qa_${model}.json
+done
+
+# View comparison
+sf-agentbench qa-compare
+```
+
+### 3. Launch Interactive Monitor
+
+```bash
+# Terminal 1: Start the monitor
+sf-agentbench interactive --watch
+
+# Terminal 2: Run benchmarks (activity appears in Terminal 1)
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 8
+```
+
+---
+
+## Running Benchmarks
+
+### Q&A Benchmarks (Knowledge Testing)
+
+Test LLM knowledge on Salesforce certification topics.
+
+```bash
+# Basic usage
+sf-agentbench qa-run <test_bank_file> [options]
+
+# Options
+  -m, --model TEXT     Model to use (e.g., gemini-2.0-flash)
+  -n, --sample INT     Run only N random questions
+  -d, --domain TEXT    Filter by domain (e.g., "Security & Access")
+  -w, --workers INT    Parallel workers (default: 1)
+  -v, --verbose        Show detailed output
+  -o, --output PATH    Save results to JSON file
+```
+
+**Examples:**
+
+```bash
+# Full test bank with 8 parallel workers
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 8
+
+# Only Security questions
+sf-agentbench qa-run salesforce_admin_test_bank.json -m claude-opus-4-20250514 -d "Security & Access"
+
+# Quick 10-question test
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -n 10 -v
+```
+
+**Output:**
+
+```
+Q&A Benchmark Results: gemini-2.0-flash
+============================================================
+  Questions: 50
+  Correct:   45
+  Accuracy:  90.0%
+  Duration:  3.9s (0.58s/question)
+  Tokens:    5,752 in / 100 out
+  Est. Cost: $0.0005
+
+By Domain:
+┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━┓
+┃ Domain                ┃ Correct ┃ Total ┃ Accuracy ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━┩
+│ Automation            │       9 │    10 │      90% │
+│ Data Management       │       7 │    10 │      70% │
+│ Reports & Dashboards  │      10 │    10 │     100% │
+│ Sales & Service Cloud │      10 │    10 │     100% │
+│ Security & Access     │       9 │    10 │      90% │
+└───────────────────────┴─────────┴───────┴──────────┘
+```
+
+### Coding Benchmarks
+
+Test AI agents on Salesforce development tasks.
+
+```bash
+# List available tasks
+sf-agentbench list-tasks
+
+# Run with API-based agent
+sf-agentbench benchmark lead-scoring-validation -m gemini-2.0-flash
+
+# Run with CLI-based agent (Claude Code, Gemini CLI)
+sf-agentbench run-cli claude-code lead-scoring-validation
+```
+
+### Rubric Evaluation (Standalone)
+
+Evaluate code quality using LLM judges:
+
+```python
+from sf_agentbench.judges import Rubric, ClaudeJudge
+from pathlib import Path
+
+# Load rubric
+rubric = Rubric.from_yaml(Path('rubrics/salesforce_best_practices.yaml'))
+
+# Create judge
+judge = ClaudeJudge(model='claude-sonnet-4-20250514')
+
+# Evaluate code
+result = judge.evaluate(
+    code=your_apex_code,
+    requirements="Create a bulkified trigger handler",
+    rubric=rubric,
+    agent_id="my-agent"
+)
+
+print(f"Score: {result.overall_score:.2f}")
+for criterion in result.criteria:
+    print(f"  {criterion.name}: {criterion.score:.2f}")
+```
+
+---
+
+## Interactive Terminal Monitor
+
+The REPL provides real-time monitoring of benchmarks running in any terminal.
+
+### Two Modes
+
+| Mode | Command | Use Case |
+|------|---------|----------|
+| **Interactive** | `sf-agentbench interactive` | Run commands in same terminal |
+| **Watch** | `sf-agentbench interactive --watch` | Monitor benchmarks from another terminal |
+
+### Starting the Monitor
+
+```bash
+# Interactive mode (type commands)
 sf-agentbench interactive --workers 4
+
+# Watch mode (auto-refresh, no input needed)
+sf-agentbench interactive --watch
 ```
 
-```
-╭─ SF-AgentBench REPL ────────────────────────────────────────╮
-│ Workers: 4 active │ Queue: 12 pending │ Cost: $0.42        │
-├─────────────────────────────────────────────────────────────┤
-│ [14:32:01] ✓ gemini-2.0-flash completed Q001 (0.8s)        │
-│ [14:32:02] → claude-sonnet-4 processing Q002...            │
-│ [14:32:03] ✓ gemini-2.0-flash completed Q003 (1.2s)        │
-╰─────────────────────────────────────────────────────────────╯
-> status
-> logs claude
-> pause
-> help
-```
+### Available Commands
 
-**Available Commands:**
 | Command | Description |
 |---------|-------------|
 | `status` | Show current benchmark status |
-| `logs [agent]` | Filter logs by agent |
+| `logs [filter]` | Filter logs (e.g., `logs qa`, `logs claude`) |
+| `costs` | Show cost breakdown by model |
+| `workers` | Show worker pool status |
 | `pause [id]` | Pause work unit(s) |
 | `resume [id]` | Resume paused work |
 | `cancel <id>` | Cancel a work unit |
-| `costs` | Show cost breakdown |
-| `workers` | Show worker status |
-| `quit` | Exit the REPL |
+| `rubric list` | List available rubrics |
+| `rubric show <name>` | Show rubric details |
+| `help` | Show all commands |
+| `quit` | Exit |
 
-### 📚 Q&A Benchmarking
+### Cross-Process Monitoring
 
-Test LLM knowledge on Salesforce certification topics:
+The monitor uses a shared SQLite event store to display activity from any `sf-agentbench` process:
 
 ```bash
-# List available test banks
-sf-agentbench qa-list
+# Terminal 1: Start monitor
+sf-agentbench interactive --watch
 
-# Run Q&A tests against a model
-sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash
-
-# Compare model performance
-sf-agentbench qa-compare
-
-# Replay exact prompts and responses
-sf-agentbench qa-playback <run-id>
+# Terminal 2: Run benchmarks (appears in Terminal 1)
+sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 8
 ```
 
-**Sample Output:**
-```
-Q&A Benchmark Results: gemini-2.0-flash
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Questions: 50 │ Correct: 42 │ Score: 84.0%
+---
 
-By Domain:
-  Security & Access:    90.0% (9/10)
-  Data Management:      85.0% (17/20)
-  Automation:           80.0% (8/10)
-  Reports & Dashboards: 80.0% (8/10)
+## The Rubric System
 
-Estimated Cost: $0.0234
-```
+### How It Works
 
-### ⚖️ LLM Judges with Rubric Scoring
+1. **Rubric Definition** — YAML files define weighted evaluation criteria
+2. **LLM Judge** — Claude or Gemini analyzes code against criteria
+3. **Scoring** — Each criterion gets 0.0-1.0, weighted average for overall
+4. **Logging** — Full prompts and responses stored for review
 
-Impartial evaluation of agent-generated code using LLMs like Claude Opus 4.5:
+### Rubric Structure
 
 ```yaml
 # rubrics/salesforce_best_practices.yaml
 name: Salesforce Best Practices
 version: "1.0"
+description: Evaluates Apex code against Salesforce development standards
 judge_model: claude-opus-4-20250514
 
 criteria:
   - name: Bulkification
-    weight: 2.0
-    description: Code handles bulk operations efficiently
+    weight: 0.25
+    description: |
+      Are DML and SOQL operations performed on collections?
+      Are there any queries or DML inside loops?
     scoring_guide:
-      1.0: All DML/SOQL in loops eliminated, uses collections
-      0.5: Partial bulkification, some operations still in loops
-      0.0: No bulkification, SOQL/DML queries inside loops
+      1.0: "All operations bulkified, no SOQL/DML in loops"
+      0.7: "Minor issues, mostly bulkified"
+      0.4: "Some SOQL/DML in loops"
+      0.0: "Severe bulkification violations"
 
-  - name: Governor Limit Awareness
-    weight: 1.5
-    description: Proper handling of Salesforce limits
+  - name: Security Best Practices
+    weight: 0.20
+    description: |
+      Are CRUD/FLS checks present?
+      Are hardcoded IDs avoided?
+    scoring_guide:
+      1.0: "Full CRUD/FLS checks, no hardcoded IDs"
+      0.5: "Partial security checks"
+      0.0: "No security considerations"
 ```
 
-**Multi-Judge Consensus:**
-```python
-from sf_agentbench.judges import ConsensusJudge, ClaudeJudge, GeminiJudge
+### Using Judges Programmatically
 
-judges = [ClaudeJudge("claude-opus-4"), GeminiJudge("gemini-2.5-pro")]
-consensus = ConsensusJudge(judges, method="average")
+```python
+from sf_agentbench.judges import ClaudeJudge, GeminiJudge, ConsensusJudge, Rubric
+
+# Single judge
+judge = ClaudeJudge(model='claude-sonnet-4-20250514', verbose=True)
+result = judge.evaluate(code, requirements, rubric)
+
+# Multi-judge consensus
+judges = [
+    ClaudeJudge('claude-sonnet-4-20250514'),
+    ClaudeJudge('claude-opus-4-20250514'),
+]
+consensus = ConsensusJudge(judges, method='average')
 result = consensus.evaluate(code, requirements, rubric)
 ```
 
-### 🖥️ CLI-Based Agent Testing
+### Judge Logging
 
-Run real AI coding assistants against Salesforce tasks:
+Enable verbose logging to review judge reasoning:
 
-```bash
-# List available CLI agents
-sf-agentbench list-cli-agents
-
-# Run a benchmark with Claude Code
-sf-agentbench run-cli claude-code lead-scoring-validation
-
-# Run with Gemini CLI
-sf-agentbench run-cli gemini-cli case-escalation-flow
+```yaml
+# sf-agentbench.yaml
+judges:
+  verbose_logging: true
+  log_prompts: true
+  log_responses: true
 ```
 
-**Supported CLI Agents:**
-| Agent | Command | Description |
-|-------|---------|-------------|
-| Claude Code | `claude` | Anthropic's coding assistant |
-| Gemini CLI | `gemini` | Google's AI assistant |
-| Aider | `aider` | Open-source AI pair programmer |
+Logs are stored in the database and can be reviewed:
 
-### 🎯 Curriculum-Aligned Evaluation
+```bash
+sf-agentbench judge-logs --last 10
+```
 
-Grounded in official Salesforce certifications:
-- **Administrator (ADM-201)** — Schema, automation, security
-- **Platform Developer I & II (PD1/PD2)** — Apex, integrations, LWC
+---
 
-### 📊 5-Layer Evaluation Pipeline
+## Configuration
 
-| Layer | Weight | Metric | Description |
-|-------|--------|--------|-------------|
-| **1** | 20% | Deployment | Can the solution deploy without errors? |
-| **2** | 40% | Functional Tests | Do Apex tests pass? What's the coverage? |
-| **3** | 10% | Static Analysis | Code quality via PMD/Code Analyzer |
-| **4** | 15% | Metadata Diff | Semantic comparison against golden config |
-| **5** | 15% | LLM Rubric | Design patterns, bulkification, best practices |
+### Main Configuration File
 
-### 🔧 Agent-Computer Interface (ACI)
+```yaml
+# sf-agentbench.yaml
 
-11 tools wrapping the Salesforce CLI (`sf`) with structured JSON I/O:
+# Default model for benchmarks
+model: gemini-2.0-flash
 
-| Tool | Description |
-|------|-------------|
-| `sf_deploy` | Deploy metadata to Scratch Org |
-| `sf_retrieve` | Retrieve metadata from org |
-| `sf_run_apex_tests` | Execute Apex tests with coverage |
-| `sf_run_anonymous` | Run anonymous Apex code |
-| `sf_query` | Execute SOQL queries |
-| `sf_create_record` | Create sObject records |
-| `sf_import_data` | Import data from plan files |
-| `sf_scan_code` | Run PMD static analysis |
-| `sf_org_create` | Create Scratch Orgs |
-| `sf_org_delete` | Delete Scratch Orgs |
-| `sf_org_open` | Get org login URL |
+# Salesforce settings
+devhub_username: admin@mydevhub.org
+scratch_org_duration: 7  # days
+cleanup_orgs: true
 
-## 🏗️ Architecture
+# Task directories
+tasks_dir: ./tasks
+results_dir: ./results
+
+# Worker configuration
+workers:
+  max_workers: 8
+  qa_workers: 8        # Parallel Q&A workers
+  coding_workers: 2    # Parallel coding workers (resource-intensive)
+
+# Cost tracking
+cost_tracking:
+  enabled: true
+  warn_threshold_usd: 1.0
+  budget_limit_usd: 10.0
+
+# Judge configuration
+judges:
+  default_model: claude-opus-4-20250514
+  verbose_logging: true
+  consensus_method: average  # average, majority, min, max
+
+# Evaluation weights (for coding benchmarks)
+evaluation_weights:
+  deployment: 0.20
+  functional_tests: 0.40
+  static_analysis: 0.10
+  metadata_diff: 0.15
+  rubric: 0.15
+
+# Logging
+logging:
+  level: INFO
+  file: logs/sf-agentbench.log
+```
+
+### Environment Variables
+
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `ANTHROPIC_API_KEY` | Claude API access | `sk-ant-api03-...` |
+| `GOOGLE_API_KEY` | Gemini API access | `AIzaSy...` |
+| `OPENAI_API_KEY` | OpenAI API access | `sk-...` |
+| `SF_DEVHUB_USERNAME` | Default DevHub org | `admin@mydevhub.org` |
+| `SF_AGENTBENCH_CONFIG` | Config file path | `./custom-config.yaml` |
+
+---
+
+## Extending the Framework
+
+### Adding New Test Banks (Q&A)
+
+1. **Create JSON file** in `docs/data/`:
+
+```json
+{
+  "id": "my_custom_test_bank",
+  "name": "My Custom Test Bank",
+  "description": "Custom questions for specific topics",
+  "version": "1.0",
+  "domains": ["Domain A", "Domain B"],
+  "difficulty": ["easy", "medium", "hard"],
+  "questions": [
+    {
+      "id": "Q001",
+      "question": "What is the maximum number of records returned by a SOQL query?",
+      "options": {
+        "A": "10,000",
+        "B": "50,000",
+        "C": "100,000",
+        "D": "Unlimited"
+      },
+      "correct_answer": "B",
+      "explanation": "SOQL queries return a maximum of 50,000 records by default.",
+      "domain": "Data Management",
+      "difficulty": "easy",
+      "source": "Salesforce Documentation"
+    }
+  ]
+}
+```
+
+2. **Run tests:**
+
+```bash
+sf-agentbench qa-run my_custom_test_bank.json -m gemini-2.0-flash -n 5
+```
+
+### Adding New Coding Tasks
+
+1. **Create task directory** in `tasks/tier-X/`:
+
+```
+tasks/tier-2/my-custom-task/
+├── README.md              # Task description and requirements
+├── sfdx-project.json      # Salesforce DX project config
+├── config/
+│   └── project-scratch-def.json  # Scratch org definition
+├── force-app/
+│   └── main/default/
+│       ├── classes/       # Apex classes (starter or golden)
+│       ├── triggers/      # Apex triggers
+│       ├── flows/         # Flows
+│       └── objects/       # Custom objects
+├── data/
+│   └── sample-data-plan.json  # Test data
+└── golden/                # Reference solution (for evaluation)
+    └── classes/
+```
+
+2. **Create task metadata** in `task.yaml`:
+
+```yaml
+id: my-custom-task
+name: My Custom Task
+description: Build a custom Salesforce solution
+tier: 2
+estimated_time_minutes: 30
+skills_tested:
+  - Apex Triggers
+  - SOQL Queries
+  - Bulkification
+evaluation:
+  rubric: salesforce_best_practices
+  test_class: MyCustomTaskTest
+  min_coverage: 75
+```
+
+3. **Verify task loads:**
+
+```bash
+sf-agentbench list-tasks
+sf-agentbench show-task my-custom-task
+```
+
+### Adding New Rubrics
+
+1. **Create YAML file** in `rubrics/`:
+
+```yaml
+# rubrics/my_custom_rubric.yaml
+name: My Custom Rubric
+version: "1.0"
+description: Custom evaluation criteria
+judge_model: claude-sonnet-4-20250514
+
+criteria:
+  - name: My Criterion
+    weight: 0.5
+    description: What this criterion evaluates
+    scoring_guide:
+      1.0: "Excellent implementation"
+      0.7: "Good with minor issues"
+      0.4: "Needs improvement"
+      0.0: "Does not meet requirements"
+
+  - name: Another Criterion
+    weight: 0.5
+    description: Another thing to evaluate
+    scoring_guide:
+      1.0: "Perfect"
+      0.5: "Acceptable"
+      0.0: "Unacceptable"
+```
+
+2. **Use in evaluations:**
+
+```python
+rubric = Rubric.from_yaml(Path('rubrics/my_custom_rubric.yaml'))
+result = judge.evaluate(code, requirements, rubric)
+```
+
+### Adding New LLM Providers
+
+1. **Create judge class** in `src/sf_agentbench/judges/`:
+
+```python
+# src/sf_agentbench/judges/my_provider_judge.py
+from sf_agentbench.judges.base import Judge, JudgeResult, Rubric
+
+class MyProviderJudge(Judge):
+    """Judge implementation for My Provider."""
+    
+    def __init__(self, model: str, api_key: str | None = None, **kwargs):
+        super().__init__(model=model, **kwargs)
+        self.api_key = api_key or os.getenv("MY_PROVIDER_API_KEY")
+        # Initialize your client
+        
+    def evaluate(
+        self,
+        code: str,
+        requirements: str,
+        rubric: Rubric,
+        agent_id: str = "unknown",
+    ) -> JudgeResult:
+        # Build prompt using self._build_prompt(code, requirements, rubric)
+        prompt = self._build_prompt(code, requirements, rubric)
+        
+        # Call your API
+        response = self._call_api(prompt)
+        
+        # Parse response into JudgeResult
+        return self._parse_response(response, rubric)
+```
+
+2. **Register in `__init__.py`:**
+
+```python
+# src/sf_agentbench/judges/__init__.py
+from sf_agentbench.judges.my_provider_judge import MyProviderJudge
+__all__ = [..., "MyProviderJudge"]
+```
+
+### Adding New Models to Existing Providers
+
+Update the model registry in `src/sf_agentbench/qa/runner.py`:
+
+```python
+MODEL_PROVIDERS = {
+    # Existing...
+    "my-new-model": "google",  # or "anthropic", "openai"
+}
+```
+
+---
+
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -201,12 +710,12 @@ Grounded in official Salesforce certifications:
 │         └─────────────────┴──────────────────────┘                  │
 │                           │                                         │
 │                    ┌──────▼──────┐                                  │
-│                    │  Event Bus  │                                  │
+│                    │  Event Bus  │ ◄─── Cross-process SQLite        │
 │                    └──────┬──────┘                                  │
 │         ┌─────────────────┼─────────────────┐                       │
 │         ▼                 ▼                 ▼                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
-│  │ QA Executor  │  │   Coding     │  │  Validator   │              │
+│  │ QA Runner    │  │   Coding     │  │  Validator   │              │
 │  │              │  │  Executor    │  │              │              │
 │  └──────────────┘  └──────────────┘  └──────────────┘              │
 │         │                 │                 │                       │
@@ -214,7 +723,7 @@ Grounded in official Salesforce certifications:
 │                           │                                         │
 │                    ┌──────▼──────┐                                  │
 │                    │  Unified    │                                  │
-│                    │   Storage   │                                  │
+│                    │   Storage   │ ◄─── SQLite + JSON               │
 │                    └─────────────┘                                  │
 ├─────────────────────────────────────────────────────────────────────┤
 │                    Agent-Computer Interface (ACI)                   │
@@ -228,257 +737,21 @@ Grounded in official Salesforce certifications:
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## 📁 Project Structure
+### Key Components
 
-```
-sf-agentbench/
-├── README.md
-├── LICENSE
-├── pyproject.toml
-├── requirements.txt
-├── sf-agentbench.yaml              # Main configuration
-│
-├── docs/
-│   ├── data/                       # Q&A test banks
-│   │   └── salesforce_admin_test_bank.json
-│   └── development/
-│       └── Salesforce AI Benchmark Design.md
-│
-├── rubrics/                        # LLM Judge rubrics
-│   ├── salesforce_best_practices.yaml
-│   ├── security_audit.yaml
-│   └── qa_accuracy.yaml
-│
-├── src/sf_agentbench/
-│   ├── __init__.py
-│   ├── cli.py                      # CLI entry point
-│   ├── config.py                   # Configuration management
-│   ├── models.py                   # Legacy data models
-│   │
-│   ├── domain/                     # Core domain models (v0.2)
-│   │   ├── models.py               # Benchmark, Test, Agent, WorkUnit
-│   │   ├── costs.py                # Token usage & cost tracking
-│   │   └── metrics.py              # Performance metrics
-│   │
-│   ├── events/                     # Event-driven architecture
-│   │   ├── bus.py                  # Pub/sub event bus
-│   │   └── types.py                # Event type definitions
-│   │
-│   ├── workers/                    # Parallel execution
-│   │   ├── pool.py                 # Worker pool management
-│   │   ├── scheduler.py            # Priority scheduling
-│   │   └── base.py                 # Worker base class
-│   │
-│   ├── executors/                  # Test executors
-│   │   ├── qa_executor.py          # Q&A test execution
-│   │   ├── coding_executor.py      # CLI agent execution
-│   │   └── validator.py            # Result validation
-│   │
-│   ├── judges/                     # LLM-as-a-Judge
-│   │   ├── base.py                 # Judge interface & Rubric
-│   │   ├── claude_judge.py         # Claude implementation
-│   │   ├── gemini_judge.py         # Gemini implementation
-│   │   ├── consensus.py            # Multi-judge voting
-│   │   └── logging.py              # Verbose judge logging
-│   │
-│   ├── repl/                       # Interactive terminal
-│   │   ├── console.py              # REPL main loop
-│   │   ├── commands.py             # Command parsing
-│   │   └── renderer.py             # Log & status rendering
-│   │
-│   ├── reports/                    # Report generation
-│   │   ├── generator.py            # Multi-format reports
-│   │   └── comparison.py           # Model comparison views
-│   │
-│   ├── storage/                    # Data persistence
-│   │   ├── store.py                # Legacy SQLite store
-│   │   └── unified.py              # Unified storage (v0.2)
-│   │
-│   ├── aci/                        # Agent-Computer Interface
-│   ├── harness/                    # Benchmark orchestration
-│   ├── evaluators/                 # 5-layer evaluation
-│   ├── agents/                     # API-based agents
-│   ├── qa/                         # Q&A framework
-│   └── auth/                       # Authentication
-│
-├── tasks/                          # Benchmark tasks
-│   ├── tier-1/
-│   └── tier-2/
-│
-├── results/                        # Run outputs
-│   ├── benchmark_results.db
-│   └── runs/
-│
-└── tests/
-    ├── e2e/                        # End-to-end tests
-    │   └── test_runner.py
-    └── fixtures/                   # Test fixtures
-        ├── sample_code/
-        ├── rubrics/
-        └── qa/
-```
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **CLI** | `src/sf_agentbench/cli.py` | Command-line interface |
+| **QA Runner** | `src/sf_agentbench/qa/runner.py` | Q&A test execution |
+| **Judges** | `src/sf_agentbench/judges/` | LLM-as-a-Judge evaluation |
+| **REPL** | `src/sf_agentbench/repl/` | Interactive terminal |
+| **Events** | `src/sf_agentbench/events/` | Cross-process communication |
+| **Workers** | `src/sf_agentbench/workers/` | Parallel execution pool |
+| **Storage** | `src/sf_agentbench/storage/` | Results persistence |
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
-
-- **Python 3.10+**
-- **Salesforce CLI** (`sf`) — [Install Guide](https://developer.salesforce.com/tools/salesforcecli)
-- **DevHub-enabled Org** — Required for Scratch Org creation
-- **API Keys** (optional) — For LLM-based features
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/bhanudas/sf-agentbench.git
-cd sf-agentbench
-
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install in development mode
-pip install -e .
-
-# Initialize with sample tasks
-sf-agentbench init
-```
-
-### Authentication Setup
-
-```bash
-# Set up API keys for LLM providers
-sf-agentbench auth set anthropic
-sf-agentbench auth set google
-
-# Or use environment variables
-export ANTHROPIC_API_KEY="sk-..."
-export GOOGLE_API_KEY="AIza..."
-```
-
-### Quick Start
-
-#### 1. Run Q&A Benchmarks
-
-```bash
-# Test LLM knowledge on Salesforce topics
-sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash
-
-# Compare multiple models
-sf-agentbench qa-run salesforce_admin_test_bank.json -m claude-sonnet-4-20250514
-sf-agentbench qa-compare
-```
-
-#### 2. Run Coding Benchmarks
-
-```bash
-# List available tasks
-sf-agentbench list-tasks
-
-# Run with a CLI agent
-sf-agentbench run-cli claude-code lead-scoring-validation
-
-# Run with an API-based agent
-sf-agentbench benchmark lead-scoring-validation -m gemini-2.0-flash
-```
-
-#### 3. Interactive Mode
-
-```bash
-# Launch the REPL for real-time monitoring
-sf-agentbench interactive --workers 4
-```
-
-#### 4. Run E2E Tests
-
-```bash
-# Verify the system is working
-sf-agentbench e2e-test -v
-```
-
-## 🤖 Supported Models
-
-### Anthropic (Claude)
-| Model ID | Name | Context |
-|----------|------|---------|
-| `claude-sonnet-4-20250514` | Claude Sonnet 4 | 200K |
-| `claude-opus-4-20250514` | Claude Opus 4 | 200K |
-
-### Google (Gemini)
-| Model ID | Name | Context |
-|----------|------|---------|
-| `gemini-2.0-flash` | Gemini 2.0 Flash | 1M |
-| `gemini-2.5-pro` | Gemini 2.5 Pro | 1M |
-| `gemini-3.0-thinking` | Gemini 3.0 Thinking | 2M |
-
-### OpenAI
-| Model ID | Name | Context |
-|----------|------|---------|
-| `gpt-4o` | GPT-4o | 128K |
-| `o1` | OpenAI o1 | 200K |
-
-List all models: `sf-agentbench list-models`
-
-## ⚙️ Configuration
-
-Edit `sf-agentbench.yaml`:
-
-```yaml
-# Active model
-model: gemini-2.5-pro
-
-# Salesforce settings
-devhub_username: admin@mydevhub.org
-
-# Worker configuration
-workers:
-  qa_workers: 8          # Parallel Q&A workers
-  coding_workers: 2      # Parallel coding workers
-
-# Cost tracking
-cost_tracking:
-  enabled: true
-  warn_threshold_usd: 1.0
-
-# Judge configuration
-judges:
-  default_model: claude-opus-4-20250514
-  verbose_logging: true
-  consensus_method: average
-
-# Evaluation weights
-evaluation_weights:
-  deployment: 0.20
-  functional_tests: 0.40
-  static_analysis: 0.10
-  metadata_diff: 0.15
-  rubric: 0.15
-```
-
-## 📊 Reports
-
-Generate comprehensive reports:
-
-```bash
-# Markdown report
-sf-agentbench report --format markdown -o report.md
-
-# HTML report with charts
-sf-agentbench report --format html -o report.html
-
-# JSON for programmatic access
-sf-agentbench report --format json -o report.json
-```
-
-**Report Contents:**
-- Model comparison tables
-- Score breakdowns by category
-- Cost analysis
-- Rubric drill-down with criterion scores
-- Trend analysis over time
-
-## 📋 CLI Reference
+## CLI Reference
 
 ```bash
 sf-agentbench --help
@@ -488,37 +761,158 @@ Commands:
   run              Run a single benchmark task
   run-all          Run all benchmark tasks
   run-cli          Run with CLI-based AI agent
-  run-parallel     Run multiple benchmarks in parallel
   benchmark        Run with API-based agent
 
   # Q&A Testing
-  qa-list          List available test banks
   qa-run           Run Q&A tests against an LLM
+  qa-list          List available test banks
   qa-compare       Compare model performance
   qa-domains       Analyze by domain
   qa-playback      Replay prompts and responses
   qa-history       Show run history
-  qa-export        Export results to CSV
 
   # Interactive
   interactive      Launch REPL mode
+    --watch        Watch mode (auto-refresh, no input)
+    --workers N    Number of workers
 
   # Information
   list-tasks       List all benchmark tasks
   list-models      List supported AI models
-  list-cli-agents  List CLI-based agents
   show-task        Show task details
 
   # Configuration
   init             Initialize project
-  validate         Validate configuration
-  auth             Manage API authentication
+  auth set <provider>   Set API key
+  auth status      Show authentication status
 
   # Testing
   e2e-test         Run end-to-end tests
 ```
 
-## 🗺️ Roadmap
+---
+
+## Troubleshooting
+
+### Common Issues
+
+#### "No API key found"
+
+```bash
+# Check authentication status
+sf-agentbench auth status
+
+# Set key interactively
+sf-agentbench auth set anthropic
+
+# Or use environment variable
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+#### "Model not found"
+
+```bash
+# List available models
+sf-agentbench list-models
+
+# Use exact model ID
+sf-agentbench qa-run test.json -m claude-sonnet-4-20250514  # Not "claude-sonnet"
+```
+
+#### "Thinking models return UNKNOWN"
+
+Gemini "thinking" models (`gemini-2.5-pro`, `gemini-3.0-thinking`) return extended reasoning instead of direct answers. Use `gemini-2.0-flash` for Q&A testing.
+
+#### "Cross-process monitoring not working"
+
+Ensure both terminals are running from the same project directory:
+
+```bash
+# Both terminals should be in:
+cd /path/to/sf-agentbench
+source .venv/bin/activate
+```
+
+#### "Scratch org creation failed"
+
+```bash
+# Verify DevHub authentication
+sf org list
+
+# Re-authenticate if needed
+sf org login web --set-default-dev-hub
+```
+
+### Debug Mode
+
+```bash
+# Enable verbose logging
+export SF_AGENTBENCH_LOG_LEVEL=DEBUG
+sf-agentbench qa-run test.json -m gemini-2.0-flash -v
+
+# Check log files
+tail -f logs/sf-agentbench.log
+```
+
+### Getting Help
+
+1. Check the [Troubleshooting Guide](docs/troubleshooting.md)
+2. Search [GitHub Issues](https://github.com/bhanudas/sf-agentbench/issues)
+3. Open a new issue with:
+   - Python version (`python --version`)
+   - OS and version
+   - Full error message
+   - Steps to reproduce
+
+---
+
+## Contributing
+
+We welcome contributions! Here's how to get started:
+
+### Areas for Contribution
+
+| Area | What's Needed |
+|------|---------------|
+| **Test Banks** | More Q&A questions, new certification domains |
+| **Coding Tasks** | Tier 3 & 4 tasks, LWC challenges |
+| **Rubrics** | Industry-specific evaluation criteria |
+| **Providers** | New LLM integrations (Cohere, Mistral, etc.) |
+| **Documentation** | Tutorials, examples, translations |
+
+### Development Setup
+
+```bash
+# Clone and setup
+git clone https://github.com/bhanudas/sf-agentbench.git
+cd sf-agentbench
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/
+
+# Run linter
+ruff check src/
+
+# Run type checker
+mypy src/
+```
+
+### Submitting Changes
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Run the test suite (`pytest tests/`)
+6. Commit with clear messages
+7. Push and open a Pull Request
+
+---
+
+## Roadmap
 
 ### Phase 1: Foundation ✅
 - [x] ACI tool wrappers for core `sf` commands
@@ -534,6 +928,7 @@ Commands:
 - [x] Parallel execution with worker pools
 - [x] Cost tracking and estimation
 - [x] Multi-judge consensus
+- [x] Cross-process monitoring
 
 ### Phase 3: Scale (Planned)
 - [ ] Scratch Org pool management
@@ -548,38 +943,15 @@ Commands:
 - [ ] Automated task generation
 - [ ] Research paper submission
 
-## 🧪 Testing
+---
 
-```bash
-# Run unit tests
-pytest tests/
-
-# Run E2E tests
-sf-agentbench e2e-test -v
-
-# Run specific category
-sf-agentbench e2e-test --category judges
-```
-
-## 📚 Documentation
-
-- [Technical Design Document](docs/development/Salesforce%20AI%20Benchmark%20Design.md)
-- [Q&A Test Bank Schema](docs/data/README.md)
-- [Rubric Configuration Guide](rubrics/README.md)
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas for contribution:
-- New benchmark tasks (especially Tier 3 & 4)
-- Additional LLM provider integrations
-- Rubric templates for different use cases
-- Documentation improvements
-
-## 📄 License
+## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+---
+
+## Acknowledgments
 
 - Inspired by [SWE-bench](https://www.swebench.com/) and [SWE-agent](https://swe-agent.com/)
 - Task methodology adapted from [Salesforce Trailhead Superbadges](https://trailhead.salesforce.com/superbadges)
@@ -589,4 +961,11 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <p align="center">
   <strong>SF-AgentBench v0.2.0</strong> — Bridging AI Agents and Enterprise Platform Development
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#running-benchmarks">Run Benchmarks</a> •
+  <a href="#extending-the-framework">Extend</a> •
+  <a href="#contributing">Contribute</a>
 </p>

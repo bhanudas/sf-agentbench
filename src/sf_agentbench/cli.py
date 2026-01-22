@@ -29,15 +29,21 @@ console = Console()
 @click.option("--workers", "-w", type=int, default=4, help="Number of parallel workers")
 @click.option("--qa-workers", type=int, default=4, help="Workers for Q&A tests")
 @click.option("--coding-workers", type=int, default=2, help="Workers for coding tests")
+@click.option("--watch", is_flag=True, help="Watch mode: auto-refresh display without input (good for background monitoring)")
 @click.pass_context
-def interactive_mode(ctx: click.Context, workers: int, qa_workers: int, coding_workers: int):
+def interactive_mode(ctx: click.Context, workers: int, qa_workers: int, coding_workers: int, watch: bool):
     """Start interactive REPL mode for monitoring and controlling benchmarks.
     
     This provides a Claude Code-style interface where logs scroll above
     while you can always type commands below.
     
     \b
-    Commands available in the REPL:
+    Modes:
+      Default         - Interactive with command input
+      --watch         - Auto-refresh only, no input required (Ctrl+C to exit)
+    
+    \b
+    Commands available in the REPL (default mode):
       status          - Show current status
       logs [agent]    - Filter logs by agent
       pause [id]      - Pause work unit(s)
@@ -64,14 +70,19 @@ def interactive_mode(ctx: click.Context, workers: int, qa_workers: int, coding_w
     event_bus = get_event_bus()
     pool = WorkerPool(config=pool_config, event_bus=event_bus)
     
-    console.print("\n[bold magenta]Starting Interactive Mode[/bold magenta]")
+    mode_text = "Watch Mode (Ctrl+C to exit)" if watch else "Interactive Mode"
+    console.print(f"\n[bold magenta]Starting {mode_text}[/bold magenta]")
     console.print(f"  Workers: {workers} (QA: {qa_workers}, Coding: {coding_workers})")
-    console.print("\n[dim]Type 'help' for commands, 'quit' to exit[/dim]\n")
+    if not watch:
+        console.print("\n[dim]Type 'help' for commands, 'quit' to exit[/dim]\n")
+    else:
+        console.print("\n[dim]Auto-refreshing display. Press Ctrl+C to exit.[/dim]\n")
     
     # Start REPL
     repl = REPLConsole(
         event_bus=event_bus,
         pool=pool,
+        watch_mode=watch,
     )
     
     try:
