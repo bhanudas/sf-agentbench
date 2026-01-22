@@ -1173,34 +1173,41 @@ def qa_list_banks():
 
 @main.command("qa-run")
 @click.argument("test_bank")
-@click.option("--cli", "-c", default="gemini-cli", help="CLI to use (gemini-cli, claude-code)")
-@click.option("--model", "-m", help="Model to use (overrides CLI default)")
+@click.option("--model", "-m", default="gemini-2.0-flash", help="Model to use (e.g., gemini-2.0-flash, claude-sonnet-4-20250514)")
 @click.option("--sample", "-n", type=int, help="Run only N random questions")
 @click.option("--domain", "-d", help="Filter by domain")
-@click.option("--workers", "-w", type=int, default=1, help="Parallel workers (default: 1 = sequential)")
+@click.option("--workers", "-w", type=int, default=4, help="Parallel workers (default: 4)")
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed output")
 @click.option("--output", "-o", type=click.Path(), help="Save results to JSON file")
+@click.option("--use-cli", is_flag=True, help="Use CLI instead of API (slower but may be more compatible)")
+@click.option("--cli", "-c", default="gemini-cli", help="CLI to use when --use-cli is set")
 def qa_run(
     test_bank: str,
-    cli: str,
-    model: str | None,
+    model: str,
     sample: int | None,
     domain: str | None,
     workers: int,
     verbose: bool,
     output: str | None,
+    use_cli: bool,
+    cli: str,
 ):
     """Run Q&A tests against an LLM.
     
     TEST_BANK is the filename of the test bank (e.g., salesforce_admin_test_bank.json)
     
+    Uses direct API calls by default (faster and more reliable).
+    Use --use-cli to use CLI tools instead.
+    
     \b
     Examples:
-      sf-agentbench qa-run salesforce_admin_test_bank.json -n 5
-      sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 4  # 4 parallel workers
-      sf-agentbench qa-run salesforce_admin_test_bank.json -c claude-code -m sonnet
+      sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash
+      sf-agentbench qa-run salesforce_admin_test_bank.json -m claude-sonnet-4-20250514 -w 8
+      sf-agentbench qa-run salesforce_admin_test_bank.json -n 10  # Only 10 questions
+      sf-agentbench qa-run salesforce_admin_test_bank.json --use-cli -c claude-code
     """
     from sf_agentbench.qa import TestBankLoader, QARunner
+    from sf_agentbench.qa.runner import QAAPIRunner
     import json
     
     # Load test bank
@@ -1223,15 +1230,34 @@ def qa_run(
     if sample:
         questions = bank.sample(sample, domain)
     
-    # Create runner
+    # Create a filtered bank for the runner
+    from sf_agentbench.qa.loader import TestBank
+    filtered_bank = TestBank(
+        id=bank.id,
+        name=bank.name,
+        version=bank.version,
+        description=bank.description,
+        questions=questions,
+        metadata=bank.metadata,
+    )
+    
+    # Create runner (API by default, CLI if requested)
     try:
-        runner = QARunner(cli_id=cli, model=model, verbose=verbose, workers=workers)
+        if use_cli:
+            runner = QARunner(cli_id=cli, model=model, verbose=verbose, workers=workers)
+            summary = runner.run_test_bank(bank, questions)
+        else:
+            runner = QAAPIRunner(model=model, verbose=verbose, workers=workers)
+            summary = runner.run(filtered_bank, max_questions=len(questions))
     except ValueError as e:
         console.print(f"[red]{e}[/red]")
         return
-    
-    # Run tests
-    summary = runner.run_test_bank(bank, questions)
+    except Exception as e:
+        console.print(f"[red]Error running Q&A tests: {e}[/red]")
+        if verbose:
+            import traceback
+            console.print(traceback.format_exc())
+        return
     
     # Print summary
     runner.print_summary(summary)

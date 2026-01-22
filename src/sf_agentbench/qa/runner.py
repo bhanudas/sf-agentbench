@@ -113,6 +113,13 @@ class QARunSummary:
             return 0.0
         return self.estimated_cost_usd / self.total_questions
     
+    @property
+    def avg_response_time(self) -> float:
+        """Average response time per question in seconds."""
+        if not self.results:
+            return 0.0
+        return sum(r.response_time_seconds for r in self.results) / len(self.results)
+    
     def by_domain(self) -> dict[str, dict]:
         """Get results grouped by domain."""
         domains: dict[str, dict] = {}
@@ -166,6 +173,20 @@ QA_CLI_CONFIGS = {
         "model_flag": "--model",
         "prompt_flag": "-p",
         "default_model": "sonnet",
+    },
+}
+
+# API configurations for direct API access (more reliable than CLI)
+QA_API_CONFIGS = {
+    "gemini": {
+        "provider": "google",
+        "models": ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.0-thinking"],
+        "default_model": "gemini-2.0-flash",
+    },
+    "claude": {
+        "provider": "anthropic",
+        "models": ["claude-sonnet-4-20250514", "claude-opus-4-20250514"],
+        "default_model": "claude-sonnet-4-20250514",
     },
 }
 
@@ -621,5 +642,347 @@ class QARunner:
                 console.print(f"    [dim]{r.question_text[:80]}...[/dim]")
             if len(incorrect) > 5:
                 console.print(f"  [dim]... and {len(incorrect) - 5} more[/dim]")
+        
+        console.print("=" * 60)
+
+
+class QAAPIRunner:
+    """Runs Q&A tests using direct API calls (more reliable than CLI)."""
+    
+    def __init__(
+        self,
+        model: str = "gemini-2.0-flash",
+        timeout_seconds: int = 30,
+        verbose: bool = False,
+        workers: int = 4,
+        results_dir: Path | str | None = None,
+        logs_dir: Path | str | None = None,
+    ):
+        """
+        Initialize the API-based Q&A runner.
+        
+        Args:
+            model: Model to use (e.g., gemini-2.0-flash, claude-sonnet-4-20250514)
+            timeout_seconds: Timeout per question
+            verbose: Show detailed output
+            workers: Number of parallel worker threads
+            results_dir: Directory for storing results
+            logs_dir: Directory for log files
+        """
+        self.model = model
+        self.timeout = timeout_seconds
+        self.verbose = verbose
+        self.workers = max(1, workers)
+        
+        # Determine provider from model name
+        if "gemini" in model.lower():
+            self.provider = "google"
+        elif "claude" in model.lower() or "sonnet" in model.lower() or "opus" in model.lower():
+            self.provider = "anthropic"
+        else:
+            self.provider = "unknown"
+        
+        # Setup storage
+        self.results_dir = Path(results_dir or "results")
+        self.logs_dir = Path(logs_dir or "logs")
+        self.store = QAResultsStore(self.results_dir)
+        
+        # API clients (lazy loaded)
+        self._gemini_client = None
+        self._anthropic_client = None
+        
+        # Logging
+        self.logger: logging.Logger | None = None
+        self.run_id: str | None = None
+        self._store_lock = threading.Lock()
+    
+    def _get_gemini_client(self):
+        """Get or create Gemini client."""
+        if self._gemini_client is None:
+            try:
+                from google import genai
+                from sf_agentbench.agents.auth import get_google_credentials
+                
+                creds = get_google_credentials()
+                if creds and creds.get("api_key"):
+                    self._gemini_client = genai.Client(api_key=creds["api_key"])
+                else:
+                    import os
+                    api_key = os.environ.get("GOOGLE_API_KEY")
+                    if api_key:
+                        self._gemini_client = genai.Client(api_key=api_key)
+                    else:
+                        raise ValueError("No Google API key found")
+            except ImportError:
+                raise ImportError("Please install google-genai: pip install google-genai")
+        return self._gemini_client
+    
+    def _get_anthropic_client(self):
+        """Get or create Anthropic client."""
+        if self._anthropic_client is None:
+            try:
+                import anthropic
+                from sf_agentbench.agents.auth import get_anthropic_credentials
+                
+                # get_anthropic_credentials returns the API key directly as a string
+                api_key = get_anthropic_credentials()
+                if api_key:
+                    self._anthropic_client = anthropic.Anthropic(api_key=api_key)
+                else:
+                    import os
+                    api_key = os.environ.get("ANTHROPIC_API_KEY")
+                    if api_key:
+                        self._anthropic_client = anthropic.Anthropic(api_key=api_key)
+                    else:
+                        raise ValueError("No Anthropic API key found")
+            except ImportError:
+                raise ImportError("Please install anthropic: pip install anthropic")
+        return self._anthropic_client
+    
+    def _call_gemini(self, prompt: str) -> tuple[str, int, int]:
+        """Call Gemini API and return (response, input_tokens, output_tokens)."""
+        from google.genai import types
+        
+        client = self._get_gemini_client()
+        response = client.models.generate_content(
+            model=self.model,
+            contents=[types.Content(role="user", parts=[types.Part(text=prompt)])],
+            config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=100),
+        )
+        
+        text = ""
+        # Handle potential None values in response
+        if response.candidates:
+            for candidate in response.candidates:
+                if candidate.content and candidate.content.parts:
+                    for part in candidate.content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            text += part.text
+        
+        # If no text extracted, try to get text from response directly
+        if not text and hasattr(response, 'text'):
+            text = response.text or ""
+        
+        input_tokens = 0
+        output_tokens = 0
+        if hasattr(response, 'usage_metadata') and response.usage_metadata:
+            input_tokens = getattr(response.usage_metadata, 'prompt_token_count', 0) or 0
+            output_tokens = getattr(response.usage_metadata, 'candidates_token_count', 0) or 0
+        
+        return text.strip(), input_tokens, output_tokens
+    
+    def _call_anthropic(self, prompt: str) -> tuple[str, int, int]:
+        """Call Anthropic API and return (response, input_tokens, output_tokens)."""
+        client = self._get_anthropic_client()
+        
+        response = client.messages.create(
+            model=self.model,
+            max_tokens=100,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        
+        text = ""
+        for block in response.content:
+            if hasattr(block, 'text'):
+                text += block.text
+        
+        input_tokens = response.usage.input_tokens if response.usage else 0
+        output_tokens = response.usage.output_tokens if response.usage else 0
+        
+        return text.strip(), input_tokens, output_tokens
+    
+    def ask_question(self, question: Question) -> QAResult:
+        """Ask a single question using API."""
+        formatted_q = question.format_for_prompt()
+        prompt = QA_PROMPT_TEMPLATE.format(question=formatted_q)
+        
+        if self.logger:
+            self.logger.debug(f"Question {question.id}: {question.question[:100]}...")
+        
+        start_time = time.time()
+        input_tokens = 0
+        output_tokens = 0
+        
+        try:
+            if self.provider == "google":
+                response, input_tokens, output_tokens = self._call_gemini(prompt)
+            elif self.provider == "anthropic":
+                response, input_tokens, output_tokens = self._call_anthropic(prompt)
+            else:
+                response = "ERROR: Unknown provider"
+        except Exception as e:
+            response = f"ERROR: {str(e)}"
+            if self.logger:
+                self.logger.error(f"Question {question.id} error: {e}")
+        
+        elapsed = time.time() - start_time
+        
+        # Evaluate
+        is_correct, extracted = question.check_answer(response)
+        
+        if self.logger:
+            status = "CORRECT" if is_correct else "INCORRECT"
+            self.logger.info(
+                f"Q{question.id} [{question.domain}]: {status} "
+                f"(expected={question.correct_answer}, got={extracted}, time={elapsed:.1f}s)"
+            )
+        
+        # Store for playback
+        if self.run_id:
+            with self._store_lock:
+                self.store.log_question(
+                    run_id=self.run_id,
+                    question_id=question.id,
+                    domain=question.domain,
+                    difficulty=question.difficulty,
+                    question_text=question.question,
+                    correct_answer=str(question.correct_answer),
+                    prompt_sent=prompt,
+                    model_response=response,
+                    extracted_answer=extracted,
+                    is_correct=is_correct,
+                    response_time=elapsed,
+                )
+        
+        return QAResult(
+            question_id=question.id,
+            question_text=question.question,
+            expected_answer=str(question.correct_answer),
+            model_response=response,
+            extracted_answer=extracted,
+            is_correct=is_correct,
+            response_time_seconds=elapsed,
+            domain=question.domain,
+            explanation=question.explanation,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
+    
+    def run(
+        self,
+        test_bank: TestBank,
+        max_questions: int | None = None,
+        progress_callback: Callable[[QAResult], None] | None = None,
+    ) -> QARunSummary:
+        """Run Q&A tests using API."""
+        questions = test_bank.questions
+        if max_questions:
+            questions = questions[:max_questions]
+        
+        # Start run in storage
+        self.run_id = self.store.start_run(
+            model_id=self.model,
+            cli_id="api",  # Indicate this is API-based
+            test_bank_id=test_bank.id,
+            test_bank_name=test_bank.name,
+        )
+        
+        self.logger = setup_qa_logging(self.logs_dir, self.run_id)
+        
+        console.print(f"\n[bold cyan]Running Q&A Test via API: {test_bank.name}[/bold cyan]")
+        console.print(f"  Run ID: [dim]{self.run_id}[/dim]")
+        console.print(f"  Model: [magenta]{self.model}[/magenta] via API")
+        console.print(f"  Questions: {len(questions)}")
+        console.print(f"  Workers: [yellow]{self.workers}[/yellow] (parallel)")
+        console.print()
+        
+        self.logger.info(f"Starting Q&A run {self.run_id}")
+        self.logger.info(f"Model: {self.model}, Questions: {len(questions)}, Workers: {self.workers}")
+        
+        started_at = datetime.now()
+        results: list[QAResult] = []
+        correct_count = 0
+        
+        # Run with thread pool
+        with ThreadPoolExecutor(max_workers=self.workers) as executor:
+            futures = {executor.submit(self.ask_question, q): q for q in questions}
+            
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    results.append(result)
+                    
+                    if result.is_correct:
+                        correct_count += 1
+                        with _console_lock:
+                            console.print(f"  [green]✓[/green] Q{result.question_id}: Correct ({result.response_time_seconds:.1f}s)")
+                    else:
+                        with _console_lock:
+                            console.print(f"  [red]✗[/red] Q{result.question_id}: Expected {result.expected_answer}, Got {result.extracted_answer} ({result.response_time_seconds:.1f}s)")
+                    
+                    if progress_callback:
+                        progress_callback(result)
+                        
+                except Exception as e:
+                    self.logger.error(f"Error processing question: {e}")
+        
+        completed_at = datetime.now()
+        duration = (completed_at - started_at).total_seconds()
+        
+        # Calculate totals
+        total_input = sum(r.input_tokens for r in results)
+        total_output = sum(r.output_tokens for r in results)
+        total_cost = estimate_cost(self.model, total_input, total_output)
+        
+        # Complete run in storage
+        self.store.complete_run(
+            run_id=self.run_id,
+            total_questions=len(questions),
+            correct_answers=correct_count,
+            duration_seconds=duration,
+        )
+        
+        summary = QARunSummary(
+            model_id=self.model,
+            test_bank_id=test_bank.name,
+            started_at=started_at,
+            completed_at=completed_at,
+            total_questions=len(results),
+            correct_answers=correct_count,
+            results=results,
+            total_input_tokens=total_input,
+            total_output_tokens=total_output,
+            estimated_cost_usd=total_cost,
+        )
+        
+        self.logger.info(f"Run complete: {correct_count}/{len(results)} correct ({summary.accuracy:.1f}%)")
+        
+        return summary
+    
+    def print_summary(self, summary: QARunSummary) -> None:
+        """Print a formatted summary (reuse from QARunner)."""
+        # Same implementation as QARunner.print_summary
+        console.print("\n" + "=" * 60)
+        console.print(f"[bold]Q&A Benchmark Results: {summary.model_id}[/bold]")
+        console.print("=" * 60)
+        
+        acc_color = "green" if summary.accuracy >= 80 else "yellow" if summary.accuracy >= 60 else "red"
+        console.print(f"  Questions: {summary.total_questions}")
+        console.print(f"  Correct:   {summary.correct_answers}")
+        console.print(f"  Accuracy:  [{acc_color}]{summary.accuracy:.1f}%[/{acc_color}]")
+        
+        duration = (summary.completed_at - summary.started_at).total_seconds()
+        console.print(f"  Duration:  {duration:.1f}s ({summary.avg_response_time:.2f}s/question)")
+        
+        if summary.estimated_cost_usd > 0:
+            console.print(f"  Tokens:    {summary.total_input_tokens:,} in / {summary.total_output_tokens:,} out")
+            console.print(f"  Est. Cost: [yellow]${summary.estimated_cost_usd:.4f}[/yellow]")
+        
+        by_domain = summary.by_domain()
+        if len(by_domain) > 1:
+            console.print("\n[bold]By Domain:[/bold]")
+            table = Table(show_header=True)
+            table.add_column("Domain", style="cyan")
+            table.add_column("Correct", justify="right")
+            table.add_column("Total", justify="right")
+            table.add_column("Accuracy", justify="right")
+            
+            for domain, stats in sorted(by_domain.items()):
+                acc = (stats["correct"] / stats["total"]) * 100 if stats["total"] > 0 else 0
+                acc_color = "green" if acc >= 80 else "yellow" if acc >= 60 else "red"
+                table.add_row(domain, str(stats["correct"]), str(stats["total"]), f"[{acc_color}]{acc:.0f}%[/{acc_color}]")
+            
+            console.print(table)
         
         console.print("=" * 60)
