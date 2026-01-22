@@ -1,0 +1,91 @@
+# Salesforce Best Practices Rubric
+# Evaluates code quality against Salesforce development standards
+
+name: Salesforce Best Practices
+version: "1.0"
+description: |
+  Comprehensive evaluation of Salesforce code against best practices,
+  including bulkification, security, and maintainability.
+judge_model: claude-opus-4-20250514
+
+criteria:
+  - name: Bulkification
+    weight: 0.25
+    description: |
+      Are DML and SOQL operations performed on collections?
+      Are there any queries or DML inside loops?
+      Does the code handle batch processing correctly?
+    scoring_guide:
+      1.0: "All operations bulkified, no SOQL/DML in loops, handles collections properly"
+      0.7: "Minor issues, mostly bulkified, perhaps 1-2 small inefficiencies"
+      0.4: "Some SOQL/DML in loops or inefficient collection handling"
+      0.2: "Multiple bulkification violations affecting performance"
+      0.0: "Severe bulkification violations, would fail in production"
+
+  - name: Security Best Practices
+    weight: 0.20
+    description: |
+      Are CRUD/FLS checks present when needed?
+      Are hardcoded IDs avoided?
+      Is SOQL injection prevented?
+      Are sensitive operations properly secured?
+    scoring_guide:
+      1.0: "Full CRUD/FLS checks, no hardcoded IDs, SOQL injection prevented"
+      0.7: "Most security checks present, minor gaps"
+      0.5: "Partial security checks, some hardcoded values"
+      0.2: "Missing important security checks"
+      0.0: "No security considerations, vulnerable code"
+
+  - name: Test Quality
+    weight: 0.20
+    description: |
+      Do tests use System.assert effectively?
+      Are edge cases and bulk scenarios covered?
+      Is test data created properly (not relying on org data)?
+      Is code coverage adequate?
+    scoring_guide:
+      1.0: "Comprehensive tests with bulk scenarios, proper assertions, good coverage"
+      0.7: "Good tests with assertions, covers main scenarios"
+      0.5: "Basic tests, limited assertions or coverage"
+      0.2: "Minimal tests, missing key scenarios"
+      0.0: "No tests or tests that don't verify behavior"
+
+  - name: Code Readability
+    weight: 0.15
+    description: |
+      Is the code well-organized and easy to understand?
+      Are naming conventions followed?
+      Is there appropriate commenting?
+      Is the code modular and reusable?
+    scoring_guide:
+      1.0: "Excellent readability, clear naming, well-documented"
+      0.7: "Good readability, mostly clear structure"
+      0.5: "Adequate readability, some confusing sections"
+      0.2: "Poor readability, inconsistent style"
+      0.0: "Very difficult to understand, no organization"
+
+  - name: Error Handling
+    weight: 0.10
+    description: |
+      Are exceptions handled appropriately?
+      Are error messages informative?
+      Is there proper logging for debugging?
+    scoring_guide:
+      1.0: "Comprehensive error handling with informative messages"
+      0.7: "Good error handling, covers main failure scenarios"
+      0.5: "Basic error handling"
+      0.2: "Minimal error handling"
+      0.0: "No error handling, unhandled exceptions"
+
+  - name: Platform Patterns
+    weight: 0.10
+    description: |
+      Does the code follow Salesforce platform patterns?
+      Are triggers properly structured (handler pattern)?
+      Is async processing used appropriately?
+    scoring_guide:
+      1.0: "Follows all platform patterns and best practices"
+      0.7: "Mostly follows patterns, minor deviations"
+      0.5: "Some patterns followed, some anti-patterns"
+      0.2: "Multiple anti-patterns"
+      0.0: "Ignores platform patterns entirely"
