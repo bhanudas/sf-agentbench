@@ -75,6 +75,8 @@ class QAResult:
     response_time_seconds: float
     domain: str = ""
     explanation: str = ""
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 @dataclass
@@ -88,6 +90,9 @@ class QARunSummary:
     total_questions: int
     correct_answers: int
     results: list[QAResult] = field(default_factory=list)
+    total_input_tokens: int = 0
+    total_output_tokens: int = 0
+    estimated_cost_usd: float = 0.0
     
     @property
     def accuracy(self) -> float:
@@ -100,6 +105,13 @@ class QARunSummary:
     def duration_seconds(self) -> float:
         """Total run duration."""
         return (self.completed_at - self.started_at).total_seconds()
+    
+    @property
+    def cost_per_question(self) -> float:
+        """Cost per question in USD."""
+        if self.total_questions == 0:
+            return 0.0
+        return self.estimated_cost_usd / self.total_questions
     
     def by_domain(self) -> dict[str, dict]:
         """Get results grouped by domain."""
@@ -156,6 +168,36 @@ QA_CLI_CONFIGS = {
         "default_model": "sonnet",
     },
 }
+
+# Cost per 1M tokens (input/output) - approximate pricing as of Jan 2026
+# Source: https://openai.com/pricing, https://www.anthropic.com/pricing, https://ai.google.dev/pricing
+MODEL_COSTS = {
+    # Gemini models
+    "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
+    "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
+    "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
+    "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
+    # Claude models
+    "sonnet": {"input": 3.00, "output": 15.00},
+    "claude-sonnet-4": {"input": 3.00, "output": 15.00},
+    "opus": {"input": 15.00, "output": 75.00},
+    "claude-opus-4": {"input": 15.00, "output": 75.00},
+    "haiku": {"input": 0.25, "output": 1.25},
+    # OpenAI models (for future)
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+}
+
+def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    """Estimate cost in USD for a given model and token count."""
+    costs = MODEL_COSTS.get(model, MODEL_COSTS.get("gemini-2.0-flash"))  # Default fallback
+    input_cost = (input_tokens / 1_000_000) * costs["input"]
+    output_cost = (output_tokens / 1_000_000) * costs["output"]
+    return input_cost + output_cost
+
+def estimate_tokens(text: str) -> int:
+    """Rough estimate of tokens (4 chars per token on average)."""
+    return len(text) // 4
 
 
 class QARunner:
@@ -300,6 +342,10 @@ class QARunner:
                     response_time=elapsed,
                 )
         
+        # Estimate tokens for cost tracking
+        input_tokens = estimate_tokens(prompt)
+        output_tokens = estimate_tokens(response)
+        
         return QAResult(
             question_id=question.id,
             question_text=question.question,
@@ -310,6 +356,8 @@ class QARunner:
             response_time_seconds=elapsed,
             domain=question.domain,
             explanation=question.explanation,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
         )
     
     def run_test_bank(
@@ -385,10 +433,17 @@ class QARunner:
             error=error_message,
         )
         
+        # Calculate tokens and cost
+        total_input_tokens = sum(r.input_tokens for r in results)
+        total_output_tokens = sum(r.output_tokens for r in results)
+        estimated_cost = estimate_cost(self.model, total_input_tokens, total_output_tokens)
+        
         # Log summary
         accuracy = (correct_count / len(questions_to_run) * 100) if questions_to_run else 0
         self.logger.info(f"Run completed: {correct_count}/{len(questions_to_run)} ({accuracy:.1f}%)")
         self.logger.info(f"Duration: {duration:.1f}s")
+        self.logger.info(f"Tokens: {total_input_tokens:,} in / {total_output_tokens:,} out")
+        self.logger.info(f"Estimated cost: ${estimated_cost:.4f}")
         
         return QARunSummary(
             model_id=self.model,
@@ -398,6 +453,9 @@ class QARunner:
             total_questions=len(questions_to_run),
             correct_answers=correct_count,
             results=results,
+            total_input_tokens=total_input_tokens,
+            total_output_tokens=total_output_tokens,
+            estimated_cost_usd=estimated_cost,
         )
     
     def _run_sequential(
@@ -525,6 +583,11 @@ class QARunner:
         console.print(f"  Test Bank: {summary.test_bank_id}")
         console.print(f"  Duration:  {summary.duration_seconds:.1f}s")
         console.print(f"  Score:     [{accuracy_color}]{summary.correct_answers}/{summary.total_questions} ({summary.accuracy:.1f}%)[/{accuracy_color}]")
+        
+        # Cost information
+        if summary.estimated_cost_usd > 0:
+            console.print(f"  Tokens:    {summary.total_input_tokens:,} in / {summary.total_output_tokens:,} out")
+            console.print(f"  Est. Cost: [yellow]${summary.estimated_cost_usd:.4f}[/yellow] (${summary.cost_per_question:.5f}/question)")
         
         # By domain breakdown
         by_domain = summary.by_domain()
