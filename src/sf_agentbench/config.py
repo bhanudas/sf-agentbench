@@ -35,18 +35,8 @@ BUILTIN_MODELS: dict[str, dict[str, Any]] = {
         "api_key_env": "ANTHROPIC_API_KEY",
         "context_window": 200000,
     },
-    "claude-3-5-sonnet-20241022": {
-        "provider": ModelProvider.ANTHROPIC,
-        "name": "Claude 3.5 Sonnet",
-        "api_key_env": "ANTHROPIC_API_KEY",
-        "context_window": 200000,
-    },
-    "claude-3-opus-20240229": {
-        "provider": ModelProvider.ANTHROPIC,
-        "name": "Claude 3 Opus",
-        "api_key_env": "ANTHROPIC_API_KEY",
-        "context_window": 200000,
-    },
+    # Note: Claude 3.x models (claude-3-5-sonnet, claude-3-opus) have been
+    # deprecated by Anthropic. Use Claude 4 models (claude-sonnet-4, claude-opus-4) instead.
     # OpenAI models
     "gpt-4o": {
         "provider": ModelProvider.OPENAI,

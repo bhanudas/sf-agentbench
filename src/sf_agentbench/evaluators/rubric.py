@@ -228,10 +228,26 @@ Return your evaluation as JSON in this format:
         - Google Gemini
         - etc.
         """
-        # Placeholder: Try to use httpx if API key is available
         import os
 
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        # Try to get API key from auth module first, then fall back to env var
+        api_key = None
+        try:
+            from sf_agentbench.agents.auth import get_anthropic_credentials
+            creds = get_anthropic_credentials()
+            if creds:
+                # Handle both dict and string returns from auth module
+                if isinstance(creds, dict):
+                    api_key = creds.get("api_key")
+                elif isinstance(creds, str):
+                    api_key = creds
+        except ImportError:
+            pass
+
+        # Fall back to environment variable
+        if not api_key:
+            api_key = os.environ.get("ANTHROPIC_API_KEY")
+
         if api_key:
             import httpx
 

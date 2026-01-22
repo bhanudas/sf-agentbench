@@ -765,15 +765,29 @@ class QAAPIRunner:
                 raise ImportError("Please install anthropic: pip install anthropic")
         return self._anthropic_client
     
+    def _get_max_output_tokens(self) -> int:
+        """Get appropriate max_output_tokens based on model type.
+
+        Thinking models (gemini-2.5-pro, gemini-3.0-thinking, etc.) need higher
+        token limits because they use internal reasoning before producing output.
+        """
+        model_lower = self.model.lower()
+        # Thinking/Pro models need higher token limits for internal reasoning
+        if any(pattern in model_lower for pattern in ["thinking", "2.5-pro", "3.0-pro", "2.5-flash"]):
+            return 8192
+        # Standard models can use lower limits for simple Q&A
+        return 256
+
     def _call_gemini(self, prompt: str) -> tuple[str, int, int]:
         """Call Gemini API and return (response, input_tokens, output_tokens)."""
         from google.genai import types
-        
+
         client = self._get_gemini_client()
+        max_tokens = self._get_max_output_tokens()
         response = client.models.generate_content(
             model=self.model,
             contents=[types.Content(role="user", parts=[types.Part(text=prompt)])],
-            config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=100),
+            config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=max_tokens),
         )
         
         text = ""
