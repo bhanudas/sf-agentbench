@@ -647,7 +647,10 @@ class QARunner:
 
 
 class QAAPIRunner:
-    """Runs Q&A tests using direct API calls (more reliable than CLI)."""
+    """Runs Q&A tests using direct API calls (more reliable than CLI).
+    
+    Integrates with the shared event store for cross-process monitoring.
+    """
     
     def __init__(
         self,
@@ -657,6 +660,7 @@ class QAAPIRunner:
         workers: int = 4,
         results_dir: Path | str | None = None,
         logs_dir: Path | str | None = None,
+        emit_events: bool = True,
     ):
         """
         Initialize the API-based Q&A runner.
@@ -668,11 +672,13 @@ class QAAPIRunner:
             workers: Number of parallel worker threads
             results_dir: Directory for storing results
             logs_dir: Directory for log files
+            emit_events: Whether to emit events to shared store for REPL monitoring
         """
         self.model = model
         self.timeout = timeout_seconds
         self.verbose = verbose
         self.workers = max(1, workers)
+        self.emit_events = emit_events
         
         # Determine provider from model name
         if "gemini" in model.lower():
@@ -687,6 +693,12 @@ class QAAPIRunner:
         self.logs_dir = Path(logs_dir or "logs")
         self.store = QAResultsStore(self.results_dir)
         
+        # Shared event store for REPL integration
+        self._event_store = None
+        if emit_events:
+            from sf_agentbench.events.shared import get_shared_store
+            self._event_store = get_shared_store()
+        
         # API clients (lazy loaded)
         self._gemini_client = None
         self._anthropic_client = None
@@ -695,6 +707,20 @@ class QAAPIRunner:
         self.logger: logging.Logger | None = None
         self.run_id: str | None = None
         self._store_lock = threading.Lock()
+        
+        # Counters for progress tracking
+        self._completed_count = 0
+        self._total_count = 0
+        self._correct_count = 0
+    
+    def _emit_event(self, event) -> None:
+        """Emit an event to the shared store."""
+        if self._event_store:
+            try:
+                self._event_store.publish(event)
+            except Exception as e:
+                if self.logger:
+                    self.logger.debug(f"Failed to emit event: {e}")
     
     def _get_gemini_client(self):
         """Get or create Gemini client."""
@@ -866,9 +892,16 @@ class QAAPIRunner:
         progress_callback: Callable[[QAResult], None] | None = None,
     ) -> QARunSummary:
         """Run Q&A tests using API."""
+        from sf_agentbench.events.types import LogEvent, LogLevel, StatusEvent, ProgressEvent
+        
         questions = test_bank.questions
         if max_questions:
             questions = questions[:max_questions]
+        
+        # Initialize counters
+        self._total_count = len(questions)
+        self._completed_count = 0
+        self._correct_count = 0
         
         # Start run in storage
         self.run_id = self.store.start_run(
@@ -879,6 +912,20 @@ class QAAPIRunner:
         )
         
         self.logger = setup_qa_logging(self.logs_dir, self.run_id)
+        
+        # Emit start event
+        self._emit_event(LogEvent(
+            level=LogLevel.INFO,
+            source=f"qa-{self.model}",
+            message=f"Starting Q&A run: {test_bank.name} ({len(questions)} questions)",
+            work_unit_id=self.run_id,
+        ))
+        self._emit_event(StatusEvent(
+            work_unit_id=self.run_id,
+            status="running",
+            progress=0.0,
+            metrics={"model": self.model, "questions": len(questions), "workers": self.workers},
+        ))
         
         console.print(f"\n[bold cyan]Running Q&A Test via API: {test_bank.name}[/bold cyan]")
         console.print(f"  Run ID: [dim]{self.run_id}[/dim]")
@@ -903,11 +950,39 @@ class QAAPIRunner:
                     result = future.result()
                     results.append(result)
                     
+                    # Update counters
+                    with self._store_lock:
+                        self._completed_count += 1
+                        if result.is_correct:
+                            correct_count += 1
+                            self._correct_count += 1
+                    
+                    # Emit progress event
+                    progress = self._completed_count / self._total_count
+                    self._emit_event(ProgressEvent(
+                        work_unit_id=self.run_id,
+                        current=self._completed_count,
+                        total=self._total_count,
+                        message=f"Q{result.question_id}: {'✓' if result.is_correct else '✗'}",
+                    ))
+                    
+                    # Emit log event
                     if result.is_correct:
-                        correct_count += 1
+                        self._emit_event(LogEvent(
+                            level=LogLevel.INFO,
+                            source=f"qa-{self.model}",
+                            message=f"Q{result.question_id}: Correct ({result.response_time_seconds:.1f}s)",
+                            work_unit_id=self.run_id,
+                        ))
                         with _console_lock:
                             console.print(f"  [green]✓[/green] Q{result.question_id}: Correct ({result.response_time_seconds:.1f}s)")
                     else:
+                        self._emit_event(LogEvent(
+                            level=LogLevel.WARN,
+                            source=f"qa-{self.model}",
+                            message=f"Q{result.question_id}: Expected {result.expected_answer}, Got {result.extracted_answer}",
+                            work_unit_id=self.run_id,
+                        ))
                         with _console_lock:
                             console.print(f"  [red]✗[/red] Q{result.question_id}: Expected {result.expected_answer}, Got {result.extracted_answer} ({result.response_time_seconds:.1f}s)")
                     
@@ -945,6 +1020,26 @@ class QAAPIRunner:
             total_output_tokens=total_output,
             estimated_cost_usd=total_cost,
         )
+        
+        # Emit completion events
+        self._emit_event(StatusEvent(
+            work_unit_id=self.run_id,
+            status="completed",
+            progress=1.0,
+            metrics={
+                "accuracy": summary.accuracy,
+                "correct": correct_count,
+                "total": len(results),
+                "duration_seconds": duration,
+                "cost_usd": total_cost,
+            },
+        ))
+        self._emit_event(LogEvent(
+            level=LogLevel.INFO,
+            source=f"qa-{self.model}",
+            message=f"Run complete: {correct_count}/{len(results)} correct ({summary.accuracy:.1f}%) - ${total_cost:.4f}",
+            work_unit_id=self.run_id,
+        ))
         
         self.logger.info(f"Run complete: {correct_count}/{len(results)} correct ({summary.accuracy:.1f}%)")
         

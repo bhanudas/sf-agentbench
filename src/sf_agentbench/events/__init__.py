@@ -14,6 +14,7 @@ from sf_agentbench.events.types import (
     ProgressEvent,
 )
 from sf_agentbench.events.bus import EventBus, EventHandler, get_event_bus, reset_event_bus
+from sf_agentbench.events.shared import SharedEventStore, get_shared_store, reset_shared_store
 
 __all__ = [
     "Event",
@@ -28,4 +29,7 @@ __all__ = [
     "EventHandler",
     "get_event_bus",
     "reset_event_bus",
+    "SharedEventStore",
+    "get_shared_store",
+    "reset_shared_store",
 ]
