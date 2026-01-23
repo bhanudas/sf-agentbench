@@ -162,32 +162,68 @@ class DeploymentEvaluator:
                     errors=[],
                     duration_seconds=0.0,
                 ), 1.0
-            
+
             errors = []
             if result:
-                errors = [
-                    DeploymentError(
-                        component_type=e.get("component_type", "Unknown"),
-                        component_name=e.get("component_name", "Unknown"),
-                        line=e.get("line"),
-                        column=e.get("column"),
-                        message=e.get("message", "Unknown error"),
-                        error_code=e.get("error_code"),
-                    )
-                    for e in result.errors
-                ]
+                # Handle both structured errors and raw error messages
+                if result.errors:
+                    for e in result.errors:
+                        if isinstance(e, dict):
+                            errors.append(
+                                DeploymentError(
+                                    component_type=e.get("component_type", "Unknown"),
+                                    component_name=e.get("component_name", "Unknown"),
+                                    line=e.get("line"),
+                                    column=e.get("column"),
+                                    message=e.get("message", str(e)),
+                                    error_code=e.get("error_code"),
+                                )
+                            )
+                        else:
+                            # Handle string errors
+                            errors.append(
+                                DeploymentError(
+                                    component_type="Unknown",
+                                    component_name="Unknown",
+                                    message=str(e),
+                                )
+                            )
+
+                # If no errors but deployment failed, check raw output for clues
+                if not errors and result.raw_output:
+                    # Extract error info from raw output
+                    raw_lower = result.raw_output.lower()
+                    if "error" in raw_lower or "failed" in raw_lower:
+                        # Try to extract meaningful error from raw output
+                        error_lines = [
+                            line.strip() for line in result.raw_output.split('\n')
+                            if 'error' in line.lower() or 'failed' in line.lower()
+                        ]
+                        error_msg = error_lines[0] if error_lines else "Deployment failed (check raw output)"
+                        errors.append(
+                            DeploymentError(
+                                component_type="Unknown",
+                                component_name="Unknown",
+                                message=error_msg[:500],  # Limit message length
+                            )
+                        )
 
             deployment = DeploymentResult(
                 status=DeploymentStatus.FAILURE,
                 deployed_count=0,
-                failed_count=len(errors),
+                failed_count=len(errors) if errors else 1,  # At least 1 error if failed
                 errors=errors,
             )
             score = 0.0
-            console.print(f"    [red]✗ Deployment failed ({len(errors)} errors)[/red]")
+
+            error_count = len(errors) if errors else "unknown"
+            console.print(f"    [red]✗ Deployment failed ({error_count} errors)[/red]")
 
             if self.verbose:
                 for error in errors[:5]:
                     console.print(f"      [dim]{error.component_name}: {error.message}[/dim]")
+                # Also show raw output excerpt if no structured errors
+                if not errors and result and result.raw_output:
+                    console.print(f"      [dim]Raw output: {result.raw_output[:200]}...[/dim]")
 
         return deployment, score
