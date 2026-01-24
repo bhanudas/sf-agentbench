@@ -267,10 +267,13 @@ class RubricConfig(BaseModel):
     """Configuration for LLM-as-a-Judge rubric evaluation."""
 
     enabled: bool = Field(default=True)
-    model: str = Field(default="claude-3-5-sonnet-20241022")
+    model: str = Field(default="claude-sonnet-4-20250514")
     temperature: float = Field(default=0.0)
-    max_tokens: int = Field(default=2048)
+    max_tokens: int = Field(default=4096)
     num_evaluations: int = Field(default=1, description="Number of evaluations to average")
+    timeout_seconds: int = Field(default=120, description="API call timeout")
+    fallback_to_heuristic: bool = Field(default=True, description="Use heuristic if LLM fails")
+    provider: str = Field(default="auto", description="LLM provider: auto, anthropic, google, openai")
 
 
 class CustomModelConfig(BaseModel):

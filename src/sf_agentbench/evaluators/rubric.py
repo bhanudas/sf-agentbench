@@ -1,15 +1,67 @@
 """Layer 5: LLM-as-a-Judge Rubric Evaluator."""
 
 import json
+import os
+import re
 from pathlib import Path
 from typing import Any
 
 from rich.console import Console
 
-from sf_agentbench.config import RubricConfig
+from sf_agentbench.config import RubricConfig, BUILTIN_MODELS, ModelProvider
 from sf_agentbench.models import RubricResult, RubricCriterion, Task
 
 console = Console()
+
+
+def _get_api_key(provider: str) -> str | None:
+    """Get API key for the given provider."""
+    env_vars = {
+        "anthropic": "ANTHROPIC_API_KEY",
+        "google": "GOOGLE_API_KEY",
+        "openai": "OPENAI_API_KEY",
+    }
+
+    env_var = env_vars.get(provider.lower())
+    if env_var:
+        key = os.environ.get(env_var)
+        if key:
+            return key
+
+    # Try to get from auth module
+    try:
+        if provider.lower() == "anthropic":
+            from sf_agentbench.agents.auth import get_anthropic_credentials
+            creds = get_anthropic_credentials()
+            if creds:
+                return creds.get("api_key") if isinstance(creds, dict) else creds
+        elif provider.lower() == "google":
+            from sf_agentbench.agents.auth import get_google_credentials
+            creds = get_google_credentials()
+            if creds:
+                return creds.get("api_key") if isinstance(creds, dict) else creds
+    except (ImportError, Exception):
+        pass
+
+    return None
+
+
+def _detect_provider(model: str) -> str:
+    """Auto-detect provider from model name."""
+    model_info = BUILTIN_MODELS.get(model)
+    if model_info:
+        return model_info["provider"].value
+
+    # Fallback to name-based detection
+    model_lower = model.lower()
+    if "claude" in model_lower:
+        return "anthropic"
+    elif "gemini" in model_lower:
+        return "google"
+    elif "gpt" in model_lower or "o1" in model_lower or "o3" in model_lower:
+        return "openai"
+
+    return "anthropic"  # Default
 
 
 # Default rubric for Salesforce development evaluation
@@ -135,13 +187,35 @@ class RubricEvaluator:
         for pattern in ["**/*.cls", "**/*.trigger"]:
             for f in force_app.glob(pattern):
                 if "-meta.xml" not in f.name:
-                    content = f.read_text()
-                    code_parts.append(f"// File: {f.name}\n{content}")
+                    try:
+                        content = f.read_text()
+                        code_parts.append(f"// File: {f.name}\n{content}")
+                    except Exception:
+                        pass
+
+        # Collect Flows
+        for f in force_app.glob("**/flows/*.flow-meta.xml"):
+            try:
+                content = f.read_text()
+                code_parts.append(f"<!-- File: {f.name} -->\n{content}")
+            except Exception:
+                pass
+
+        # Collect Validation Rules
+        for f in force_app.glob("**/validationRules/*.validationRule-meta.xml"):
+            try:
+                content = f.read_text()
+                code_parts.append(f"<!-- File: {f.name} -->\n{content}")
+            except Exception:
+                pass
 
         # Collect LWC JavaScript
         for f in force_app.glob("**/*.js"):
-            content = f.read_text()
-            code_parts.append(f"// File: {f.name}\n{content}")
+            try:
+                content = f.read_text()
+                code_parts.append(f"// File: {f.name}\n{content}")
+            except Exception:
+                pass
 
         return "\n\n".join(code_parts)
 
@@ -161,19 +235,32 @@ class RubricEvaluator:
         """
         Call LLM to evaluate code against rubric.
 
-        This is a placeholder that can be implemented with various LLM providers.
-        For now, it returns a simulated evaluation.
+        Supports multiple providers and has robust fallback behavior.
         """
         # Build the prompt
         prompt = self._build_evaluation_prompt(code, requirements, rubric)
 
-        # Try to call LLM (placeholder - implement with actual provider)
+        # Try to call LLM
         try:
             response = self._call_llm(prompt)
-            return self._parse_llm_response(response, rubric)
-        except Exception:
-            # Fall back to heuristic evaluation
-            return self._heuristic_evaluation(code, rubric)
+            result = self._parse_llm_response(response, rubric)
+            result.feedback = f"Evaluated by LLM ({self.config.model}). {result.feedback}"
+            console.print(f"    [green]LLM evaluation successful[/green]")
+            return result
+        except ValueError as e:
+            # API key not configured
+            console.print(f"    [yellow]LLM not configured: {e}[/yellow]")
+            if getattr(self.config, "fallback_to_heuristic", True):
+                console.print(f"    [dim]Falling back to heuristic evaluation[/dim]")
+                return self._heuristic_evaluation(code, rubric)
+            raise
+        except Exception as e:
+            # API call failed
+            console.print(f"    [yellow]LLM API call failed: {e}[/yellow]")
+            if getattr(self.config, "fallback_to_heuristic", True):
+                console.print(f"    [dim]Falling back to heuristic evaluation[/dim]")
+                return self._heuristic_evaluation(code, rubric)
+            raise
 
     def _build_evaluation_prompt(
         self,
@@ -220,57 +307,125 @@ Return your evaluation as JSON in this format:
 
     def _call_llm(self, prompt: str) -> str:
         """
-        Call LLM API.
+        Call LLM API with support for multiple providers.
 
-        This is a placeholder - implement with your preferred LLM provider:
+        Supports:
         - Anthropic Claude
-        - OpenAI GPT-4
         - Google Gemini
-        - etc.
+        - OpenAI GPT
         """
-        import os
+        import httpx
 
-        # Try to get API key from auth module first, then fall back to env var
-        api_key = None
-        try:
-            from sf_agentbench.agents.auth import get_anthropic_credentials
-            creds = get_anthropic_credentials()
-            if creds:
-                # Handle both dict and string returns from auth module
-                if isinstance(creds, dict):
-                    api_key = creds.get("api_key")
-                elif isinstance(creds, str):
-                    api_key = creds
-        except ImportError:
-            pass
+        # Determine provider
+        provider = self.config.provider
+        if provider == "auto":
+            provider = _detect_provider(self.config.model)
 
-        # Fall back to environment variable
+        # Get API key
+        api_key = _get_api_key(provider)
         if not api_key:
-            api_key = os.environ.get("ANTHROPIC_API_KEY")
+            raise ValueError(f"No API key found for provider: {provider}")
 
-        if api_key:
-            import httpx
+        timeout = getattr(self.config, "timeout_seconds", 120)
 
-            response = httpx.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": api_key,
-                    "content-type": "application/json",
-                    "anthropic-version": "2023-06-01",
-                },
-                json={
-                    "model": self.config.model,
-                    "max_tokens": self.config.max_tokens,
+        if provider == "anthropic":
+            return self._call_anthropic(prompt, api_key, timeout)
+        elif provider == "google":
+            return self._call_google(prompt, api_key, timeout)
+        elif provider == "openai":
+            return self._call_openai(prompt, api_key, timeout)
+        else:
+            raise ValueError(f"Unsupported provider: {provider}")
+
+    def _call_anthropic(self, prompt: str, api_key: str, timeout: int) -> str:
+        """Call Anthropic Claude API."""
+        import httpx
+
+        console.print(f"    [dim]Calling Anthropic API ({self.config.model})...[/dim]")
+
+        response = httpx.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": api_key,
+                "content-type": "application/json",
+                "anthropic-version": "2023-06-01",
+            },
+            json={
+                "model": self.config.model,
+                "max_tokens": self.config.max_tokens,
+                "temperature": self.config.temperature,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=float(timeout),
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["content"][0]["text"]
+
+    def _call_google(self, prompt: str, api_key: str, timeout: int) -> str:
+        """Call Google Gemini API."""
+        import httpx
+
+        console.print(f"    [dim]Calling Google Gemini API ({self.config.model})...[/dim]")
+
+        # Map model name if needed
+        model = self.config.model
+        if not model.startswith("models/"):
+            model = f"models/{model}"
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/{model}:generateContent"
+
+        response = httpx.post(
+            url,
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": api_key,
+            },
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
                     "temperature": self.config.temperature,
-                    "messages": [{"role": "user", "content": prompt}],
+                    "maxOutputTokens": self.config.max_tokens,
                 },
-                timeout=60.0,
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["content"][0]["text"]
+            },
+            timeout=float(timeout),
+        )
+        response.raise_for_status()
+        data = response.json()
 
-        raise NotImplementedError("LLM API not configured")
+        # Extract text from response
+        candidates = data.get("candidates", [])
+        if candidates:
+            content = candidates[0].get("content", {})
+            parts = content.get("parts", [])
+            if parts:
+                return parts[0].get("text", "")
+
+        raise ValueError("No content in Gemini response")
+
+    def _call_openai(self, prompt: str, api_key: str, timeout: int) -> str:
+        """Call OpenAI API."""
+        import httpx
+
+        console.print(f"    [dim]Calling OpenAI API ({self.config.model})...[/dim]")
+
+        response = httpx.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self.config.model,
+                "max_tokens": self.config.max_tokens,
+                "temperature": self.config.temperature,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=float(timeout),
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
 
     def _parse_llm_response(
         self, response: str, rubric: list[dict[str, Any]]
@@ -326,114 +481,181 @@ Return your evaluation as JSON in this format:
         """
         Perform heuristic code evaluation when LLM is unavailable.
 
-        This is a simple rule-based evaluation as fallback.
+        Enhanced rule-based evaluation with support for:
+        - Apex code patterns
+        - Flow metadata patterns
+        - Validation rule patterns
         """
         criteria = []
         code_lower = code.lower()
 
-        # Check for bulkification issues
-        soql_in_loop = (
-            "for(" in code_lower or "for (" in code_lower
-        ) and "[select" in code_lower
-        dml_in_loop = any(
-            op in code_lower
-            for op in ["insert ", "update ", "delete ", "upsert "]
-        ) and ("for(" in code_lower or "for (" in code_lower)
+        # Detect what type of code we're evaluating
+        has_apex = ".cls" in code or "public class" in code_lower or "@istest" in code_lower
+        has_flow = "<flow " in code_lower or "<recordupdates>" in code_lower or "flow-meta.xml" in code_lower
+        has_validation = "<validationrule" in code_lower or "errorformula" in code_lower
 
-        bulkification_score = 1.0
-        if soql_in_loop:
-            bulkification_score -= 0.4
-        if dml_in_loop:
-            bulkification_score -= 0.4
+        # Check for bulkification issues (Apex-specific)
+        bulkification_score = 0.8  # Start with good score
+        if has_apex:
+            soql_in_loop = (
+                "for(" in code_lower or "for (" in code_lower
+            ) and "[select" in code_lower
+            dml_in_loop = any(
+                op in code_lower
+                for op in ["insert ", "update ", "delete ", "upsert "]
+            ) and ("for(" in code_lower or "for (" in code_lower)
+
+            if soql_in_loop:
+                bulkification_score -= 0.4
+            if dml_in_loop:
+                bulkification_score -= 0.4
+            # Bonus for using collections
+            if "list<" in code_lower or "map<" in code_lower or "set<" in code_lower:
+                bulkification_score = min(1.0, bulkification_score + 0.2)
 
         criteria.append(
             RubricCriterion(
                 name="Bulkification",
                 weight=0.25,
                 score=max(0, bulkification_score),
-                reasoning="Heuristic check for SOQL/DML in loops",
+                reasoning="Heuristic check for SOQL/DML patterns and collections",
             )
         )
 
-        # Check for async patterns
-        has_async = any(
-            pattern in code_lower
-            for pattern in ["queueable", "batchable", "schedulable", "@future"]
-        )
+        # Check for async patterns (Apex-specific) or Flow patterns
+        async_score = 0.7  # Default neutral score
+        if has_apex:
+            has_async = any(
+                pattern in code_lower
+                for pattern in ["queueable", "batchable", "schedulable", "@future"]
+            )
+            async_score = 0.9 if has_async else 0.6
+        elif has_flow:
+            # Flows handle async through their execution mode
+            is_after_save = "aftersave" in code_lower or "triggertype>update" in code_lower
+            async_score = 0.85 if is_after_save else 0.7
+
         criteria.append(
             RubricCriterion(
                 name="Correct Use of Async Apex",
                 weight=0.20,
-                score=0.8 if has_async else 0.5,
-                reasoning="Checked for async patterns",
+                score=async_score,
+                reasoning="Checked for async patterns or Flow execution mode",
             )
         )
 
         # Check for test quality
-        has_asserts = "system.assert" in code_lower
-        has_test_annotation = "@istest" in code_lower
-        test_score = 0.3
-        if has_test_annotation:
-            test_score += 0.3
-        if has_asserts:
-            test_score += 0.4
+        test_score = 0.5  # Default
+        if has_apex:
+            has_asserts = "system.assert" in code_lower
+            has_test_annotation = "@istest" in code_lower
+            has_testmethod = "testmethod" in code_lower
+            has_bulk_test = "200" in code or "list<" in code_lower and "for" in code_lower
+
+            test_score = 0.3
+            if has_test_annotation or has_testmethod:
+                test_score += 0.25
+            if has_asserts:
+                test_score += 0.25
+            if has_bulk_test:
+                test_score += 0.2  # Bonus for bulk testing
 
         criteria.append(
             RubricCriterion(
                 name="Test Quality",
                 weight=0.20,
-                score=test_score,
-                reasoning="Checked for test annotations and assertions",
+                score=min(1.0, test_score),
+                reasoning="Checked for test annotations, assertions, and bulk patterns",
             )
         )
 
         # Check for security
-        has_crud_check = any(
-            pattern in code_lower
-            for pattern in ["isdeletable", "iscreateable", "isupdateable", "isaccessible"]
-        )
-        has_hardcoded_id = "001" in code or "003" in code  # Common ID prefixes
+        security_score = 0.7  # Default neutral
+        if has_apex:
+            has_crud_check = any(
+                pattern in code_lower
+                for pattern in ["isdeletable", "iscreateable", "isupdateable", "isaccessible", "stripfinal"]
+            )
+            # Check for hardcoded IDs (common Salesforce ID prefixes)
+            has_hardcoded_id = any(
+                prefix in code for prefix in ["001", "003", "005", "006", "00D", "00Q"]
+            )
+            has_with_security = "with security_enforced" in code_lower or "with user_mode" in code_lower
 
-        security_score = 0.6
-        if has_crud_check:
-            security_score += 0.3
-        if has_hardcoded_id:
-            security_score -= 0.3
+            security_score = 0.6
+            if has_crud_check or has_with_security:
+                security_score += 0.3
+            if has_hardcoded_id:
+                security_score -= 0.2
+        elif has_validation:
+            # Validation rules inherently respect security model
+            security_score = 0.85
+        elif has_flow:
+            # Flows run in system context by default, check for user mode
+            security_score = 0.75
 
         criteria.append(
             RubricCriterion(
                 name="Security Best Practices",
                 weight=0.20,
                 score=max(0, min(1, security_score)),
-                reasoning="Checked for CRUD/FLS and hardcoded IDs",
+                reasoning="Checked for security patterns and hardcoded values",
             )
         )
 
-        # Code readability (basic check)
-        has_comments = "//" in code or "/*" in code
-        avg_line_length = sum(len(line) for line in code.split("\n")) / max(
-            1, len(code.split("\n"))
-        )
-        readability_score = 0.5
-        if has_comments:
-            readability_score += 0.2
-        if avg_line_length < 100:
-            readability_score += 0.2
+        # Code readability
+        readability_score = 0.6  # Default
+        if has_apex:
+            has_comments = "//" in code or "/*" in code
+            lines = code.split("\n")
+            avg_line_length = sum(len(line) for line in lines) / max(1, len(lines))
+            has_descriptive_names = any(
+                len(name) > 10 for name in re.findall(r'\b[a-z][a-zA-Z]+\b', code)
+            )
+
+            readability_score = 0.5
+            if has_comments:
+                readability_score += 0.15
+            if avg_line_length < 100:
+                readability_score += 0.15
+            if has_descriptive_names:
+                readability_score += 0.2
+        elif has_flow:
+            # Check Flow has descriptive labels
+            has_labels = "<label>" in code_lower
+            has_descriptions = "<description>" in code_lower
+            readability_score = 0.6
+            if has_labels:
+                readability_score += 0.2
+            if has_descriptions:
+                readability_score += 0.2
 
         criteria.append(
             RubricCriterion(
                 name="Code Readability",
                 weight=0.15,
                 score=min(1, readability_score),
-                reasoning="Checked for comments and line length",
+                reasoning="Checked for comments, naming, and structure",
             )
         )
 
-        # Calculate overall
-        overall = sum(c.score * c.weight for c in criteria) / sum(c.weight for c in criteria)
+        # Calculate overall weighted score
+        total_weight = sum(c.weight for c in criteria)
+        overall = sum(c.score * c.weight for c in criteria) / total_weight if total_weight > 0 else 0.5
+
+        # Determine code type for feedback
+        code_types = []
+        if has_apex:
+            code_types.append("Apex")
+        if has_flow:
+            code_types.append("Flow")
+        if has_validation:
+            code_types.append("Validation Rule")
+        code_type_str = ", ".join(code_types) if code_types else "Code"
 
         return RubricResult(
             overall_score=overall,
             criteria=criteria,
-            feedback="Evaluated using heuristic rules (LLM not available)",
+            feedback=f"Evaluated {code_type_str} using enhanced heuristic rules (LLM not available). "
+                     f"For more accurate evaluation, configure an LLM API key.",
         )
