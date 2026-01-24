@@ -82,3 +82,5 @@ logs/
 *.log
 .scratch-orgs/
 temp/
+node_modules/
+web/dist/

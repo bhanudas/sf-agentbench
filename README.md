@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.2.1-green.svg)](https://github.com/bhanudas/sf-agentbench)
+[![Version](https://img.shields.io/badge/version-0.2.2-green.svg)](https://github.com/bhanudas/sf-agentbench)
 
 ---
 
@@ -14,6 +14,7 @@
 - [What's Included](#whats-included)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Web Interface](#web-interface)
 - [Running Benchmarks](#running-benchmarks)
 - [Interactive Terminal Monitor](#interactive-terminal-monitor)
 - [The Rubric System](#the-rubric-system)
@@ -40,7 +41,14 @@ Salesforce development is a hybrid practice requiring:
 
 SF-AgentBench addresses these unique challenges with a purpose-built evaluation framework.
 
-### ✨ What's New in v0.2.1
+### ✨ What's New in v0.2.2
+
+- **🌐 Web Interface** — Modern React dashboard for reviewing runs, launching benchmarks, and real-time monitoring
+- **📊 Visual Analytics** — Agent comparison charts, score breakdowns, and performance metrics
+- **🔴 Live Monitor** — WebSocket-powered real-time event streaming during benchmark runs
+- **🚀 REST API** — FastAPI backend with full API documentation at `/api/docs`
+
+### What's in v0.2.1
 
 - **🔧 CLI Agent Improvements** — Phase-specific timeouts, Gemini/Aider-specific prompts, progressive timeout warnings
 - **🤖 Multi-Provider LLM-as-Judge** — Auto-detection for Anthropic, Google, and OpenAI with fallback support
@@ -240,6 +248,73 @@ sf-agentbench interactive --watch
 
 # Terminal 2: Run benchmarks (activity appears in Terminal 1)
 sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 8
+```
+
+---
+
+## Web Interface
+
+SF-AgentBench includes a modern web interface for reviewing benchmark runs, launching new benchmarks, and monitoring progress in real-time.
+
+### Starting the Web Interface
+
+```bash
+# Start the backend API server
+sf-agentbench serve
+
+# With options
+sf-agentbench serve -p 8000 -r  # Port 8000 with hot reload
+sf-agentbench serve -o           # Open browser automatically
+```
+
+The API will be available at `http://localhost:8000/api` with interactive docs at `http://localhost:8000/api/docs`.
+
+### Frontend Development
+
+For frontend development with hot reloading:
+
+```bash
+# Terminal 1: Start the backend
+sf-agentbench serve -p 8000
+
+# Terminal 2: Start the frontend dev server
+cd web
+npm install
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173` and proxies API requests to the backend.
+
+### Features
+
+| Page | URL | Description |
+|------|-----|-------------|
+| **Dashboard** | `/` | Summary cards, agent performance charts, recent runs |
+| **Run Browser** | `/runs` | Filterable table of all benchmark runs |
+| **Run Detail** | `/runs/:id` | 5-layer score breakdown, radar chart, evaluation details |
+| **Live Monitor** | `/runs/:id/live` | Real-time WebSocket event stream during runs |
+| **Run Launcher** | `/launch` | Start new benchmarks with task/agent selection |
+| **Q&A Tests** | `/qa` | Browse Q&A runs, model comparison charts |
+| **Comparison** | `/compare` | Multi-agent radar charts and detailed comparisons |
+
+### API Endpoints
+
+```
+GET  /api/runs                    # List benchmark runs
+GET  /api/runs/:id                # Get run details
+POST /api/runs                    # Start new benchmark
+GET  /api/runs/summary            # Get summary statistics
+GET  /api/runs/comparison         # Get agent comparison
+
+GET  /api/qa/runs                 # List Q&A runs
+GET  /api/qa/comparison           # Model comparison
+GET  /api/qa/domains              # Domain analysis
+
+GET  /api/tasks                   # List available tasks
+GET  /api/agents                  # List CLI agents
+GET  /api/models                  # List AI models
+
+WS   /api/ws/runs/:id             # Real-time run events
 ```
 
 ---
@@ -815,6 +890,12 @@ Commands:
     --watch        Watch mode (auto-refresh, no input)
     --workers N    Number of workers
 
+  # Web Interface
+  serve            Start the web interface server
+    -p, --port     Port to listen on (default: 8000)
+    -r, --reload   Enable hot reload for development
+    -o, --open     Open browser automatically
+
   # Information
   list-tasks       List all benchmark tasks
   list-models      List supported AI models
@@ -1000,10 +1081,10 @@ mypy src/
 - [x] **v0.2.1:** Platform Developer I certification questions
 - [x] **v0.2.1:** New Tier-2 coding tasks (territory trigger, discount calculator)
 
-### Phase 3: Scale (Planned)
+### Phase 3: Scale (In Progress)
 - [ ] Scratch Org pool management
 - [ ] Distributed worker nodes
-- [ ] Web dashboard
+- [x] **v0.2.2:** Web dashboard with React frontend and FastAPI backend
 - [ ] Public leaderboard
 - [ ] 10+ Tier 3 tasks
 
@@ -1030,7 +1111,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  <strong>SF-AgentBench v0.2.1</strong> — Bridging AI Agents and Enterprise Platform Development
+  <strong>SF-AgentBench v0.2.2</strong> — Bridging AI Agents and Enterprise Platform Development
 </p>
 
 <p align="center">

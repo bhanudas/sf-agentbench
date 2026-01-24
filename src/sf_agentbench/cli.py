@@ -452,11 +452,67 @@ def main(ctx: click.Context, config: Path | None, verbose: bool) -> None:
     ctx.obj["config"] = cfg
 
 
+# =============================================================================
+# WEB SERVER COMMAND
+# =============================================================================
+
+@click.command("serve")
+@click.option("--host", "-h", default="127.0.0.1", help="Host to bind to")
+@click.option("--port", "-p", type=int, default=8000, help="Port to listen on")
+@click.option("--reload", "-r", is_flag=True, help="Enable auto-reload for development")
+@click.option("--open", "-o", "open_browser", is_flag=True, help="Open browser automatically")
+@click.pass_context
+def serve_web(ctx: click.Context, host: str, port: int, reload: bool, open_browser: bool):
+    """Start the web interface server.
+
+    This launches a FastAPI server that provides:
+    - REST API for benchmark data
+    - WebSocket for real-time updates
+    - Web UI for viewing results
+
+    \b
+    Examples:
+      sf-agentbench serve                    # Start on localhost:8000
+      sf-agentbench serve -p 3000            # Use port 3000
+      sf-agentbench serve -h 0.0.0.0 -o      # Bind to all interfaces, open browser
+      sf-agentbench serve -r                 # Enable hot reload for development
+    """
+    import uvicorn
+    import webbrowser
+    from threading import Timer
+
+    console.print("\n[bold cyan]SF-AgentBench Web Interface[/bold cyan]")
+    console.print("=" * 50)
+    console.print(f"  API:      http://{host}:{port}/api")
+    console.print(f"  Docs:     http://{host}:{port}/api/docs")
+    console.print(f"  Web UI:   http://{host}:{port}/")
+    console.print("=" * 50)
+    console.print("\n[dim]Press Ctrl+C to stop the server[/dim]\n")
+
+    if open_browser:
+        url = f"http://{host}:{port}"
+        if host == "0.0.0.0":
+            url = f"http://127.0.0.1:{port}"
+        Timer(1.5, lambda: webbrowser.open(url)).start()
+
+    try:
+        uvicorn.run(
+            "sf_agentbench.web.app:app",
+            host=host,
+            port=port,
+            reload=reload,
+            log_level="info",
+        )
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Server stopped[/yellow]")
+
+
 # Register command groups
 main.add_command(auth)
 main.add_command(interactive_mode)
 main.add_command(run_parallel)
 main.add_command(e2e_test)
+main.add_command(serve_web)
 
 
 @main.command()

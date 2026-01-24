@@ -41,6 +41,9 @@ dependencies = [
     "deepdiff>=6.0.0",
     "lxml>=5.0.0",
     "textual>=0.47.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "websockets>=14.0",
 ]
 
 [project.optional-dependencies]
@@ -71,6 +74,7 @@ all = [
 [project.scripts]
 sf-agentbench = "sf_agentbench.cli:main"
 sf-agentbench-tui = "sf_agentbench.tui:run"
+sf-agentbench-web = "sf_agentbench.web.app:run_dev_server"
 
 [project.urls]
 Homepage = "https://github.com/bhanudas/sf-agentbench"
