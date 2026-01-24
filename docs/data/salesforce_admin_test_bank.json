@@ -1,24 +1,25 @@
 {
   "metadata": {
-    "version": "1.1",
+    "version": "1.2",
     "created": "2026-01-21",
     "updated": "2026-01-24",
     "description": "Salesforce Administrator Certification Test Bank - Rebalanced Distribution",
-    "total_questions": 50,
+    "total_questions": 75,
     "domains": [
       "Security & Access",
       "Data Management",
       "Automation",
       "Reports & Dashboards",
-      "Sales & Service Cloud"
+      "Sales & Service Cloud",
+      "Platform Developer I"
     ],
     "format": "multiple_choice",
     "answer_distribution": {
-      "A": 13,
-      "B": 12,
-      "C": 13,
-      "D": 12,
-      "note": "Balanced to ~25% per option to eliminate positional bias"
+      "A": 19,
+      "B": 19,
+      "C": 18,
+      "D": 19,
+      "note": "Balanced distribution across all 75 questions"
     },
     "future_enhancements": [
       "non_deterministic_answers",
@@ -676,6 +677,331 @@
       },
       "correct_answer": "A",
       "explanation": "Queues can own records (like Cases or Leads) and have associated list views. Public Groups are used only for sharing and cannot own records."
+    },
+    {
+      "id": 51,
+      "domain": "Platform Developer I",
+      "question": "Which collection type should be used to store unique values and check for membership efficiently?",
+      "choices": {
+        "A": "List",
+        "B": "Map",
+        "C": "Set",
+        "D": "Array"
+      },
+      "correct_answer": "C",
+      "explanation": "Set collections store unique values and provide O(1) lookup for membership checks, making them ideal for deduplication and contains() operations."
+    },
+    {
+      "id": 52,
+      "domain": "Platform Developer I",
+      "question": "What is the governor limit for total SOQL queries in a synchronous transaction?",
+      "choices": {
+        "A": "100",
+        "B": "50",
+        "C": "150",
+        "D": "200"
+      },
+      "correct_answer": "A",
+      "explanation": "Synchronous Apex transactions are limited to 100 SOQL queries. Asynchronous transactions allow 200 queries."
+    },
+    {
+      "id": 53,
+      "domain": "Platform Developer I",
+      "question": "Which trigger event fires after the record has been committed to the database?",
+      "choices": {
+        "A": "before insert",
+        "B": "before update",
+        "C": "after insert",
+        "D": "before delete"
+      },
+      "correct_answer": "C",
+      "explanation": "After triggers (after insert, after update, after delete) fire after the record is committed to the database and has a record ID."
+    },
+    {
+      "id": 54,
+      "domain": "Platform Developer I",
+      "question": "What is the correct way to bulkify a trigger that needs to query related records?",
+      "choices": {
+        "A": "Query inside the for loop for each record",
+        "B": "Use SOSL instead of SOQL",
+        "C": "Increase the query limit using Limits class",
+        "D": "Use a Map to store queried records before the loop"
+      },
+      "correct_answer": "D",
+      "explanation": "Bulkification requires querying all needed records in a single SOQL query before the loop and storing them in a Map for O(1) access."
+    },
+    {
+      "id": 55,
+      "domain": "Platform Developer I",
+      "question": "Which annotation is used to expose an Apex method as a REST endpoint?",
+      "choices": {
+        "A": "@RestResource",
+        "B": "@HttpGet",
+        "C": "@AuraEnabled",
+        "D": "@RemoteAction"
+      },
+      "correct_answer": "A",
+      "explanation": "@RestResource annotation at the class level exposes the class as a REST endpoint. @HttpGet, @HttpPost, etc. define specific methods."
+    },
+    {
+      "id": 56,
+      "domain": "Platform Developer I",
+      "question": "What is the minimum code coverage required to deploy Apex to production?",
+      "choices": {
+        "A": "50%",
+        "B": "75%",
+        "C": "85%",
+        "D": "100%"
+      },
+      "correct_answer": "B",
+      "explanation": "Salesforce requires at least 75% overall code coverage for Apex classes and triggers to deploy to production."
+    },
+    {
+      "id": 57,
+      "domain": "Platform Developer I",
+      "question": "Which method should be used to perform DML operations in a test class without committing to the database?",
+      "choices": {
+        "A": "Test.startTest()",
+        "B": "Database.setSavepoint()",
+        "C": "Test.isRunningTest()",
+        "D": "All test DML is automatically rolled back"
+      },
+      "correct_answer": "D",
+      "explanation": "All DML operations in test methods are automatically rolled back after the test completes, regardless of test result."
+    },
+    {
+      "id": 58,
+      "domain": "Platform Developer I",
+      "question": "What is the purpose of the @TestSetup annotation?",
+      "choices": {
+        "A": "To run tests in isolation",
+        "B": "To skip certain tests",
+        "C": "To create test data once and use it in multiple test methods",
+        "D": "To set governor limit overrides"
+      },
+      "correct_answer": "C",
+      "explanation": "@TestSetup methods create test data that is rolled back after each test method but available to all test methods in the class."
+    },
+    {
+      "id": 59,
+      "domain": "Platform Developer I",
+      "question": "Which keyword prevents a class from being extended?",
+      "choices": {
+        "A": "static",
+        "B": "virtual",
+        "C": "abstract",
+        "D": "final"
+      },
+      "correct_answer": "D",
+      "explanation": "The 'final' keyword on a class prevents it from being extended. Final methods cannot be overridden in subclasses."
+    },
+    {
+      "id": 60,
+      "domain": "Platform Developer I",
+      "question": "What does SOSL allow that SOQL does not?",
+      "choices": {
+        "A": "Querying multiple objects simultaneously",
+        "B": "Using aggregate functions",
+        "C": "Filtering by date ranges",
+        "D": "Ordering results"
+      },
+      "correct_answer": "A",
+      "explanation": "SOSL (Salesforce Object Search Language) can search across multiple objects in a single query, while SOQL queries one object at a time."
+    },
+    {
+      "id": 61,
+      "domain": "Platform Developer I",
+      "question": "Which interface must be implemented for a class to be used in a batch Apex job?",
+      "choices": {
+        "A": "Database.Batchable",
+        "B": "Queueable",
+        "C": "Schedulable",
+        "D": "Database.Stateful"
+      },
+      "correct_answer": "A",
+      "explanation": "Database.Batchable interface must be implemented with start(), execute(), and finish() methods for batch Apex."
+    },
+    {
+      "id": 62,
+      "domain": "Platform Developer I",
+      "question": "What is the maximum batch size for Database.executeBatch()?",
+      "choices": {
+        "A": "100",
+        "B": "200",
+        "C": "1000",
+        "D": "2000"
+      },
+      "correct_answer": "D",
+      "explanation": "The maximum batch size for batch Apex is 2000 records. The default is 200 if not specified."
+    },
+    {
+      "id": 63,
+      "domain": "Platform Developer I",
+      "question": "Which statement correctly describes a before trigger?",
+      "choices": {
+        "A": "The record has an ID assigned",
+        "B": "The record is already committed",
+        "C": "Related records can be modified directly",
+        "D": "The record can be modified without DML"
+      },
+      "correct_answer": "D",
+      "explanation": "In before triggers, you can modify field values on the trigger records directly without additional DML operations."
+    },
+    {
+      "id": 64,
+      "domain": "Platform Developer I",
+      "question": "What is the purpose of the @future annotation?",
+      "choices": {
+        "A": "To make a method run synchronously",
+        "B": "To schedule a method for a specific time",
+        "C": "To run a method asynchronously",
+        "D": "To cache method results"
+      },
+      "correct_answer": "C",
+      "explanation": "@future methods run asynchronously in their own thread, separate from the current transaction."
+    },
+    {
+      "id": 65,
+      "domain": "Platform Developer I",
+      "question": "Which access modifier allows a method to be called from a Visualforce page?",
+      "choices": {
+        "A": "private",
+        "B": "public",
+        "C": "global",
+        "D": "protected"
+      },
+      "correct_answer": "B",
+      "explanation": "Public methods in the controller class can be called from Visualforce pages. Global is not required unless the class is in a managed package."
+    },
+    {
+      "id": 66,
+      "domain": "Platform Developer I",
+      "question": "What happens when a validation rule fails in an after trigger?",
+      "choices": {
+        "A": "Only the failing record is rolled back",
+        "B": "The entire transaction is rolled back",
+        "C": "The error is logged but the record is saved",
+        "D": "The trigger continues processing other records"
+      },
+      "correct_answer": "B",
+      "explanation": "If a validation rule fails at any point, the entire transaction is rolled back, including all DML operations."
+    },
+    {
+      "id": 67,
+      "domain": "Platform Developer I",
+      "question": "Which method is used to add an error to a specific field in a trigger?",
+      "choices": {
+        "A": "record.addError(field, message)",
+        "B": "record.field.addError(message)",
+        "C": "ApexPages.addMessage()",
+        "D": "throw new DmlException()"
+      },
+      "correct_answer": "B",
+      "explanation": "record.field.addError('message') adds an error to a specific field, displaying it inline on the page layout."
+    },
+    {
+      "id": 68,
+      "domain": "Platform Developer I",
+      "question": "What is the heap size limit for synchronous Apex?",
+      "choices": {
+        "A": "3 MB",
+        "B": "6 MB",
+        "C": "12 MB",
+        "D": "24 MB"
+      },
+      "correct_answer": "B",
+      "explanation": "Synchronous Apex has a 6 MB heap size limit. Asynchronous Apex has 12 MB."
+    },
+    {
+      "id": 69,
+      "domain": "Platform Developer I",
+      "question": "Which SOQL clause is used to lock records for update?",
+      "choices": {
+        "A": "WITH SHARING",
+        "B": "FOR UPDATE",
+        "C": "FOR REFERENCE",
+        "D": "LOCK MODE"
+      },
+      "correct_answer": "B",
+      "explanation": "FOR UPDATE clause locks the queried records to prevent other transactions from modifying them until the current transaction completes."
+    },
+    {
+      "id": 70,
+      "domain": "Platform Developer I",
+      "question": "What does 'with sharing' keyword do in Apex?",
+      "choices": {
+        "A": "Enforces the current user's sharing rules",
+        "B": "Shares the class with other orgs",
+        "C": "Makes all records visible to the user",
+        "D": "Enables community user access"
+      },
+      "correct_answer": "A",
+      "explanation": "'with sharing' enforces the running user's sharing rules, record-level security, and field-level security."
+    },
+    {
+      "id": 71,
+      "domain": "Platform Developer I",
+      "question": "Which method signature is correct for a Queueable class?",
+      "choices": {
+        "A": "public void execute()",
+        "B": "public void run()",
+        "C": "public void execute(QueueableContext context)",
+        "D": "public void process()"
+      },
+      "correct_answer": "C",
+      "explanation": "Queueable interface requires execute(QueueableContext context) method implementation."
+    },
+    {
+      "id": 72,
+      "domain": "Platform Developer I",
+      "question": "What is the maximum number of records returned by a SOQL query without using OFFSET?",
+      "choices": {
+        "A": "1,000",
+        "B": "10,000",
+        "C": "50,000",
+        "D": "Unlimited"
+      },
+      "correct_answer": "C",
+      "explanation": "SOQL queries can return up to 50,000 records. For larger datasets, use batch Apex or queryMore()."
+    },
+    {
+      "id": 73,
+      "domain": "Platform Developer I",
+      "question": "Which annotation exposes an Apex method to Lightning components?",
+      "choices": {
+        "A": "@AuraEnabled",
+        "B": "@RemoteAction",
+        "C": "@InvocableMethod",
+        "D": "@RestResource"
+      },
+      "correct_answer": "A",
+      "explanation": "@AuraEnabled annotation exposes methods to both Aura components and Lightning Web Components (LWC)."
+    },
+    {
+      "id": 74,
+      "domain": "Platform Developer I",
+      "question": "What is the correct order of trigger execution?",
+      "choices": {
+        "A": "After triggers \u2192 Before triggers \u2192 Validation rules",
+        "B": "Before triggers \u2192 After triggers \u2192 Validation rules",
+        "C": "Validation rules \u2192 Before triggers \u2192 After triggers",
+        "D": "Before triggers \u2192 Validation rules \u2192 After triggers"
+      },
+      "correct_answer": "D",
+      "explanation": "The order is: Before triggers \u2192 System validation \u2192 Custom validation rules \u2192 After triggers \u2192 Assignment/Escalation rules."
+    },
+    {
+      "id": 75,
+      "domain": "Platform Developer I",
+      "question": "Which DML option allows partial success when inserting multiple records?",
+      "choices": {
+        "A": "Database.insert(records, true)",
+        "B": "Database.insert(records, false)",
+        "C": "insert records",
+        "D": "Database.insertImmediate(records)"
+      },
+      "correct_answer": "B",
+      "explanation": "Database.insert(records, false) allows partial success - successful records are committed while failed records return errors."
     }
   ]
 }
