@@ -1,0 +1,12 @@
+id: account-territory-trigger
+name: Account Territory Assignment Trigger
+description: Create an Apex trigger with handler class for automatic territory assignment
+tier: tier-2
+categories:
+  - apex-trigger
+  - apex-class
+  - apex-test
+time_limit_minutes: 30
+scratch_def: config/project-scratch-def.json
+evaluation_tests:
+  - AccountTerritoryTriggerTest

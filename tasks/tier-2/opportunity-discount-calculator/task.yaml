@@ -1,0 +1,12 @@
+id: opportunity-discount-calculator
+name: Opportunity Discount Calculator
+description: Create an Apex class with invocable method for calculating opportunity discounts
+tier: tier-2
+categories:
+  - apex-class
+  - apex-test
+  - invocable
+time_limit_minutes: 30
+scratch_def: config/project-scratch-def.json
+evaluation_tests:
+  - OpportunityDiscountCalculatorTest
