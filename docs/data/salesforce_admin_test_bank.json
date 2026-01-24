@@ -1,8 +1,9 @@
 {
   "metadata": {
-    "version": "1.0",
+    "version": "1.1",
     "created": "2026-01-21",
-    "description": "Salesforce Administrator Certification Test Bank - Trial Version",
+    "updated": "2026-01-24",
+    "description": "Salesforce Administrator Certification Test Bank - Rebalanced Distribution",
     "total_questions": 50,
     "domains": [
       "Security & Access",
@@ -12,6 +13,13 @@
       "Sales & Service Cloud"
     ],
     "format": "multiple_choice",
+    "answer_distribution": {
+      "A": 13,
+      "B": 12,
+      "C": 13,
+      "D": 12,
+      "note": "Balanced to ~25% per option to eliminate positional bias"
+    },
     "future_enhancements": [
       "non_deterministic_answers",
       "llm_generated_explanations",
@@ -24,12 +32,12 @@
       "domain": "Security & Access",
       "question": "What is the correct order of access evaluation in Salesforce?",
       "choices": {
-        "A": "Permission Sets → Profiles → Organization-Wide Defaults → Role Hierarchy",
-        "B": "Organization-Wide Defaults → Role Hierarchy → Sharing Rules → Manual Sharing",
-        "C": "Profiles → Organization-Wide Defaults → Sharing Rules → Permission Sets",
-        "D": "Role Hierarchy → Organization-Wide Defaults → Profiles → Sharing Rules"
+        "A": "Permission Sets \u2192 Profiles \u2192 Organization-Wide Defaults \u2192 Role Hierarchy",
+        "B": "Profiles \u2192 Organization-Wide Defaults \u2192 Sharing Rules \u2192 Permission Sets",
+        "C": "Role Hierarchy \u2192 Organization-Wide Defaults \u2192 Profiles \u2192 Sharing Rules",
+        "D": "Organization-Wide Defaults \u2192 Role Hierarchy \u2192 Sharing Rules \u2192 Manual Sharing"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Salesforce evaluates record access starting with OWD as the baseline, then opens up access through Role Hierarchy, Sharing Rules, and finally Manual Sharing."
     },
     {
@@ -37,12 +45,12 @@
       "domain": "Security & Access",
       "question": "Which permission cannot be granted through a Permission Set?",
       "choices": {
-        "A": "Modify All Data",
-        "B": "Page Layout Assignment",
+        "A": "Page Layout Assignment",
+        "B": "Modify All Data",
         "C": "Apex Class Access",
         "D": "Field-Level Security"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "Page Layout assignments are controlled exclusively through Profiles and cannot be assigned via Permission Sets."
     },
     {
@@ -51,11 +59,11 @@
       "question": "An administrator needs to restrict login access to specific IP ranges for a group of users. Where should this be configured?",
       "choices": {
         "A": "Organization-Wide Defaults",
-        "B": "Profile Login IP Ranges",
-        "C": "Permission Set",
+        "B": "Permission Set",
+        "C": "Profile Login IP Ranges",
         "D": "Public Groups"
       },
-      "correct_answer": "B",
+      "correct_answer": "C",
       "explanation": "Login IP Ranges are configured at the Profile level to restrict which IP addresses users with that profile can log in from."
     },
     {
@@ -64,11 +72,11 @@
       "question": "What happens when Organization-Wide Defaults for an object are set to 'Private'?",
       "choices": {
         "A": "No user can access any records of that object",
-        "B": "Users can only see records they own or that have been shared with them",
-        "C": "Only System Administrators can view records",
-        "D": "Records are hidden from all reports"
+        "B": "Only System Administrators can view records",
+        "C": "Records are hidden from all reports",
+        "D": "Users can only see records they own or that have been shared with them"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Private OWD means users can only access records they own, plus records shared via role hierarchy, sharing rules, or manual sharing."
     },
     {
@@ -76,12 +84,12 @@
       "domain": "Security & Access",
       "question": "Which type of sharing rule can be used to share records based on field values?",
       "choices": {
-        "A": "Owner-Based Sharing Rules",
-        "B": "Criteria-Based Sharing Rules",
+        "A": "Criteria-Based Sharing Rules",
+        "B": "Owner-Based Sharing Rules",
         "C": "Manual Sharing Rules",
         "D": "Implicit Sharing Rules"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "Criteria-Based Sharing Rules allow sharing records based on field values meeting specific criteria, not just record ownership."
     },
     {
@@ -115,12 +123,12 @@
       "domain": "Security & Access",
       "question": "What is required to enable Shield Platform Encryption for a custom field?",
       "choices": {
-        "A": "The field must be a text field only",
-        "B": "A Tenant Secret must be generated first",
+        "A": "A Tenant Secret must be generated first",
+        "B": "The field must be a text field only",
         "C": "The object must have OWD set to Private",
         "D": "The user must have Modify All Data permission"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "Shield Platform Encryption requires a Tenant Secret to be generated before encryption can be enabled for fields."
     },
     {
@@ -142,17 +150,17 @@
       "question": "What is the purpose of a Permission Set Group?",
       "choices": {
         "A": "To create a backup of Permission Sets",
-        "B": "To bundle multiple Permission Sets for easier assignment",
-        "C": "To replace Profiles entirely",
-        "D": "To share Permission Sets across multiple orgs"
+        "B": "To replace Profiles entirely",
+        "C": "To share Permission Sets across multiple orgs",
+        "D": "To bundle multiple Permission Sets for easier assignment"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Permission Set Groups bundle multiple Permission Sets together, making it easier to assign a collection of permissions to users."
     },
     {
       "id": 11,
       "domain": "Data Management",
-      "question": "What is the maximum number of records that can be processed using Data Loader in a single batch?",
+      "question": "What is the default batch size when processing records using Data Loader?",
       "choices": {
         "A": "100",
         "B": "200",
@@ -182,10 +190,10 @@
       "choices": {
         "A": "Master-Detail Relationship",
         "B": "Lookup Relationship",
-        "C": "Junction Object with two Master-Detail relationships",
-        "D": "External Lookup Relationship"
+        "C": "External Lookup Relationship",
+        "D": "Junction Object with two Master-Detail relationships"
       },
-      "correct_answer": "C",
+      "correct_answer": "D",
       "explanation": "A Junction Object with two Master-Detail relationships creates a many-to-many relationship between two objects."
     },
     {
@@ -193,12 +201,12 @@
       "domain": "Data Management",
       "question": "When converting a Lookup relationship to Master-Detail, what must be true?",
       "choices": {
-        "A": "All child records must have a value in the lookup field",
-        "B": "The parent object must have Private OWD",
-        "C": "The child object must be a custom object",
-        "D": "Both A and C"
+        "A": "The parent object must have Private OWD",
+        "B": "Both A and C (all child records have parent value AND child is custom object)",
+        "C": "All child records must have a value in the lookup field",
+        "D": "The child object must be a custom object"
       },
-      "correct_answer": "D",
+      "correct_answer": "B",
       "explanation": "Converting to Master-Detail requires all child records to have a parent value, and the child must be a custom object."
     },
     {
@@ -219,12 +227,12 @@
       "domain": "Data Management",
       "question": "Which field type cannot be used as an External ID?",
       "choices": {
-        "A": "Text",
-        "B": "Number",
-        "C": "Email",
-        "D": "Picklist"
+        "A": "Picklist",
+        "B": "Text",
+        "C": "Number",
+        "D": "Email"
       },
-      "correct_answer": "D",
+      "correct_answer": "A",
       "explanation": "External IDs can only be Text, Number, Email, or Auto-Number fields. Picklist fields cannot be External IDs."
     },
     {
@@ -271,12 +279,12 @@
       "domain": "Data Management",
       "question": "What happens to child records when a parent record in a Master-Detail relationship is deleted?",
       "choices": {
-        "A": "Child records are preserved with null parent reference",
-        "B": "Child records are cascade deleted",
+        "A": "Child records are cascade deleted",
+        "B": "Child records are preserved with null parent reference",
         "C": "Deletion is blocked until child records are removed",
         "D": "Child records are transferred to another parent"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "Master-Detail relationships enforce cascade delete - deleting the parent automatically deletes all child records."
     },
     {
@@ -297,13 +305,13 @@
       "domain": "Automation",
       "question": "What is the order of execution when a record is saved in Salesforce?",
       "choices": {
-        "A": "Triggers → Validation Rules → Workflow Rules → Assignment Rules",
-        "B": "Validation Rules → Before Triggers → After Triggers → Workflow Rules",
-        "C": "Before Triggers → Validation Rules → After Triggers → Workflow Rules",
-        "D": "Assignment Rules → Validation Rules → Before Triggers → Workflow Rules"
+        "A": "Triggers \u2192 Validation Rules \u2192 Workflow Rules \u2192 Assignment Rules",
+        "B": "Validation Rules \u2192 Before Triggers \u2192 After Triggers \u2192 Workflow Rules",
+        "C": "Before Triggers \u2192 Validation Rules \u2192 After Triggers \u2192 Workflow Rules",
+        "D": "Assignment Rules \u2192 Validation Rules \u2192 Before Triggers \u2192 Workflow Rules"
       },
       "correct_answer": "C",
-      "explanation": "The order is: Before Triggers → System Validation → Validation Rules → Duplicate Rules → After Triggers → Assignment Rules → Workflow Rules → Escalation Rules → Processes/Flows."
+      "explanation": "The order is: Before Triggers \u2192 System Validation \u2192 Validation Rules \u2192 Duplicate Rules \u2192 After Triggers \u2192 Assignment Rules \u2192 Workflow Rules \u2192 Escalation Rules \u2192 Processes/Flows."
     },
     {
       "id": 23,
@@ -311,11 +319,11 @@
       "question": "Which Flow type runs when a record is created or updated?",
       "choices": {
         "A": "Screen Flow",
-        "B": "Autolaunched Flow",
-        "C": "Record-Triggered Flow",
+        "B": "Record-Triggered Flow",
+        "C": "Autolaunched Flow",
         "D": "Schedule-Triggered Flow"
       },
-      "correct_answer": "C",
+      "correct_answer": "B",
       "explanation": "Record-Triggered Flows automatically execute when records are created, updated, or deleted."
     },
     {
@@ -350,11 +358,11 @@
       "question": "In an Approval Process, what determines who can approve a record?",
       "choices": {
         "A": "Entry Criteria",
-        "B": "Approval Steps",
-        "C": "Initial Submission Actions",
-        "D": "Final Approval Actions"
+        "B": "Initial Submission Actions",
+        "C": "Final Approval Actions",
+        "D": "Approval Steps"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Approval Steps define who can approve the record and the criteria for each step in the approval process."
     },
     {
@@ -362,12 +370,12 @@
       "domain": "Automation",
       "question": "What is the difference between 'Before Save' and 'After Save' Flow triggers?",
       "choices": {
-        "A": "Before Save cannot access the record ID",
-        "B": "After Save runs before validation rules",
-        "C": "Before Save is faster and doesn't require DML for the triggering record",
+        "A": "Before Save is faster and doesn't require DML for the triggering record",
+        "B": "Before Save cannot access the record ID",
+        "C": "After Save runs before validation rules",
         "D": "There is no difference"
       },
-      "correct_answer": "C",
+      "correct_answer": "A",
       "explanation": "Before Save Flows are faster because they don't require a separate DML operation to update the triggering record's fields."
     },
     {
@@ -376,11 +384,11 @@
       "question": "Which element in Flow is used to loop through a collection of records?",
       "choices": {
         "A": "Decision",
-        "B": "Loop",
-        "C": "Assignment",
-        "D": "Get Records"
+        "B": "Assignment",
+        "C": "Get Records",
+        "D": "Loop"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "The Loop element iterates through each item in a collection, allowing you to process records one at a time."
     },
     {
@@ -388,12 +396,12 @@
       "domain": "Automation",
       "question": "What happens if a Screen Flow encounters an unhandled fault?",
       "choices": {
-        "A": "The flow silently fails and commits partial changes",
-        "B": "The user sees an error message and all changes are rolled back",
+        "A": "The user sees an error message and all changes are rolled back",
+        "B": "The flow silently fails and commits partial changes",
         "C": "The flow continues to the next element",
         "D": "An email is automatically sent to the admin"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "Unhandled faults in Screen Flows display an error to the user and roll back all database changes made during the flow interview."
     },
     {
@@ -402,11 +410,11 @@
       "question": "Which validation rule function checks if a field value has changed?",
       "choices": {
         "A": "CHANGED()",
-        "B": "ISCHANGED()",
-        "C": "PRIORVALUE()",
-        "D": "Both B and C can be used"
+        "B": "Both B and C can be used (ISCHANGED and PRIORVALUE)",
+        "C": "ISCHANGED()",
+        "D": "PRIORVALUE()"
       },
-      "correct_answer": "D",
+      "correct_answer": "B",
       "explanation": "ISCHANGED() returns true if a field value changed, while PRIORVALUE() returns the previous value, allowing comparison logic."
     },
     {
@@ -453,12 +461,12 @@
       "domain": "Reports & Dashboards",
       "question": "What does the 'Running User' setting on a dashboard control?",
       "choices": {
-        "A": "Who can view the dashboard",
-        "B": "Whose data access level is used to display data",
+        "A": "Whose data access level is used to display data",
+        "B": "Who can view the dashboard",
         "C": "Who receives scheduled dashboard refreshes",
         "D": "Who can edit the dashboard"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "The Running User determines whose security settings and data access are used when displaying dashboard data."
     },
     {
@@ -492,12 +500,12 @@
       "domain": "Reports & Dashboards",
       "question": "What is a Bucket Field used for in reports?",
       "choices": {
-        "A": "To store report results",
-        "B": "To group report data into categories without creating a formula field",
+        "A": "To group report data into categories without creating a formula field",
+        "B": "To store report results",
         "C": "To create calculated columns",
         "D": "To filter report results"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "Bucket Fields categorize report data into groups you define, without needing to create custom formula fields on the object."
     },
     {
@@ -532,11 +540,11 @@
       "question": "What is a Cross Filter in reports?",
       "choices": {
         "A": "A filter that works across multiple dashboards",
-        "B": "A filter based on related objects with or without related records",
-        "C": "A filter that crosses report blocks",
-        "D": "A filter applied to multiple fields simultaneously"
+        "B": "A filter that crosses report blocks",
+        "C": "A filter applied to multiple fields simultaneously",
+        "D": "A filter based on related objects with or without related records"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Cross Filters filter records based on related objects, such as 'Accounts with Opportunities' or 'Accounts without Cases'."
     },
     {
@@ -558,11 +566,11 @@
       "question": "Which feature automatically converts web form submissions into Leads?",
       "choices": {
         "A": "Lead Assignment Rules",
-        "B": "Web-to-Lead",
-        "C": "Lead Conversion",
-        "D": "Campaign Members"
+        "B": "Lead Conversion",
+        "C": "Campaign Members",
+        "D": "Web-to-Lead"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Web-to-Lead captures information from your website and automatically creates Lead records in Salesforce."
     },
     {
@@ -584,11 +592,11 @@
       "question": "What is the purpose of Escalation Rules in Service Cloud?",
       "choices": {
         "A": "To assign cases to queues",
-        "B": "To automatically escalate cases based on criteria and time",
-        "C": "To create case hierarchies",
-        "D": "To merge duplicate cases"
+        "B": "To create case hierarchies",
+        "C": "To merge duplicate cases",
+        "D": "To automatically escalate cases based on criteria and time"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Escalation Rules automatically escalate cases when they meet certain criteria and time thresholds, ensuring timely resolution."
     },
     {
@@ -623,11 +631,11 @@
       "question": "What is the purpose of an Entitlement in Service Cloud?",
       "choices": {
         "A": "To define user permissions",
-        "B": "To specify what support a customer is entitled to receive",
-        "C": "To track product warranties",
-        "D": "To calculate service revenue"
+        "B": "To track product warranties",
+        "C": "To calculate service revenue",
+        "D": "To specify what support a customer is entitled to receive"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Entitlements define the level of support customers are entitled to receive, including response times and service levels."
     },
     {
