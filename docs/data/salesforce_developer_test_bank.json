@@ -1,0 +1,1328 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-01-24",
+    "updated": "2026-01-24",
+    "description": "Salesforce Platform Developer I Certification Test Bank",
+    "total_questions": 100,
+    "domains": [
+      "Apex Fundamentals",
+      "Data Modeling & SOQL",
+      "Triggers & Processing",
+      "Testing & Deployment",
+      "Asynchronous Apex",
+      "Integration & Security"
+    ],
+    "questions_per_domain": "16-17",
+    "format": "multiple_choice",
+    "answer_distribution": {
+      "A": 25,
+      "B": 25,
+      "C": 25,
+      "D": 25,
+      "note": "Balanced distribution across all options"
+    }
+  },
+  "questions": [
+    {
+      "id": 1,
+      "domain": "Apex Fundamentals",
+      "question": "Which collection type should be used to store unique values and check for membership efficiently?",
+      "choices": {
+        "A": "List",
+        "B": "Map",
+        "C": "Set",
+        "D": "Array"
+      },
+      "correct_answer": "C",
+      "explanation": "Set collections store unique values and provide O(1) lookup for membership checks, making them ideal for deduplication and contains() operations."
+    },
+    {
+      "id": 2,
+      "domain": "Apex Fundamentals",
+      "question": "Which keyword prevents a class from being extended?",
+      "choices": {
+        "A": "static",
+        "B": "virtual",
+        "C": "abstract",
+        "D": "final"
+      },
+      "correct_answer": "D",
+      "explanation": "The 'final' keyword on a class prevents it from being extended. Final methods cannot be overridden in subclasses."
+    },
+    {
+      "id": 3,
+      "domain": "Apex Fundamentals",
+      "question": "What is the correct way to declare a constant in Apex?",
+      "choices": {
+        "A": "static final Integer MAX_VALUE = 100;",
+        "B": "const Integer MAX_VALUE = 100;",
+        "C": "final Integer MAX_VALUE = 100;",
+        "D": "constant Integer MAX_VALUE = 100;"
+      },
+      "correct_answer": "A",
+      "explanation": "Constants in Apex are declared using 'static final' keywords. The 'const' keyword doesn't exist in Apex."
+    },
+    {
+      "id": 4,
+      "domain": "Apex Fundamentals",
+      "question": "Which access modifier allows a method to be accessed from any Apex code in the same namespace?",
+      "choices": {
+        "A": "private",
+        "B": "protected",
+        "C": "public",
+        "D": "global"
+      },
+      "correct_answer": "C",
+      "explanation": "Public methods can be accessed from any Apex code within the same namespace. Global is required for managed packages."
+    },
+    {
+      "id": 5,
+      "domain": "Apex Fundamentals",
+      "question": "What is the result of dividing an Integer by zero in Apex?",
+      "choices": {
+        "A": "Returns null",
+        "B": "Returns 0",
+        "C": "Throws a MathException",
+        "D": "Throws a System.MathException"
+      },
+      "correct_answer": "D",
+      "explanation": "Dividing by zero in Apex throws a System.MathException. This must be handled with try-catch or prevented with validation."
+    },
+    {
+      "id": 6,
+      "domain": "Apex Fundamentals",
+      "question": "Which primitive data type should be used for monetary values in Apex?",
+      "choices": {
+        "A": "Decimal",
+        "B": "Double",
+        "C": "Currency",
+        "D": "Integer"
+      },
+      "correct_answer": "A",
+      "explanation": "Decimal should be used for monetary values as it provides precise decimal representation without floating-point errors."
+    },
+    {
+      "id": 7,
+      "domain": "Apex Fundamentals",
+      "question": "What does the 'virtual' keyword enable for a class?",
+      "choices": {
+        "A": "The class can be extended and methods can be overridden",
+        "B": "The class cannot be instantiated",
+        "C": "The class runs in a separate thread",
+        "D": "The class is cached for performance"
+      },
+      "correct_answer": "A",
+      "explanation": "The 'virtual' keyword allows a class to be extended and its methods to be overridden by child classes."
+    },
+    {
+      "id": 8,
+      "domain": "Apex Fundamentals",
+      "question": "How do you access a value from a Map by key in Apex?",
+      "choices": {
+        "A": "map.get(key)",
+        "B": "map[key]",
+        "C": "map.getValue(key)",
+        "D": "map.retrieve(key)"
+      },
+      "correct_answer": "A",
+      "explanation": "The get() method is used to retrieve a value from a Map. Square bracket notation is not supported for Maps in Apex."
+    },
+    {
+      "id": 9,
+      "domain": "Apex Fundamentals",
+      "question": "What is the default value of an uninitialized String variable in Apex?",
+      "choices": {
+        "A": "null",
+        "B": "Empty string ''",
+        "C": "'undefined'",
+        "D": "Throws an error"
+      },
+      "correct_answer": "A",
+      "explanation": "Uninitialized variables in Apex default to null, including Strings. An empty string must be explicitly assigned."
+    },
+    {
+      "id": 10,
+      "domain": "Apex Fundamentals",
+      "question": "Which interface must be implemented to allow custom sorting of a List?",
+      "choices": {
+        "A": "Comparable",
+        "B": "Sortable",
+        "C": "Comparator",
+        "D": "Orderable"
+      },
+      "correct_answer": "A",
+      "explanation": "The Comparable interface must be implemented with the compareTo() method to enable custom sorting of objects in a List."
+    },
+    {
+      "id": 11,
+      "domain": "Apex Fundamentals",
+      "question": "What is the purpose of the 'transient' keyword in Apex?",
+      "choices": {
+        "A": "To exclude a variable from Visualforce view state serialization",
+        "B": "To make a variable thread-safe",
+        "C": "To make a variable read-only",
+        "D": "To create a temporary variable"
+      },
+      "correct_answer": "A",
+      "explanation": "The transient keyword excludes member variables from being serialized, reducing view state size in Visualforce pages."
+    },
+    {
+      "id": 12,
+      "domain": "Apex Fundamentals",
+      "question": "Which statement correctly creates an instance of a custom exception?",
+      "choices": {
+        "A": "throw new Exception('Error');",
+        "B": "raise new MyException('Error');",
+        "C": "throw new CustomException('Error');",
+        "D": "error new CustomException('Error');"
+      },
+      "correct_answer": "C",
+      "explanation": "Custom exceptions extend the Exception class and are thrown using 'throw new ExceptionName()' syntax."
+    },
+    {
+      "id": 13,
+      "domain": "Apex Fundamentals",
+      "question": "What is the maximum size of a String in Apex?",
+      "choices": {
+        "A": "1 MB",
+        "B": "3 MB",
+        "C": "6 MB",
+        "D": "12 MB"
+      },
+      "correct_answer": "C",
+      "explanation": "The maximum size of a String in Apex is 6 MB, matching the heap size limit for synchronous transactions."
+    },
+    {
+      "id": 14,
+      "domain": "Apex Fundamentals",
+      "question": "Which method converts a String to lowercase?",
+      "choices": {
+        "A": "str.lower()",
+        "B": "String.lower(str)",
+        "C": "str.toLowerCase()",
+        "D": "str.lowerCase()"
+      },
+      "correct_answer": "C",
+      "explanation": "The toLowerCase() instance method converts all characters in the string to lowercase."
+    },
+    {
+      "id": 15,
+      "domain": "Apex Fundamentals",
+      "question": "What is the difference between '==' and '===' in Apex?",
+      "choices": {
+        "A": "'===' checks type and value, '==' checks only value",
+        "B": "'==' is case-sensitive, '===' is not",
+        "C": "'===' doesn't exist in Apex",
+        "D": "They are identical"
+      },
+      "correct_answer": "C",
+      "explanation": "Unlike JavaScript, Apex does not have a '===' operator. Only '==' is used for equality comparison."
+    },
+    {
+      "id": 16,
+      "domain": "Apex Fundamentals",
+      "question": "How do you check if a List is empty in Apex?",
+      "choices": {
+        "A": "list.length == 0",
+        "B": "list.size() == null",
+        "C": "list.isEmpty()",
+        "D": "list == empty"
+      },
+      "correct_answer": "C",
+      "explanation": "The isEmpty() method returns true if the list contains no elements. size() == 0 also works but isEmpty() is more readable."
+    },
+    {
+      "id": 17,
+      "domain": "Data Modeling & SOQL",
+      "question": "What is the governor limit for total SOQL queries in a synchronous transaction?",
+      "choices": {
+        "A": "100",
+        "B": "50",
+        "C": "150",
+        "D": "200"
+      },
+      "correct_answer": "A",
+      "explanation": "Synchronous Apex transactions are limited to 100 SOQL queries. Asynchronous transactions allow 200 queries."
+    },
+    {
+      "id": 18,
+      "domain": "Data Modeling & SOQL",
+      "question": "What is the maximum number of records returned by a SOQL query without using OFFSET?",
+      "choices": {
+        "A": "1,000",
+        "B": "10,000",
+        "C": "50,000",
+        "D": "Unlimited"
+      },
+      "correct_answer": "C",
+      "explanation": "SOQL queries can return up to 50,000 records. For larger datasets, use batch Apex or queryMore()."
+    },
+    {
+      "id": 19,
+      "domain": "Data Modeling & SOQL",
+      "question": "Which SOQL clause is used to lock records for update?",
+      "choices": {
+        "A": "WITH SHARING",
+        "B": "FOR REFERENCE",
+        "C": "FOR UPDATE",
+        "D": "LOCK MODE"
+      },
+      "correct_answer": "C",
+      "explanation": "FOR UPDATE clause locks the queried records to prevent other transactions from modifying them until the current transaction completes."
+    },
+    {
+      "id": 20,
+      "domain": "Data Modeling & SOQL",
+      "question": "What does SOSL allow that SOQL does not?",
+      "choices": {
+        "A": "Searching across multiple objects simultaneously",
+        "B": "Using aggregate functions",
+        "C": "Filtering by date ranges",
+        "D": "Ordering results"
+      },
+      "correct_answer": "A",
+      "explanation": "SOSL (Salesforce Object Search Language) can search across multiple objects in a single query, while SOQL queries one object at a time."
+    },
+    {
+      "id": 21,
+      "domain": "Data Modeling & SOQL",
+      "question": "What is the correct syntax for a parent-to-child SOQL query?",
+      "choices": {
+        "A": "SELECT Id, (SELECT Id FROM Contact) FROM Account",
+        "B": "SELECT Id, Contacts.Id FROM Account",
+        "C": "SELECT Id, (SELECT Id FROM Contacts) FROM Account",
+        "D": "SELECT Id FROM Account JOIN Contact"
+      },
+      "correct_answer": "C",
+      "explanation": "Parent-to-child queries use the child relationship name (plural) in a subquery. Contacts is the relationship name for Account's children."
+    },
+    {
+      "id": 22,
+      "domain": "Data Modeling & SOQL",
+      "question": "Which aggregate function returns the number of records?",
+      "choices": {
+        "A": "SUM()",
+        "B": "NUM()",
+        "C": "TOTAL()",
+        "D": "COUNT()"
+      },
+      "correct_answer": "D",
+      "explanation": "COUNT() returns the number of rows that match the query criteria. COUNT(fieldName) counts non-null values."
+    },
+    {
+      "id": 23,
+      "domain": "Data Modeling & SOQL",
+      "question": "What is the correct syntax for a child-to-parent SOQL query?",
+      "choices": {
+        "A": "SELECT Account.Name FROM Contact",
+        "B": "SELECT Parent.Name FROM Contact",
+        "C": "SELECT (Account.Name) FROM Contact",
+        "D": "SELECT Account->Name FROM Contact"
+      },
+      "correct_answer": "A",
+      "explanation": "Child-to-parent queries use dot notation with the relationship field name. Account is the relationship name on Contact."
+    },
+    {
+      "id": 24,
+      "domain": "Data Modeling & SOQL",
+      "question": "What is the DML limit for records in a single transaction?",
+      "choices": {
+        "A": "1,000",
+        "B": "5,000",
+        "C": "10,000",
+        "D": "50,000"
+      },
+      "correct_answer": "C",
+      "explanation": "A single transaction can process up to 10,000 records across all DML statements combined."
+    },
+    {
+      "id": 25,
+      "domain": "Data Modeling & SOQL",
+      "question": "Which keyword enables fuzzy matching in SOSL?",
+      "choices": {
+        "A": "LIKE",
+        "B": "SEARCH",
+        "C": "WITH",
+        "D": "FIND"
+      },
+      "correct_answer": "D",
+      "explanation": "FIND is the SOSL keyword that enables text search with fuzzy matching capabilities across multiple objects."
+    },
+    {
+      "id": 26,
+      "domain": "Data Modeling & SOQL",
+      "question": "What is the maximum OFFSET value in SOQL?",
+      "choices": {
+        "A": "500",
+        "B": "1,000",
+        "C": "2,000",
+        "D": "5,000"
+      },
+      "correct_answer": "C",
+      "explanation": "The maximum OFFSET value in SOQL is 2,000. For pagination beyond this, use queryMore() or a filter-based approach."
+    },
+    {
+      "id": 27,
+      "domain": "Data Modeling & SOQL",
+      "question": "Which SOQL function returns records created today?",
+      "choices": {
+        "A": "WHERE CreatedDate = TODAY",
+        "B": "WHERE CreatedDate = TODAY()",
+        "C": "WHERE DAY(CreatedDate) = TODAY",
+        "D": "WHERE CreatedDate LIKE TODAY"
+      },
+      "correct_answer": "A",
+      "explanation": "TODAY is a date literal in SOQL that represents the current day. No parentheses are needed."
+    },
+    {
+      "id": 28,
+      "domain": "Data Modeling & SOQL",
+      "question": "What does Database.insert(records, false) do differently than a standard insert?",
+      "choices": {
+        "A": "Inserts faster by skipping validation",
+        "B": "Inserts records asynchronously",
+        "C": "Inserts records without triggers",
+        "D": "Allows partial success - failed records don't stop successful ones"
+      },
+      "correct_answer": "D",
+      "explanation": "The false parameter allows partial success - records that pass validation are inserted while failed records return errors in the result."
+    },
+    {
+      "id": 29,
+      "domain": "Data Modeling & SOQL",
+      "question": "How many levels deep can relationship queries go?",
+      "choices": {
+        "A": "3 levels for child, 5 for parent",
+        "B": "Unlimited",
+        "C": "5 levels for both",
+        "D": "1 level for child, 5 for parent"
+      },
+      "correct_answer": "D",
+      "explanation": "Child relationship queries can only go 1 level deep (one subquery), while parent relationships can traverse up to 5 levels."
+    },
+    {
+      "id": 30,
+      "domain": "Data Modeling & SOQL",
+      "question": "Which method checks if a field is accessible for the current user?",
+      "choices": {
+        "A": "Schema.SObjectType.Account.fields.Name.isAccessible()",
+        "B": "Account.Name.isAccessible()",
+        "C": "isAccessible(Account.Name)",
+        "D": "Schema.getAccessible('Account.Name')"
+      },
+      "correct_answer": "A",
+      "explanation": "Field-level security is checked using Schema describe methods: Schema.SObjectType.Object.fields.Field.isAccessible()."
+    },
+    {
+      "id": 31,
+      "domain": "Data Modeling & SOQL",
+      "question": "What does the NULLS FIRST clause do in SOQL ORDER BY?",
+      "choices": {
+        "A": "Filters out null values",
+        "B": "Throws an error for null values",
+        "C": "Replaces null values with empty strings",
+        "D": "Places null values at the beginning of results"
+      },
+      "correct_answer": "D",
+      "explanation": "NULLS FIRST/NULLS LAST controls where null values appear in sorted results. NULLS FIRST places them at the beginning."
+    },
+    {
+      "id": 32,
+      "domain": "Data Modeling & SOQL",
+      "question": "Which statement about polymorphic relationships is correct?",
+      "choices": {
+        "A": "They can only reference standard objects",
+        "B": "They cannot be queried with SOQL",
+        "C": "They are only available in Master-Detail relationships",
+        "D": "The TYPEOF clause is used to handle different object types"
+      },
+      "correct_answer": "D",
+      "explanation": "TYPEOF is used in SOQL to handle polymorphic fields (like WhatId on Task) that can reference multiple object types."
+    },
+    {
+      "id": 33,
+      "domain": "Triggers & Processing",
+      "question": "Which trigger event fires after the record has been committed to the database?",
+      "choices": {
+        "A": "before insert",
+        "B": "before update",
+        "C": "after insert",
+        "D": "before delete"
+      },
+      "correct_answer": "C",
+      "explanation": "After triggers (after insert, after update, after delete) fire after the record is committed to the database and has a record ID."
+    },
+    {
+      "id": 34,
+      "domain": "Triggers & Processing",
+      "question": "What is the correct way to bulkify a trigger that needs to query related records?",
+      "choices": {
+        "A": "Query inside the for loop for each record",
+        "B": "Use SOSL instead of SOQL",
+        "C": "Increase the query limit using Limits class",
+        "D": "Use a Map to store queried records before the loop"
+      },
+      "correct_answer": "D",
+      "explanation": "Bulkification requires querying all needed records in a single SOQL query before the loop and storing them in a Map for O(1) access."
+    },
+    {
+      "id": 35,
+      "domain": "Triggers & Processing",
+      "question": "Which statement correctly describes a before trigger?",
+      "choices": {
+        "A": "The record has an ID assigned",
+        "B": "The record is already committed",
+        "C": "Related records can be modified directly",
+        "D": "The record can be modified without DML"
+      },
+      "correct_answer": "D",
+      "explanation": "In before triggers, you can modify field values on the trigger records directly without additional DML operations."
+    },
+    {
+      "id": 36,
+      "domain": "Triggers & Processing",
+      "question": "What is the correct order of trigger execution?",
+      "choices": {
+        "A": "After triggers \u2192 Before triggers \u2192 Validation rules",
+        "B": "Before triggers \u2192 After triggers \u2192 Validation rules",
+        "C": "Validation rules \u2192 Before triggers \u2192 After triggers",
+        "D": "Before triggers \u2192 Validation rules \u2192 After triggers"
+      },
+      "correct_answer": "D",
+      "explanation": "The order is: Before triggers \u2192 System validation \u2192 Custom validation rules \u2192 After triggers \u2192 Assignment/Escalation rules."
+    },
+    {
+      "id": 37,
+      "domain": "Triggers & Processing",
+      "question": "Which trigger context variable contains the old values of updated records?",
+      "choices": {
+        "A": "Trigger.new",
+        "B": "Trigger.before",
+        "C": "Trigger.previous",
+        "D": "Trigger.old"
+      },
+      "correct_answer": "D",
+      "explanation": "Trigger.old contains the old versions of records (before update). Trigger.oldMap provides the same as a Map keyed by ID."
+    },
+    {
+      "id": 38,
+      "domain": "Triggers & Processing",
+      "question": "What happens when a validation rule fails in an after trigger?",
+      "choices": {
+        "A": "Only the failing record is rolled back",
+        "B": "The trigger continues processing other records",
+        "C": "The error is logged but the record is saved",
+        "D": "The entire transaction is rolled back"
+      },
+      "correct_answer": "D",
+      "explanation": "If a validation rule fails at any point, the entire transaction is rolled back, including all DML operations."
+    },
+    {
+      "id": 39,
+      "domain": "Triggers & Processing",
+      "question": "Which method is used to add an error to a specific field in a trigger?",
+      "choices": {
+        "A": "record.addError(field, message)",
+        "B": "throw new DmlException()",
+        "C": "ApexPages.addMessage()",
+        "D": "record.field.addError(message)"
+      },
+      "correct_answer": "D",
+      "explanation": "record.field.addError('message') adds an error to a specific field, displaying it inline on the page layout."
+    },
+    {
+      "id": 40,
+      "domain": "Triggers & Processing",
+      "question": "How can you prevent recursive trigger execution?",
+      "choices": {
+        "A": "Use a static Boolean variable to track execution",
+        "B": "Add a try-catch block",
+        "C": "Use the @future annotation",
+        "D": "Recursion is automatically prevented"
+      },
+      "correct_answer": "A",
+      "explanation": "A static Boolean variable can track whether the trigger has already executed in the current transaction to prevent recursion."
+    },
+    {
+      "id": 41,
+      "domain": "Triggers & Processing",
+      "question": "Which context variable is available in before delete triggers?",
+      "choices": {
+        "A": "Trigger.new only",
+        "B": "Neither",
+        "C": "Both Trigger.new and Trigger.old",
+        "D": "Trigger.old only"
+      },
+      "correct_answer": "D",
+      "explanation": "In delete triggers, Trigger.old and Trigger.oldMap are available. Trigger.new is not available since records are being deleted."
+    },
+    {
+      "id": 42,
+      "domain": "Triggers & Processing",
+      "question": "What is the purpose of trigger handler patterns?",
+      "choices": {
+        "A": "To improve query performance",
+        "B": "To automatically bulkify triggers",
+        "C": "To enable parallel trigger execution",
+        "D": "To separate trigger logic from the trigger itself for better maintainability"
+      },
+      "correct_answer": "D",
+      "explanation": "Trigger handler patterns move logic to handler classes, improving testability, maintainability, and allowing logic reuse."
+    },
+    {
+      "id": 43,
+      "domain": "Triggers & Processing",
+      "question": "Which trigger event should be used to update related records after an insert?",
+      "choices": {
+        "A": "before insert",
+        "B": "after update",
+        "C": "before update",
+        "D": "after insert"
+      },
+      "correct_answer": "D",
+      "explanation": "After insert should be used because the record ID is available and the record is committed, allowing related record updates."
+    },
+    {
+      "id": 44,
+      "domain": "Triggers & Processing",
+      "question": "What is Trigger.operationType used for?",
+      "choices": {
+        "A": "To determine the API version",
+        "B": "To measure trigger execution time",
+        "C": "To check if the trigger is running synchronously",
+        "D": "To identify the DML operation that fired the trigger"
+      },
+      "correct_answer": "D",
+      "explanation": "Trigger.operationType returns the enum value (BEFORE_INSERT, AFTER_UPDATE, etc.) indicating which operation fired the trigger."
+    },
+    {
+      "id": 45,
+      "domain": "Triggers & Processing",
+      "question": "Which is NOT a valid trigger context variable?",
+      "choices": {
+        "A": "Trigger.newMap",
+        "B": "Trigger.oldMap",
+        "C": "Trigger.isExecuting",
+        "D": "Trigger.currentRecord"
+      },
+      "correct_answer": "D",
+      "explanation": "Trigger.currentRecord does not exist. Valid context variables include new, old, newMap, oldMap, isExecuting, etc."
+    },
+    {
+      "id": 46,
+      "domain": "Triggers & Processing",
+      "question": "Can a single trigger handle multiple objects?",
+      "choices": {
+        "A": "Yes, using the ALL OBJECTS keyword",
+        "B": "Only in managed packages",
+        "C": "Yes, by specifying multiple object names",
+        "D": "No, each trigger is specific to one object"
+      },
+      "correct_answer": "D",
+      "explanation": "Triggers in Salesforce are always specific to a single object. You need separate triggers for different objects."
+    },
+    {
+      "id": 47,
+      "domain": "Triggers & Processing",
+      "question": "What is the purpose of Trigger.size?",
+      "choices": {
+        "A": "Returns the memory size of the trigger",
+        "B": "Returns the number of trigger executions",
+        "C": "Returns the maximum allowed batch size",
+        "D": "Returns the number of records in the trigger context"
+      },
+      "correct_answer": "D",
+      "explanation": "Trigger.size returns the total number of records in the trigger invocation, both old and new."
+    },
+    {
+      "id": 48,
+      "domain": "Triggers & Processing",
+      "question": "Which scenario would cause a trigger to fire twice for a single user action?",
+      "choices": {
+        "A": "When the trigger has both before and after events",
+        "B": "When workflow field updates occur",
+        "C": "When the trigger is poorly written",
+        "D": "This is not possible"
+      },
+      "correct_answer": "B",
+      "explanation": "Workflow field updates cause the record to be re-saved, which fires the trigger again. This is a common source of trigger re-entrancy."
+    },
+    {
+      "id": 49,
+      "domain": "Testing & Deployment",
+      "question": "What is the minimum code coverage required to deploy Apex to production?",
+      "choices": {
+        "A": "50%",
+        "B": "75%",
+        "C": "85%",
+        "D": "100%"
+      },
+      "correct_answer": "B",
+      "explanation": "Salesforce requires at least 75% overall code coverage for Apex classes and triggers to deploy to production."
+    },
+    {
+      "id": 50,
+      "domain": "Testing & Deployment",
+      "question": "Which method should be used to perform DML operations in a test class without committing to the database?",
+      "choices": {
+        "A": "Test.startTest()",
+        "B": "Database.setSavepoint()",
+        "C": "Test.isRunningTest()",
+        "D": "All test DML is automatically rolled back"
+      },
+      "correct_answer": "D",
+      "explanation": "All DML operations in test methods are automatically rolled back after the test completes, regardless of test result."
+    },
+    {
+      "id": 51,
+      "domain": "Testing & Deployment",
+      "question": "What is the purpose of the @TestSetup annotation?",
+      "choices": {
+        "A": "To run tests in isolation",
+        "B": "To skip certain tests",
+        "C": "To create test data once and use it in multiple test methods",
+        "D": "To set governor limit overrides"
+      },
+      "correct_answer": "C",
+      "explanation": "@TestSetup methods create test data that is rolled back after each test method but available to all test methods in the class."
+    },
+    {
+      "id": 52,
+      "domain": "Testing & Deployment",
+      "question": "Which attribute makes a test method visible to all test data in the org?",
+      "choices": {
+        "A": "@isTest(SeeAllData=true)",
+        "B": "@isTest(UseRealData=true)",
+        "C": "@isTest(AccessAllData=true)",
+        "D": "@isTest(Sandbox=true)"
+      },
+      "correct_answer": "A",
+      "explanation": "SeeAllData=true allows tests to access actual org data, but this is discouraged as it makes tests environment-dependent."
+    },
+    {
+      "id": 53,
+      "domain": "Testing & Deployment",
+      "question": "What is the purpose of Test.startTest() and Test.stopTest()?",
+      "choices": {
+        "A": "To measure test execution time",
+        "B": "To reset governor limits for the code between them",
+        "C": "To pause and resume test execution",
+        "D": "To enable debugging in tests"
+      },
+      "correct_answer": "B",
+      "explanation": "Test.startTest() and stopTest() reset governor limits, allowing the code between them to have fresh limits."
+    },
+    {
+      "id": 54,
+      "domain": "Testing & Deployment",
+      "question": "Which method creates a mock HTTP response for testing callouts?",
+      "choices": {
+        "A": "Test.setMockResponse()",
+        "B": "HttpCalloutMock interface implementation",
+        "C": "Mock.setHttpResponse()",
+        "D": "Test.createMockCallout()"
+      },
+      "correct_answer": "B",
+      "explanation": "The HttpCalloutMock interface must be implemented and registered with Test.setMock() to mock HTTP callouts in tests."
+    },
+    {
+      "id": 55,
+      "domain": "Testing & Deployment",
+      "question": "What does System.runAs() allow in test methods?",
+      "choices": {
+        "A": "Running code with elevated permissions",
+        "B": "Running code as a different user context",
+        "C": "Running code without governor limits",
+        "D": "Running code in a different time zone"
+      },
+      "correct_answer": "B",
+      "explanation": "System.runAs() allows test code to run as a specific user, useful for testing sharing rules and profile-specific logic."
+    },
+    {
+      "id": 56,
+      "domain": "Testing & Deployment",
+      "question": "Which assertion method checks if two values are NOT equal?",
+      "choices": {
+        "A": "System.assertNotEquals()",
+        "B": "System.assertNot()",
+        "C": "System.assertDifferent()",
+        "D": "Assert.isNotEqual()"
+      },
+      "correct_answer": "A",
+      "explanation": "System.assertNotEquals(expected, actual, message) asserts that two values are not equal."
+    },
+    {
+      "id": 57,
+      "domain": "Testing & Deployment",
+      "question": "How can you test code that depends on custom settings?",
+      "choices": {
+        "A": "Custom settings data is automatically available in tests",
+        "B": "Insert custom setting records in the test method",
+        "C": "Use SeeAllData=true",
+        "D": "Custom settings cannot be tested"
+      },
+      "correct_answer": "B",
+      "explanation": "Custom settings data must be created in test methods (or @TestSetup) as they are not automatically available in tests."
+    },
+    {
+      "id": 58,
+      "domain": "Testing & Deployment",
+      "question": "What is the maximum number of test methods that can be executed at once?",
+      "choices": {
+        "A": "100",
+        "B": "500",
+        "C": "No limit",
+        "D": "Depends on org edition"
+      },
+      "correct_answer": "C",
+      "explanation": "There is no limit to the number of test methods that can be executed. However, there are time limits per test run."
+    },
+    {
+      "id": 59,
+      "domain": "Testing & Deployment",
+      "question": "Which class is used to create test data factories?",
+      "choices": {
+        "A": "@TestFactory",
+        "B": "TestDataFactory (custom utility class)",
+        "C": "Test.DataFactory",
+        "D": "SObjectFactory"
+      },
+      "correct_answer": "B",
+      "explanation": "TestDataFactory is a common naming convention for custom utility classes that create test data. There's no built-in factory class."
+    },
+    {
+      "id": 60,
+      "domain": "Testing & Deployment",
+      "question": "What happens when Test.stopTest() is called with async operations pending?",
+      "choices": {
+        "A": "The async operations are cancelled",
+        "B": "The async operations are forced to complete synchronously",
+        "C": "An error is thrown",
+        "D": "The test continues asynchronously"
+      },
+      "correct_answer": "B",
+      "explanation": "Test.stopTest() forces all asynchronous operations (future, queueable, batch) to complete synchronously before continuing."
+    },
+    {
+      "id": 61,
+      "domain": "Testing & Deployment",
+      "question": "Which deployment tool is recommended for production deployments?",
+      "choices": {
+        "A": "Change Sets only",
+        "B": "Salesforce CLI with source tracking",
+        "C": "ANT Migration Tool",
+        "D": "Any of the above depending on needs"
+      },
+      "correct_answer": "D",
+      "explanation": "All deployment methods are valid. Choice depends on CI/CD needs, org structure, and team preferences."
+    },
+    {
+      "id": 62,
+      "domain": "Testing & Deployment",
+      "question": "What is the purpose of the @IsTest(isParallel=true) annotation?",
+      "choices": {
+        "A": "Runs the test class in parallel with other test classes",
+        "B": "Runs test methods within the class in parallel",
+        "C": "Runs the test across multiple orgs",
+        "D": "This annotation doesn't exist"
+      },
+      "correct_answer": "A",
+      "explanation": "isParallel=true allows the test class to run in parallel with other test classes during test execution."
+    },
+    {
+      "id": 63,
+      "domain": "Testing & Deployment",
+      "question": "How do you test private methods in Apex?",
+      "choices": {
+        "A": "Private methods cannot be tested",
+        "B": "Use the @TestVisible annotation",
+        "C": "Change them to public for testing",
+        "D": "Use reflection"
+      },
+      "correct_answer": "B",
+      "explanation": "@TestVisible annotation allows private members to be accessed from test classes without changing their access modifier."
+    },
+    {
+      "id": 64,
+      "domain": "Testing & Deployment",
+      "question": "What is the time limit for a single test method execution?",
+      "choices": {
+        "A": "10 seconds",
+        "B": "1 minute",
+        "C": "10 minutes",
+        "D": "No limit"
+      },
+      "correct_answer": "C",
+      "explanation": "Each test method has a 10-minute synchronous limit. The entire test run (all tests) has additional cumulative limits."
+    },
+    {
+      "id": 65,
+      "domain": "Asynchronous Apex",
+      "question": "What is the purpose of the @future annotation?",
+      "choices": {
+        "A": "To make a method run synchronously",
+        "B": "To schedule a method for a specific time",
+        "C": "To run a method asynchronously",
+        "D": "To cache method results"
+      },
+      "correct_answer": "C",
+      "explanation": "@future methods run asynchronously in their own thread, separate from the current transaction."
+    },
+    {
+      "id": 66,
+      "domain": "Asynchronous Apex",
+      "question": "Which interface must be implemented for a class to be used in a batch Apex job?",
+      "choices": {
+        "A": "Database.Batchable",
+        "B": "Queueable",
+        "C": "Schedulable",
+        "D": "Database.Stateful"
+      },
+      "correct_answer": "A",
+      "explanation": "Database.Batchable interface must be implemented with start(), execute(), and finish() methods for batch Apex."
+    },
+    {
+      "id": 67,
+      "domain": "Asynchronous Apex",
+      "question": "What is the maximum batch size for Database.executeBatch()?",
+      "choices": {
+        "A": "100",
+        "B": "200",
+        "C": "1000",
+        "D": "2000"
+      },
+      "correct_answer": "D",
+      "explanation": "The maximum batch size for batch Apex is 2000 records. The default is 200 if not specified."
+    },
+    {
+      "id": 68,
+      "domain": "Asynchronous Apex",
+      "question": "Which method signature is correct for a Queueable class?",
+      "choices": {
+        "A": "public void execute()",
+        "B": "public void run()",
+        "C": "public void execute(QueueableContext context)",
+        "D": "public void process()"
+      },
+      "correct_answer": "C",
+      "explanation": "Queueable interface requires execute(QueueableContext context) method implementation."
+    },
+    {
+      "id": 69,
+      "domain": "Asynchronous Apex",
+      "question": "What advantage does Queueable have over @future?",
+      "choices": {
+        "A": "Queueable methods can accept sObjects as parameters",
+        "B": "Queueable runs faster",
+        "C": "Queueable doesn't count against async limits",
+        "D": "Queueable can be scheduled"
+      },
+      "correct_answer": "A",
+      "explanation": "Queueable classes can accept complex types including sObjects, while @future methods only accept primitive types."
+    },
+    {
+      "id": 70,
+      "domain": "Asynchronous Apex",
+      "question": "What is the heap size limit for asynchronous Apex?",
+      "choices": {
+        "A": "3 MB",
+        "B": "6 MB",
+        "C": "12 MB",
+        "D": "24 MB"
+      },
+      "correct_answer": "C",
+      "explanation": "Asynchronous Apex has a 12 MB heap size limit, double the 6 MB limit for synchronous Apex."
+    },
+    {
+      "id": 71,
+      "domain": "Asynchronous Apex",
+      "question": "Which interface allows batch Apex to maintain state between executions?",
+      "choices": {
+        "A": "Database.Batchable",
+        "B": "Database.Stateful",
+        "C": "Database.AllowsCallouts",
+        "D": "Database.Persistent"
+      },
+      "correct_answer": "B",
+      "explanation": "Database.Stateful maintains member variable values between execute() method invocations in batch Apex."
+    },
+    {
+      "id": 72,
+      "domain": "Asynchronous Apex",
+      "question": "What is the maximum number of @future method invocations per transaction?",
+      "choices": {
+        "A": "10",
+        "B": "50",
+        "C": "100",
+        "D": "200"
+      },
+      "correct_answer": "B",
+      "explanation": "A single transaction can invoke up to 50 @future methods. This limit applies per transaction."
+    },
+    {
+      "id": 73,
+      "domain": "Asynchronous Apex",
+      "question": "Which class is used to schedule Apex jobs?",
+      "choices": {
+        "A": "System.schedule()",
+        "B": "Scheduler.run()",
+        "C": "Database.schedule()",
+        "D": "Schedule.execute()"
+      },
+      "correct_answer": "A",
+      "explanation": "System.schedule(jobName, cronExpression, schedulableInstance) schedules an Apex job using a CRON expression."
+    },
+    {
+      "id": 74,
+      "domain": "Asynchronous Apex",
+      "question": "Can you call a @future method from another @future method?",
+      "choices": {
+        "A": "Yes, unlimited chaining",
+        "B": "Yes, but only once",
+        "C": "No, this is not allowed",
+        "D": "Only with the (callout=true) parameter"
+      },
+      "correct_answer": "C",
+      "explanation": "You cannot call a @future method from another @future method. Use Queueable for chaining asynchronous operations."
+    },
+    {
+      "id": 75,
+      "domain": "Asynchronous Apex",
+      "question": "What is the maximum number of batch Apex jobs that can be queued?",
+      "choices": {
+        "A": "5",
+        "B": "100",
+        "C": "200",
+        "D": "No limit"
+      },
+      "correct_answer": "B",
+      "explanation": "Up to 100 batch jobs can be in the queue (Holding, Queued, Preparing, Processing status) at once."
+    },
+    {
+      "id": 76,
+      "domain": "Asynchronous Apex",
+      "question": "Which method returns the job ID when starting a batch?",
+      "choices": {
+        "A": "Database.executeBatch()",
+        "B": "System.enqueueJob()",
+        "C": "Both A and B",
+        "D": "Neither"
+      },
+      "correct_answer": "C",
+      "explanation": "Both Database.executeBatch() and System.enqueueJob() return an AsyncApexJob ID that can be used to monitor the job."
+    },
+    {
+      "id": 77,
+      "domain": "Asynchronous Apex",
+      "question": "What happens if a batch execute() method fails?",
+      "choices": {
+        "A": "The entire batch job fails",
+        "B": "Only that batch chunk fails, others continue",
+        "C": "The job is automatically retried",
+        "D": "The finish() method is never called"
+      },
+      "correct_answer": "B",
+      "explanation": "If one execute() chunk fails, only those records are affected. Other chunks process normally, and finish() is still called."
+    },
+    {
+      "id": 78,
+      "domain": "Asynchronous Apex",
+      "question": "Which parameter enables callouts in @future methods?",
+      "choices": {
+        "A": "@future(allowCallouts=true)",
+        "B": "@future(callout=true)",
+        "C": "@future(http=true)",
+        "D": "@future(external=true)"
+      },
+      "correct_answer": "B",
+      "explanation": "@future(callout=true) enables the future method to make HTTP callouts to external services."
+    },
+    {
+      "id": 79,
+      "domain": "Asynchronous Apex",
+      "question": "How can Queueable jobs be chained?",
+      "choices": {
+        "A": "Call System.enqueueJob() from within the execute() method",
+        "B": "Use the @Chain annotation",
+        "C": "Chaining is not supported",
+        "D": "Use Database.chainJobs()"
+      },
+      "correct_answer": "A",
+      "explanation": "Queueable jobs can chain by calling System.enqueueJob() from within the execute() method to enqueue another job."
+    },
+    {
+      "id": 80,
+      "domain": "Asynchronous Apex",
+      "question": "What is the SOQL query limit in batch Apex?",
+      "choices": {
+        "A": "100",
+        "B": "200",
+        "C": "500",
+        "D": "Same as synchronous (100)"
+      },
+      "correct_answer": "B",
+      "explanation": "Batch Apex has a 200 SOQL query limit per execute() method invocation, double the synchronous limit."
+    },
+    {
+      "id": 81,
+      "domain": "Integration & Security",
+      "question": "Which annotation is used to expose an Apex method as a REST endpoint?",
+      "choices": {
+        "A": "@RestResource",
+        "B": "@HttpGet",
+        "C": "@AuraEnabled",
+        "D": "@RemoteAction"
+      },
+      "correct_answer": "A",
+      "explanation": "@RestResource annotation at the class level exposes the class as a REST endpoint. @HttpGet, @HttpPost, etc. define specific methods."
+    },
+    {
+      "id": 82,
+      "domain": "Integration & Security",
+      "question": "Which annotation exposes an Apex method to Lightning components?",
+      "choices": {
+        "A": "@AuraEnabled",
+        "B": "@RemoteAction",
+        "C": "@InvocableMethod",
+        "D": "@RestResource"
+      },
+      "correct_answer": "A",
+      "explanation": "@AuraEnabled annotation exposes methods to both Aura components and Lightning Web Components (LWC)."
+    },
+    {
+      "id": 83,
+      "domain": "Integration & Security",
+      "question": "What does 'with sharing' keyword do in Apex?",
+      "choices": {
+        "A": "Enforces the current user's sharing rules",
+        "B": "Shares the class with other orgs",
+        "C": "Makes all records visible to the user",
+        "D": "Enables community user access"
+      },
+      "correct_answer": "A",
+      "explanation": "'with sharing' enforces the running user's sharing rules, record-level security, and field-level security."
+    },
+    {
+      "id": 84,
+      "domain": "Integration & Security",
+      "question": "Which method makes an HTTP callout to an external service?",
+      "choices": {
+        "A": "Http.request()",
+        "B": "HttpRequest.send()",
+        "C": "Http.send()",
+        "D": "Callout.execute()"
+      },
+      "correct_answer": "C",
+      "explanation": "Http.send(HttpRequest) executes the callout and returns an HttpResponse object."
+    },
+    {
+      "id": 85,
+      "domain": "Integration & Security",
+      "question": "What is required to make an HTTP callout from Apex?",
+      "choices": {
+        "A": "A Named Credential",
+        "B": "The endpoint must be added to Remote Site Settings",
+        "C": "Either A or B",
+        "D": "Both A and B"
+      },
+      "correct_answer": "C",
+      "explanation": "Callout endpoints must be whitelisted via Remote Site Settings OR use Named Credentials (recommended for authentication)."
+    },
+    {
+      "id": 86,
+      "domain": "Integration & Security",
+      "question": "Which annotation makes an Apex method available to Flow?",
+      "choices": {
+        "A": "@FlowEnabled",
+        "B": "@InvocableMethod",
+        "C": "@ProcessBuilder",
+        "D": "@Automatable"
+      },
+      "correct_answer": "B",
+      "explanation": "@InvocableMethod exposes a method to Flow, Process Builder, and REST API invocable actions."
+    },
+    {
+      "id": 87,
+      "domain": "Integration & Security",
+      "question": "What is the purpose of Named Credentials?",
+      "choices": {
+        "A": "To name API users",
+        "B": "To store endpoint URLs and authentication settings securely",
+        "C": "To create unique identifiers",
+        "D": "To name external objects"
+      },
+      "correct_answer": "B",
+      "explanation": "Named Credentials securely store endpoint URLs and authentication details, separating them from code."
+    },
+    {
+      "id": 88,
+      "domain": "Integration & Security",
+      "question": "Which class is used to check CRUD permissions before DML?",
+      "choices": {
+        "A": "Schema.sObjectType",
+        "B": "UserInfo.getPermissions()",
+        "C": "Security.checkPermissions()",
+        "D": "System.SecurityUtils"
+      },
+      "correct_answer": "A",
+      "explanation": "Schema.sObjectType.ObjectName.isAccessible(), isCreateable(), isUpdateable(), isDeletable() check CRUD permissions."
+    },
+    {
+      "id": 89,
+      "domain": "Integration & Security",
+      "question": "What does 'inherited sharing' mean in Apex?",
+      "choices": {
+        "A": "The class inherits sharing from its parent class",
+        "B": "The class uses the sharing context of the calling class",
+        "C": "The class shares data with all users",
+        "D": "The class doesn't enforce any sharing rules"
+      },
+      "correct_answer": "B",
+      "explanation": "'inherited sharing' means the class adopts the sharing context of the class that called it."
+    },
+    {
+      "id": 90,
+      "domain": "Integration & Security",
+      "question": "Which method parses JSON into an Apex object?",
+      "choices": {
+        "A": "JSON.parse()",
+        "B": "JSON.deserialize()",
+        "C": "JSONParser.parse()",
+        "D": "Object.fromJSON()"
+      },
+      "correct_answer": "B",
+      "explanation": "JSON.deserialize(jsonString, apexType) parses a JSON string into the specified Apex type."
+    },
+    {
+      "id": 91,
+      "domain": "Integration & Security",
+      "question": "What is the callout timeout limit in synchronous Apex?",
+      "choices": {
+        "A": "60 seconds",
+        "B": "120 seconds",
+        "C": "180 seconds",
+        "D": "300 seconds"
+      },
+      "correct_answer": "B",
+      "explanation": "The maximum timeout for HTTP callouts is 120 seconds in synchronous Apex."
+    },
+    {
+      "id": 92,
+      "domain": "Integration & Security",
+      "question": "Which access modifier is required for managed package classes that need to be accessed externally?",
+      "choices": {
+        "A": "public",
+        "B": "global",
+        "C": "external",
+        "D": "protected"
+      },
+      "correct_answer": "B",
+      "explanation": "The 'global' access modifier is required for classes and methods that must be accessible from outside a managed package."
+    },
+    {
+      "id": 93,
+      "domain": "Integration & Security",
+      "question": "What does the @AuraEnabled(cacheable=true) annotation do?",
+      "choices": {
+        "A": "Caches the method result client-side for improved performance",
+        "B": "Stores results in Platform Cache",
+        "C": "Prevents the method from being called repeatedly",
+        "D": "Enables server-side caching only"
+      },
+      "correct_answer": "A",
+      "explanation": "cacheable=true enables client-side caching and allows the method to be called from Lightning Data Service wire adapters."
+    },
+    {
+      "id": 94,
+      "domain": "Integration & Security",
+      "question": "Which security feature should be used to store API keys?",
+      "choices": {
+        "A": "Custom Settings",
+        "B": "Custom Metadata Types",
+        "C": "Protected Custom Metadata or Named Credentials",
+        "D": "Static Variables"
+      },
+      "correct_answer": "C",
+      "explanation": "Sensitive data like API keys should be stored in Protected Custom Metadata (not visible in code) or Named Credentials."
+    },
+    {
+      "id": 95,
+      "domain": "Integration & Security",
+      "question": "What is the maximum number of callouts in a single transaction?",
+      "choices": {
+        "A": "10",
+        "B": "50",
+        "C": "100",
+        "D": "200"
+      },
+      "correct_answer": "C",
+      "explanation": "A single Apex transaction can make up to 100 callouts to external services."
+    },
+    {
+      "id": 96,
+      "domain": "Integration & Security",
+      "question": "Which class provides information about the current user?",
+      "choices": {
+        "A": "User.getCurrentUser()",
+        "B": "UserInfo",
+        "C": "System.getUser()",
+        "D": "CurrentUser"
+      },
+      "correct_answer": "B",
+      "explanation": "UserInfo class provides methods like getUserId(), getName(), getProfileId() to get current user information."
+    },
+    {
+      "id": 97,
+      "domain": "Integration & Security",
+      "question": "What does stripInaccessible() method do?",
+      "choices": {
+        "A": "Removes HTML tags from strings",
+        "B": "Removes fields the user doesn't have access to from sObject records",
+        "C": "Strips whitespace from fields",
+        "D": "Removes special characters"
+      },
+      "correct_answer": "B",
+      "explanation": "Security.stripInaccessible() removes fields the user doesn't have FLS access to, preventing security violations."
+    },
+    {
+      "id": 98,
+      "domain": "Integration & Security",
+      "question": "Which interface enables authentication for outbound callouts?",
+      "choices": {
+        "A": "Auth.AuthProvider",
+        "B": "Auth.OAuth2",
+        "C": "HttpAuth",
+        "D": "Named Credentials (not an interface)"
+      },
+      "correct_answer": "D",
+      "explanation": "Named Credentials handle authentication declaratively without requiring interface implementation. Auth providers are for inbound auth."
+    },
+    {
+      "id": 99,
+      "domain": "Integration & Security",
+      "question": "What is the purpose of Platform Events in Apex?",
+      "choices": {
+        "A": "To log platform errors",
+        "B": "To enable event-driven architecture and loosely coupled integration",
+        "C": "To schedule events",
+        "D": "To track user events"
+      },
+      "correct_answer": "B",
+      "explanation": "Platform Events enable publish-subscribe patterns for loosely coupled, event-driven integrations within and outside Salesforce."
+    },
+    {
+      "id": 100,
+      "domain": "Integration & Security",
+      "question": "Which method serializes an Apex object to JSON?",
+      "choices": {
+        "A": "JSON.stringify()",
+        "B": "JSON.serialize()",
+        "C": "object.toJSON()",
+        "D": "JSONGenerator.writeObject()"
+      },
+      "correct_answer": "B",
+      "explanation": "JSON.serialize(object) converts an Apex object to a JSON string representation."
+    }
+  ]
+}

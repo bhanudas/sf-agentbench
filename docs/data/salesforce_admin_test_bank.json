@@ -1,31 +1,26 @@
 {
   "metadata": {
-    "version": "1.2",
-    "created": "2026-01-21",
+    "version": "2.0",
+    "created": "2026-01-24",
     "updated": "2026-01-24",
-    "description": "Salesforce Administrator Certification Test Bank - Rebalanced Distribution",
-    "total_questions": 75,
+    "description": "Salesforce Administrator Certification Test Bank",
+    "total_questions": 100,
     "domains": [
       "Security & Access",
       "Data Management",
       "Automation",
       "Reports & Dashboards",
-      "Sales & Service Cloud",
-      "Platform Developer I"
+      "Sales & Service Cloud"
     ],
+    "questions_per_domain": 20,
     "format": "multiple_choice",
     "answer_distribution": {
-      "A": 19,
-      "B": 19,
-      "C": 18,
-      "D": 19,
-      "note": "Balanced distribution across all 75 questions"
-    },
-    "future_enhancements": [
-      "non_deterministic_answers",
-      "llm_generated_explanations",
-      "difficulty_scoring"
-    ]
+      "A": 25,
+      "B": 25,
+      "C": 25,
+      "D": 25,
+      "note": "Balanced distribution across all options"
+    }
   },
   "questions": [
     {
@@ -98,12 +93,12 @@
       "domain": "Security & Access",
       "question": "What is the maximum number of Permission Sets that can be assigned to a single user?",
       "choices": {
-        "A": "10",
-        "B": "100",
+        "A": "100",
+        "B": "10",
         "C": "1000",
         "D": "Unlimited"
       },
-      "correct_answer": "B",
+      "correct_answer": "A",
       "explanation": "Salesforce allows a maximum of 100 Permission Sets to be assigned to a single user."
     },
     {
@@ -160,19 +155,149 @@
     },
     {
       "id": 11,
+      "domain": "Security & Access",
+      "question": "Which OWD setting provides the most restrictive default access?",
+      "choices": {
+        "A": "Public Read Only",
+        "B": "Public Read/Write",
+        "C": "Private",
+        "D": "Controlled by Parent"
+      },
+      "correct_answer": "C",
+      "explanation": "Private OWD is the most restrictive, only allowing record owners and users above them in the role hierarchy to see records."
+    },
+    {
+      "id": 12,
+      "domain": "Security & Access",
+      "question": "What happens when a user's profile is deactivated?",
+      "choices": {
+        "A": "Users with that profile cannot log in",
+        "B": "The profile is deleted",
+        "C": "The profile remains but all permissions are removed",
+        "D": "Profiles cannot be deactivated, only deleted"
+      },
+      "correct_answer": "A",
+      "explanation": "When a profile is deactivated, users assigned to that profile cannot log in to Salesforce."
+    },
+    {
+      "id": 13,
+      "domain": "Security & Access",
+      "question": "Which feature allows an admin to see the effective permissions for a user?",
+      "choices": {
+        "A": "Permission Set Summary",
+        "B": "Profile Settings",
+        "C": "User Permission Summary",
+        "D": "View Summary on the User detail page"
+      },
+      "correct_answer": "D",
+      "explanation": "The View Summary feature on the User detail page shows the effective permissions combining Profile and all assigned Permission Sets."
+    },
+    {
+      "id": 14,
+      "domain": "Security & Access",
+      "question": "What is the purpose of Login Hours on a Profile?",
+      "choices": {
+        "A": "To restrict the times when users can access Salesforce",
+        "B": "To track when users log in",
+        "C": "To set session timeout duration",
+        "D": "To schedule automated processes"
+      },
+      "correct_answer": "A",
+      "explanation": "Login Hours restrict the times of day when users with that profile can access Salesforce."
+    },
+    {
+      "id": 15,
+      "domain": "Security & Access",
+      "question": "Which sharing setting is available for child objects in a Master-Detail relationship?",
+      "choices": {
+        "A": "Private",
+        "B": "Public Read Only",
+        "C": "Controlled by Parent",
+        "D": "Public Read/Write"
+      },
+      "correct_answer": "C",
+      "explanation": "Child objects in a Master-Detail relationship always inherit the sharing setting from the parent (Controlled by Parent)."
+    },
+    {
+      "id": 16,
+      "domain": "Security & Access",
+      "question": "What is the maximum number of custom profiles in an Enterprise Edition org?",
+      "choices": {
+        "A": "2",
+        "B": "10",
+        "C": "Unlimited",
+        "D": "Based on user licenses"
+      },
+      "correct_answer": "C",
+      "explanation": "Enterprise Edition and above allow unlimited custom profiles to be created."
+    },
+    {
+      "id": 17,
+      "domain": "Security & Access",
+      "question": "Which feature allows users to delegate record approval authority?",
+      "choices": {
+        "A": "Delegated Approver",
+        "B": "Permission Set Groups",
+        "C": "Sharing Rules",
+        "D": "Queue Membership"
+      },
+      "correct_answer": "A",
+      "explanation": "Delegated Approvers can be assigned to act on behalf of other users for approval requests."
+    },
+    {
+      "id": 18,
+      "domain": "Security & Access",
+      "question": "What does Field-Level Security (FLS) control?",
+      "choices": {
+        "A": "Which records a user can see",
+        "B": "Which objects a user can access",
+        "C": "Which fields are visible and editable for a user",
+        "D": "Which reports a user can run"
+      },
+      "correct_answer": "C",
+      "explanation": "Field-Level Security controls field visibility and editability at the profile and permission set level."
+    },
+    {
+      "id": 19,
+      "domain": "Security & Access",
+      "question": "How can an administrator grant access to an Apex class?",
+      "choices": {
+        "A": "Through Profiles and Permission Sets",
+        "B": "Through Role Hierarchy only",
+        "C": "Through Sharing Rules only",
+        "D": "Apex classes are always accessible"
+      },
+      "correct_answer": "A",
+      "explanation": "Apex class access is controlled through the Enabled Apex Class Access settings in Profiles and Permission Sets."
+    },
+    {
+      "id": 20,
+      "domain": "Security & Access",
+      "question": "What is a Muting Permission Set?",
+      "choices": {
+        "A": "A permission set that removes permissions granted elsewhere",
+        "B": "A permission set for guest users",
+        "C": "A permission set that hides error messages",
+        "D": "A deprecated feature replaced by Permission Set Groups"
+      },
+      "correct_answer": "A",
+      "explanation": "Muting Permission Sets remove specific permissions from a Permission Set Group, providing more granular control."
+    },
+    {
+      "id": 21,
       "domain": "Data Management",
       "question": "What is the default batch size when processing records using Data Loader?",
       "choices": {
         "A": "100",
-        "B": "200",
+        "B": "10,000",
         "C": "2,000",
-        "D": "10,000"
+        "D": "200"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Data Loader processes records in batches of up to 200 records per batch by default, which aligns with API limits."
     },
     {
-      "id": 12,
+      "id": 22,
       "domain": "Data Management",
       "question": "Which tool should be used to mass delete records that meet specific criteria?",
       "choices": {
@@ -185,7 +310,7 @@
       "explanation": "Both Mass Delete Records (for standard objects up to 250 records) and Data Loader (for larger volumes) can be used for mass deletions."
     },
     {
-      "id": 13,
+      "id": 23,
       "domain": "Data Management",
       "question": "What type of relationship allows a child record to have two parent objects?",
       "choices": {
@@ -198,20 +323,20 @@
       "explanation": "A Junction Object with two Master-Detail relationships creates a many-to-many relationship between two objects."
     },
     {
-      "id": 14,
+      "id": 24,
       "domain": "Data Management",
       "question": "When converting a Lookup relationship to Master-Detail, what must be true?",
       "choices": {
         "A": "The parent object must have Private OWD",
-        "B": "Both A and C (all child records have parent value AND child is custom object)",
+        "B": "The child object must be a custom object",
         "C": "All child records must have a value in the lookup field",
-        "D": "The child object must be a custom object"
+        "D": "Both A and C (all child records have parent value AND child is custom object)"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Converting to Master-Detail requires all child records to have a parent value, and the child must be a custom object."
     },
     {
-      "id": 15,
+      "id": 25,
       "domain": "Data Management",
       "question": "What is the storage limit for file attachments in Salesforce per organization (base)?",
       "choices": {
@@ -224,7 +349,7 @@
       "explanation": "Organizations receive 11 GB base file storage plus additional allocation per user license type."
     },
     {
-      "id": 16,
+      "id": 26,
       "domain": "Data Management",
       "question": "Which field type cannot be used as an External ID?",
       "choices": {
@@ -237,33 +362,33 @@
       "explanation": "External IDs can only be Text, Number, Email, or Auto-Number fields. Picklist fields cannot be External IDs."
     },
     {
-      "id": 17,
+      "id": 27,
       "domain": "Data Management",
       "question": "How long are deleted records retained in the Recycle Bin?",
       "choices": {
         "A": "7 days",
-        "B": "15 days",
+        "B": "90 days",
         "C": "30 days",
-        "D": "90 days"
+        "D": "15 days"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Deleted records remain in the Recycle Bin for 15 days before being permanently deleted."
     },
     {
-      "id": 18,
+      "id": 28,
       "domain": "Data Management",
       "question": "What is the maximum number of custom fields allowed on a custom object?",
       "choices": {
         "A": "100",
-        "B": "500",
+        "B": "1000",
         "C": "800",
-        "D": "1000"
+        "D": "500"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Custom objects can have up to 500 custom fields in most editions."
     },
     {
-      "id": 19,
+      "id": 29,
       "domain": "Data Management",
       "question": "Which import tool supports importing custom objects?",
       "choices": {
@@ -276,7 +401,7 @@
       "explanation": "Both Import Wizard (for up to 50,000 records) and Data Loader support importing data into custom objects."
     },
     {
-      "id": 20,
+      "id": 30,
       "domain": "Data Management",
       "question": "What happens to child records when a parent record in a Master-Detail relationship is deleted?",
       "choices": {
@@ -289,7 +414,137 @@
       "explanation": "Master-Detail relationships enforce cascade delete - deleting the parent automatically deletes all child records."
     },
     {
-      "id": 21,
+      "id": 31,
+      "domain": "Data Management",
+      "question": "What is the maximum number of External IDs per object?",
+      "choices": {
+        "A": "3",
+        "B": "7",
+        "C": "25",
+        "D": "Unlimited"
+      },
+      "correct_answer": "C",
+      "explanation": "Each object can have up to 25 fields marked as External IDs for upsert operations."
+    },
+    {
+      "id": 32,
+      "domain": "Data Management",
+      "question": "Which feature prevents duplicate records from being created?",
+      "choices": {
+        "A": "Validation Rules",
+        "B": "Assignment Rules",
+        "C": "Workflow Rules",
+        "D": "Duplicate Rules with Duplicate Jobs"
+      },
+      "correct_answer": "D",
+      "explanation": "Duplicate Rules combined with Matching Rules and Duplicate Jobs prevent and manage duplicate records."
+    },
+    {
+      "id": 33,
+      "domain": "Data Management",
+      "question": "What is the purpose of the Data Import Wizard?",
+      "choices": {
+        "A": "To import up to 50,000 records with a simple interface",
+        "B": "To export data only",
+        "C": "To import unlimited records",
+        "D": "To transform data formats"
+      },
+      "correct_answer": "A",
+      "explanation": "Data Import Wizard provides a simple browser-based interface for importing up to 50,000 records."
+    },
+    {
+      "id": 34,
+      "domain": "Data Management",
+      "question": "Which relationship type supports roll-up summary fields?",
+      "choices": {
+        "A": "Lookup Relationship",
+        "B": "Self Relationship",
+        "C": "External Lookup",
+        "D": "Master-Detail Relationship"
+      },
+      "correct_answer": "D",
+      "explanation": "Roll-up summary fields are only available on Master-Detail relationships, calculating values from child records."
+    },
+    {
+      "id": 35,
+      "domain": "Data Management",
+      "question": "What is Schema Builder used for?",
+      "choices": {
+        "A": "Creating reports",
+        "B": "Setting up security",
+        "C": "Importing data",
+        "D": "Visualizing and editing the data model"
+      },
+      "correct_answer": "D",
+      "explanation": "Schema Builder provides a visual interface for viewing and editing objects, fields, and relationships."
+    },
+    {
+      "id": 36,
+      "domain": "Data Management",
+      "question": "How many Master-Detail relationships can a single object have?",
+      "choices": {
+        "A": "1",
+        "B": "Unlimited",
+        "C": "3",
+        "D": "2"
+      },
+      "correct_answer": "D",
+      "explanation": "A custom object can have a maximum of 2 Master-Detail relationships."
+    },
+    {
+      "id": 37,
+      "domain": "Data Management",
+      "question": "What does the 'Upsert' operation in Data Loader do?",
+      "choices": {
+        "A": "Uploads data to Salesforce",
+        "B": "Only updates existing records",
+        "C": "Deletes and re-inserts records",
+        "D": "Updates existing records and inserts new ones based on External ID"
+      },
+      "correct_answer": "D",
+      "explanation": "Upsert combines update and insert - it updates existing records matching the External ID or inserts new ones if no match."
+    },
+    {
+      "id": 38,
+      "domain": "Data Management",
+      "question": "What is the maximum size of a single file upload via the Salesforce UI?",
+      "choices": {
+        "A": "25 MB",
+        "B": "5 GB",
+        "C": "100 MB",
+        "D": "2 GB"
+      },
+      "correct_answer": "D",
+      "explanation": "Salesforce allows file uploads up to 2 GB through the UI using Salesforce Files."
+    },
+    {
+      "id": 39,
+      "domain": "Data Management",
+      "question": "Which formula field cannot reference fields across relationships?",
+      "choices": {
+        "A": "Text Formula",
+        "B": "Cross-Object Formula",
+        "C": "Roll-up Summary Field",
+        "D": "None - all formulas can reference related fields"
+      },
+      "correct_answer": "C",
+      "explanation": "Roll-up Summary Fields can only aggregate child records in Master-Detail relationships, not reference fields across relationships like Cross-Object formulas."
+    },
+    {
+      "id": 40,
+      "domain": "Data Management",
+      "question": "What is the purpose of Record Types?",
+      "choices": {
+        "A": "To define different page layouts and picklist values for different business processes",
+        "B": "To restrict record access",
+        "C": "To enable field-level security",
+        "D": "To create duplicate records"
+      },
+      "correct_answer": "A",
+      "explanation": "Record Types allow different page layouts, picklist values, and business processes for the same object."
+    },
+    {
+      "id": 41,
       "domain": "Automation",
       "question": "Which automation tool should be used to send an email alert when an Opportunity reaches 'Closed Won'?",
       "choices": {
@@ -302,7 +557,7 @@
       "explanation": "Email alerts can be triggered by Workflow Rules, Process Builder, or Flows, though Salesforce recommends migrating to Flows."
     },
     {
-      "id": 22,
+      "id": 42,
       "domain": "Automation",
       "question": "What is the order of execution when a record is saved in Salesforce?",
       "choices": {
@@ -315,20 +570,20 @@
       "explanation": "The order is: Before Triggers \u2192 System Validation \u2192 Validation Rules \u2192 Duplicate Rules \u2192 After Triggers \u2192 Assignment Rules \u2192 Workflow Rules \u2192 Escalation Rules \u2192 Processes/Flows."
     },
     {
-      "id": 23,
+      "id": 43,
       "domain": "Automation",
       "question": "Which Flow type runs when a record is created or updated?",
       "choices": {
         "A": "Screen Flow",
-        "B": "Record-Triggered Flow",
+        "B": "Schedule-Triggered Flow",
         "C": "Autolaunched Flow",
-        "D": "Schedule-Triggered Flow"
+        "D": "Record-Triggered Flow"
       },
-      "correct_answer": "B",
+      "correct_answer": "D",
       "explanation": "Record-Triggered Flows automatically execute when records are created, updated, or deleted."
     },
     {
-      "id": 24,
+      "id": 44,
       "domain": "Automation",
       "question": "What is the maximum number of time-based workflow actions that can be queued?",
       "choices": {
@@ -341,7 +596,7 @@
       "explanation": "Salesforce allows up to 1,000,000 time-based workflow actions in the queue at any time."
     },
     {
-      "id": 25,
+      "id": 45,
       "domain": "Automation",
       "question": "Which automation tool can create multiple records of different object types in a single transaction?",
       "choices": {
@@ -354,7 +609,7 @@
       "explanation": "Flows can create, update, and delete multiple records across different objects in a single transaction."
     },
     {
-      "id": 26,
+      "id": 46,
       "domain": "Automation",
       "question": "In an Approval Process, what determines who can approve a record?",
       "choices": {
@@ -367,7 +622,7 @@
       "explanation": "Approval Steps define who can approve the record and the criteria for each step in the approval process."
     },
     {
-      "id": 27,
+      "id": 47,
       "domain": "Automation",
       "question": "What is the difference between 'Before Save' and 'After Save' Flow triggers?",
       "choices": {
@@ -380,7 +635,7 @@
       "explanation": "Before Save Flows are faster because they don't require a separate DML operation to update the triggering record's fields."
     },
     {
-      "id": 28,
+      "id": 48,
       "domain": "Automation",
       "question": "Which element in Flow is used to loop through a collection of records?",
       "choices": {
@@ -393,7 +648,7 @@
       "explanation": "The Loop element iterates through each item in a collection, allowing you to process records one at a time."
     },
     {
-      "id": 29,
+      "id": 49,
       "domain": "Automation",
       "question": "What happens if a Screen Flow encounters an unhandled fault?",
       "choices": {
@@ -406,7 +661,7 @@
       "explanation": "Unhandled faults in Screen Flows display an error to the user and roll back all database changes made during the flow interview."
     },
     {
-      "id": 30,
+      "id": 50,
       "domain": "Automation",
       "question": "Which validation rule function checks if a field value has changed?",
       "choices": {
@@ -419,7 +674,137 @@
       "explanation": "ISCHANGED() returns true if a field value changed, while PRIORVALUE() returns the previous value, allowing comparison logic."
     },
     {
-      "id": 31,
+      "id": 51,
+      "domain": "Automation",
+      "question": "What is the purpose of the $Record variable in a Record-Triggered Flow?",
+      "choices": {
+        "A": "To store the flow's execution history",
+        "B": "To reference the record that triggered the flow",
+        "C": "To count total records processed",
+        "D": "To store error messages"
+      },
+      "correct_answer": "B",
+      "explanation": "$Record references the record that triggered the flow, allowing you to access and modify its field values."
+    },
+    {
+      "id": 52,
+      "domain": "Automation",
+      "question": "Which Flow element is used to make branching decisions based on conditions?",
+      "choices": {
+        "A": "Assignment",
+        "B": "Loop",
+        "C": "Decision",
+        "D": "Get Records"
+      },
+      "correct_answer": "C",
+      "explanation": "The Decision element evaluates conditions and routes the flow to different paths based on the outcomes."
+    },
+    {
+      "id": 53,
+      "domain": "Automation",
+      "question": "What happens when a workflow rule's time-dependent action is pending and the record no longer meets criteria?",
+      "choices": {
+        "A": "The action executes anyway",
+        "B": "The action is removed from the queue",
+        "C": "The action is converted to immediate",
+        "D": "An error is generated"
+      },
+      "correct_answer": "B",
+      "explanation": "If a record no longer meets the workflow rule criteria, pending time-dependent actions are removed from the queue."
+    },
+    {
+      "id": 54,
+      "domain": "Automation",
+      "question": "Which automation feature can send an outbound message to an external system?",
+      "choices": {
+        "A": "Process Builder",
+        "B": "Workflow Rules",
+        "C": "Validation Rules",
+        "D": "Assignment Rules"
+      },
+      "correct_answer": "B",
+      "explanation": "Workflow Rules can trigger Outbound Messages to send SOAP messages to external web services."
+    },
+    {
+      "id": 55,
+      "domain": "Automation",
+      "question": "What is the purpose of Flow Fault Paths?",
+      "choices": {
+        "A": "To define alternate routes for successful operations",
+        "B": "To handle errors gracefully without stopping the entire flow",
+        "C": "To speed up flow execution",
+        "D": "To log successful operations"
+      },
+      "correct_answer": "B",
+      "explanation": "Fault Paths allow you to handle errors gracefully by defining what happens when an element fails."
+    },
+    {
+      "id": 56,
+      "domain": "Automation",
+      "question": "Which type of Flow can be scheduled to run at specific times?",
+      "choices": {
+        "A": "Screen Flow",
+        "B": "Record-Triggered Flow",
+        "C": "Schedule-Triggered Flow",
+        "D": "Autolaunched Flow"
+      },
+      "correct_answer": "C",
+      "explanation": "Schedule-Triggered Flows run automatically at specified times and frequencies, similar to scheduled batch Apex."
+    },
+    {
+      "id": 57,
+      "domain": "Automation",
+      "question": "What is the Approval History related list used for?",
+      "choices": {
+        "A": "To display audit trail of field changes",
+        "B": "To show the history of approval process actions on a record",
+        "C": "To track user login history",
+        "D": "To display workflow rule executions"
+      },
+      "correct_answer": "B",
+      "explanation": "Approval History shows all approval process actions, including submissions, approvals, and rejections."
+    },
+    {
+      "id": 58,
+      "domain": "Automation",
+      "question": "Which automation can update a parent record when a child record changes?",
+      "choices": {
+        "A": "Roll-up Summary Field",
+        "B": "Cross-Object Field Update in Flow",
+        "C": "Both A and B",
+        "D": "Neither - parent records cannot be updated automatically"
+      },
+      "correct_answer": "C",
+      "explanation": "Both Roll-up Summary Fields (for Master-Detail) and Cross-Object Field Updates in Flow can update parent records."
+    },
+    {
+      "id": 59,
+      "domain": "Automation",
+      "question": "What is the purpose of Entry Criteria in an Approval Process?",
+      "choices": {
+        "A": "To define who can submit records for approval",
+        "B": "To define conditions that must be met to enter the approval process",
+        "C": "To define actions after approval",
+        "D": "To define the approval steps"
+      },
+      "correct_answer": "B",
+      "explanation": "Entry Criteria define the conditions a record must meet to be submitted for approval."
+    },
+    {
+      "id": 60,
+      "domain": "Automation",
+      "question": "Which Flow feature allows you to run operations asynchronously?",
+      "choices": {
+        "A": "Pause element",
+        "B": "Run Asynchronously path",
+        "C": "Scheduled Path",
+        "D": "Decision element"
+      },
+      "correct_answer": "B",
+      "explanation": "Record-Triggered Flows can have 'Run Asynchronously' paths that execute outside the main transaction."
+    },
+    {
+      "id": 61,
       "domain": "Reports & Dashboards",
       "question": "Which report format allows grouping by both rows and columns?",
       "choices": {
@@ -432,7 +817,7 @@
       "explanation": "Matrix reports allow grouping data by both rows and columns, creating a grid-like view of summarized data."
     },
     {
-      "id": 32,
+      "id": 62,
       "domain": "Reports & Dashboards",
       "question": "What is the maximum number of components that can be added to a dashboard?",
       "choices": {
@@ -445,7 +830,7 @@
       "explanation": "A Salesforce dashboard can contain a maximum of 20 components."
     },
     {
-      "id": 33,
+      "id": 63,
       "domain": "Reports & Dashboards",
       "question": "Which report type is required to create a dashboard component?",
       "choices": {
@@ -458,7 +843,7 @@
       "explanation": "Dashboard components require Summary or Matrix reports because they need grouped/summarized data. Tabular reports cannot be used."
     },
     {
-      "id": 34,
+      "id": 64,
       "domain": "Reports & Dashboards",
       "question": "What does the 'Running User' setting on a dashboard control?",
       "choices": {
@@ -471,7 +856,7 @@
       "explanation": "The Running User determines whose security settings and data access are used when displaying dashboard data."
     },
     {
-      "id": 35,
+      "id": 65,
       "domain": "Reports & Dashboards",
       "question": "How can an administrator allow users to see a dashboard with their own data access?",
       "choices": {
@@ -484,7 +869,7 @@
       "explanation": "Dynamic Dashboards display data based on the viewing user's security settings rather than a fixed Running User."
     },
     {
-      "id": 36,
+      "id": 66,
       "domain": "Reports & Dashboards",
       "question": "Which feature allows combining data from multiple report types in a single report?",
       "choices": {
@@ -497,7 +882,7 @@
       "explanation": "Joined Reports combine data from multiple report types (up to 5 blocks) in a single report."
     },
     {
-      "id": 37,
+      "id": 67,
       "domain": "Reports & Dashboards",
       "question": "What is a Bucket Field used for in reports?",
       "choices": {
@@ -510,7 +895,7 @@
       "explanation": "Bucket Fields categorize report data into groups you define, without needing to create custom formula fields on the object."
     },
     {
-      "id": 38,
+      "id": 68,
       "domain": "Reports & Dashboards",
       "question": "What is the maximum number of filters that can be added to a report?",
       "choices": {
@@ -523,7 +908,7 @@
       "explanation": "Reports can have a maximum of 20 field filters in addition to the standard filters."
     },
     {
-      "id": 39,
+      "id": 69,
       "domain": "Reports & Dashboards",
       "question": "Which chart type is best for showing trends over time?",
       "choices": {
@@ -536,7 +921,7 @@
       "explanation": "Line Charts are ideal for displaying trends over time, showing how values change across time periods."
     },
     {
-      "id": 40,
+      "id": 70,
       "domain": "Reports & Dashboards",
       "question": "What is a Cross Filter in reports?",
       "choices": {
@@ -549,7 +934,137 @@
       "explanation": "Cross Filters filter records based on related objects, such as 'Accounts with Opportunities' or 'Accounts without Cases'."
     },
     {
-      "id": 41,
+      "id": 71,
+      "domain": "Reports & Dashboards",
+      "question": "What is a Custom Report Type used for?",
+      "choices": {
+        "A": "To create custom charts",
+        "B": "To define which objects and fields are available in reports",
+        "C": "To schedule report delivery",
+        "D": "To set report permissions"
+      },
+      "correct_answer": "B",
+      "explanation": "Custom Report Types define the objects, relationships, and fields available when creating reports."
+    },
+    {
+      "id": 72,
+      "domain": "Reports & Dashboards",
+      "question": "How many blocks can a Joined Report contain?",
+      "choices": {
+        "A": "2",
+        "B": "3",
+        "C": "5",
+        "D": "10"
+      },
+      "correct_answer": "C",
+      "explanation": "Joined Reports can contain up to 5 blocks, each potentially using a different report type."
+    },
+    {
+      "id": 73,
+      "domain": "Reports & Dashboards",
+      "question": "What is the purpose of Report Subscriptions?",
+      "choices": {
+        "A": "To restrict report access",
+        "B": "To automatically receive report results via email on a schedule",
+        "C": "To share reports with external users",
+        "D": "To track report usage"
+      },
+      "correct_answer": "B",
+      "explanation": "Report Subscriptions allow users to schedule automatic email delivery of report results."
+    },
+    {
+      "id": 74,
+      "domain": "Reports & Dashboards",
+      "question": "Which dashboard component type shows a single value with conditional highlighting?",
+      "choices": {
+        "A": "Chart",
+        "B": "Table",
+        "C": "Metric",
+        "D": "Gauge"
+      },
+      "correct_answer": "C",
+      "explanation": "Metric components display a single grand total value from a report with optional conditional highlighting."
+    },
+    {
+      "id": 75,
+      "domain": "Reports & Dashboards",
+      "question": "What is the maximum number of groupings in a Summary report?",
+      "choices": {
+        "A": "2",
+        "B": "3",
+        "C": "4",
+        "D": "5"
+      },
+      "correct_answer": "B",
+      "explanation": "Summary reports can have up to 3 levels of grouping for organizing and subtotaling data."
+    },
+    {
+      "id": 76,
+      "domain": "Reports & Dashboards",
+      "question": "What does the 'Show Details' option control in reports?",
+      "choices": {
+        "A": "Whether the report shows individual records or only summary data",
+        "B": "Whether charts are displayed",
+        "C": "Whether totals are shown",
+        "D": "Whether the report can be exported"
+      },
+      "correct_answer": "A",
+      "explanation": "Show Details toggles between showing individual record rows or just the grouped summary data."
+    },
+    {
+      "id": 77,
+      "domain": "Reports & Dashboards",
+      "question": "Which feature allows report users to filter data without modifying the report itself?",
+      "choices": {
+        "A": "Cross Filters",
+        "B": "Filter Logic",
+        "C": "Dashboard Filters",
+        "D": "Report Filters"
+      },
+      "correct_answer": "C",
+      "explanation": "Dashboard Filters allow users to dynamically filter dashboard data without modifying underlying reports."
+    },
+    {
+      "id": 78,
+      "domain": "Reports & Dashboards",
+      "question": "What is the Gauge component best used for?",
+      "choices": {
+        "A": "Showing trends over time",
+        "B": "Displaying progress toward a goal with ranges",
+        "C": "Comparing multiple values",
+        "D": "Showing proportions of a whole"
+      },
+      "correct_answer": "B",
+      "explanation": "Gauge components show how a value compares to a goal, with customizable ranges for visual feedback."
+    },
+    {
+      "id": 79,
+      "domain": "Reports & Dashboards",
+      "question": "Which report format cannot include charts?",
+      "choices": {
+        "A": "Summary",
+        "B": "Matrix",
+        "C": "Tabular",
+        "D": "Joined"
+      },
+      "correct_answer": "C",
+      "explanation": "Tabular reports cannot include charts because they don't have grouped data required for visualization."
+    },
+    {
+      "id": 80,
+      "domain": "Reports & Dashboards",
+      "question": "What is Historical Trend Reporting used for?",
+      "choices": {
+        "A": "Viewing deleted records",
+        "B": "Tracking changes to field values over time",
+        "C": "Comparing report versions",
+        "D": "Analyzing login history"
+      },
+      "correct_answer": "B",
+      "explanation": "Historical Trend Reporting tracks how field values on records have changed over time (up to 5 fields, 3 months of history)."
+    },
+    {
+      "id": 81,
       "domain": "Sales & Service Cloud",
       "question": "What is the purpose of a Sales Path in Salesforce?",
       "choices": {
@@ -562,7 +1077,7 @@
       "explanation": "Sales Path provides visual guidance for each stage of a process, displaying key fields and coaching information to help users move records forward."
     },
     {
-      "id": 42,
+      "id": 82,
       "domain": "Sales & Service Cloud",
       "question": "Which feature automatically converts web form submissions into Leads?",
       "choices": {
@@ -575,7 +1090,7 @@
       "explanation": "Web-to-Lead captures information from your website and automatically creates Lead records in Salesforce."
     },
     {
-      "id": 43,
+      "id": 83,
       "domain": "Sales & Service Cloud",
       "question": "When converting a Lead, which records can be created?",
       "choices": {
@@ -588,7 +1103,7 @@
       "explanation": "Lead conversion can create an Account, Contact, and optionally an Opportunity from the Lead data."
     },
     {
-      "id": 44,
+      "id": 84,
       "domain": "Sales & Service Cloud",
       "question": "What is the purpose of Escalation Rules in Service Cloud?",
       "choices": {
@@ -601,7 +1116,7 @@
       "explanation": "Escalation Rules automatically escalate cases when they meet certain criteria and time thresholds, ensuring timely resolution."
     },
     {
-      "id": 45,
+      "id": 85,
       "domain": "Sales & Service Cloud",
       "question": "Which object is used to track customer issues in Service Cloud?",
       "choices": {
@@ -614,7 +1129,7 @@
       "explanation": "Cases are the primary object in Service Cloud for tracking customer issues, questions, and feedback."
     },
     {
-      "id": 46,
+      "id": 86,
       "domain": "Sales & Service Cloud",
       "question": "What does the Service Console provide?",
       "choices": {
@@ -627,7 +1142,7 @@
       "explanation": "Service Console is a tab-based workspace that displays multiple records simultaneously, improving agent productivity."
     },
     {
-      "id": 47,
+      "id": 87,
       "domain": "Sales & Service Cloud",
       "question": "What is the purpose of an Entitlement in Service Cloud?",
       "choices": {
@@ -640,7 +1155,7 @@
       "explanation": "Entitlements define the level of support customers are entitled to receive, including response times and service levels."
     },
     {
-      "id": 48,
+      "id": 88,
       "domain": "Sales & Service Cloud",
       "question": "Which feature tracks the stages a deal goes through from prospect to close?",
       "choices": {
@@ -653,7 +1168,7 @@
       "explanation": "Sales Process defines the stages an Opportunity moves through and is assigned to Opportunity record types."
     },
     {
-      "id": 49,
+      "id": 89,
       "domain": "Sales & Service Cloud",
       "question": "What is Email-to-Case used for?",
       "choices": {
@@ -666,7 +1181,7 @@
       "explanation": "Email-to-Case automatically creates Cases from incoming customer emails, streamlining case creation."
     },
     {
-      "id": 50,
+      "id": 90,
       "domain": "Sales & Service Cloud",
       "question": "What is the difference between a Queue and a Group in Salesforce?",
       "choices": {
@@ -679,329 +1194,134 @@
       "explanation": "Queues can own records (like Cases or Leads) and have associated list views. Public Groups are used only for sharing and cannot own records."
     },
     {
-      "id": 51,
-      "domain": "Platform Developer I",
-      "question": "Which collection type should be used to store unique values and check for membership efficiently?",
+      "id": 91,
+      "domain": "Sales & Service Cloud",
+      "question": "What is Opportunity Splitting used for?",
       "choices": {
-        "A": "List",
-        "B": "Map",
-        "C": "Set",
-        "D": "Array"
+        "A": "Dividing an opportunity into smaller deals",
+        "B": "Splitting revenue credit among team members",
+        "C": "Creating child opportunities",
+        "D": "Splitting payment schedules"
       },
-      "correct_answer": "C",
-      "explanation": "Set collections store unique values and provide O(1) lookup for membership checks, making them ideal for deduplication and contains() operations."
+      "correct_answer": "B",
+      "explanation": "Opportunity Splits allow revenue credit to be divided among multiple team members on a single opportunity."
     },
     {
-      "id": 52,
-      "domain": "Platform Developer I",
-      "question": "What is the governor limit for total SOQL queries in a synchronous transaction?",
+      "id": 92,
+      "domain": "Sales & Service Cloud",
+      "question": "Which feature allows customers to find answers without contacting support?",
       "choices": {
-        "A": "100",
-        "B": "50",
-        "C": "150",
-        "D": "200"
+        "A": "Case Assignment Rules",
+        "B": "Knowledge Base",
+        "C": "Escalation Rules",
+        "D": "Omni-Channel"
+      },
+      "correct_answer": "B",
+      "explanation": "Knowledge Base provides self-service articles that customers can search to find answers independently."
+    },
+    {
+      "id": 93,
+      "domain": "Sales & Service Cloud",
+      "question": "What is the purpose of Campaign Influence in Sales Cloud?",
+      "choices": {
+        "A": "To track which campaigns influenced closed deals",
+        "B": "To send marketing emails",
+        "C": "To create campaign hierarchies",
+        "D": "To assign leads to campaigns"
       },
       "correct_answer": "A",
-      "explanation": "Synchronous Apex transactions are limited to 100 SOQL queries. Asynchronous transactions allow 200 queries."
+      "explanation": "Campaign Influence tracks which marketing campaigns contributed to closing opportunities, enabling ROI analysis."
     },
     {
-      "id": 53,
-      "domain": "Platform Developer I",
-      "question": "Which trigger event fires after the record has been committed to the database?",
+      "id": 94,
+      "domain": "Sales & Service Cloud",
+      "question": "What does Omni-Channel in Service Cloud do?",
       "choices": {
-        "A": "before insert",
-        "B": "before update",
-        "C": "after insert",
-        "D": "before delete"
-      },
-      "correct_answer": "C",
-      "explanation": "After triggers (after insert, after update, after delete) fire after the record is committed to the database and has a record ID."
-    },
-    {
-      "id": 54,
-      "domain": "Platform Developer I",
-      "question": "What is the correct way to bulkify a trigger that needs to query related records?",
-      "choices": {
-        "A": "Query inside the for loop for each record",
-        "B": "Use SOSL instead of SOQL",
-        "C": "Increase the query limit using Limits class",
-        "D": "Use a Map to store queried records before the loop"
-      },
-      "correct_answer": "D",
-      "explanation": "Bulkification requires querying all needed records in a single SOQL query before the loop and storing them in a Map for O(1) access."
-    },
-    {
-      "id": 55,
-      "domain": "Platform Developer I",
-      "question": "Which annotation is used to expose an Apex method as a REST endpoint?",
-      "choices": {
-        "A": "@RestResource",
-        "B": "@HttpGet",
-        "C": "@AuraEnabled",
-        "D": "@RemoteAction"
+        "A": "Routes work items to agents based on capacity and skills",
+        "B": "Sends automated email responses",
+        "C": "Creates reports across channels",
+        "D": "Manages social media posts"
       },
       "correct_answer": "A",
-      "explanation": "@RestResource annotation at the class level exposes the class as a REST endpoint. @HttpGet, @HttpPost, etc. define specific methods."
+      "explanation": "Omni-Channel intelligently routes work items (cases, chats, etc.) to qualified agents based on availability, capacity, and skills."
     },
     {
-      "id": 56,
-      "domain": "Platform Developer I",
-      "question": "What is the minimum code coverage required to deploy Apex to production?",
+      "id": 95,
+      "domain": "Sales & Service Cloud",
+      "question": "What is a Milestone in Entitlement Management?",
       "choices": {
-        "A": "50%",
-        "B": "75%",
-        "C": "85%",
-        "D": "100%"
+        "A": "A sales target",
+        "B": "A required step in a case's lifecycle with time-based requirements",
+        "C": "A report metric",
+        "D": "A campaign goal"
       },
       "correct_answer": "B",
-      "explanation": "Salesforce requires at least 75% overall code coverage for Apex classes and triggers to deploy to production."
+      "explanation": "Milestones are required steps in a support process (like first response or resolution) with time-based SLA requirements."
     },
     {
-      "id": 57,
-      "domain": "Platform Developer I",
-      "question": "Which method should be used to perform DML operations in a test class without committing to the database?",
+      "id": 96,
+      "domain": "Sales & Service Cloud",
+      "question": "Which object connects Contacts to multiple Accounts?",
       "choices": {
-        "A": "Test.startTest()",
-        "B": "Database.setSavepoint()",
-        "C": "Test.isRunningTest()",
-        "D": "All test DML is automatically rolled back"
+        "A": "Account Contact Role",
+        "B": "Account Contact Relationship",
+        "C": "Contact Role",
+        "D": "Person Account"
       },
-      "correct_answer": "D",
-      "explanation": "All DML operations in test methods are automatically rolled back after the test completes, regardless of test result."
+      "correct_answer": "B",
+      "explanation": "Account Contact Relationship allows a Contact to be related to multiple Accounts with different roles."
     },
     {
-      "id": 58,
-      "domain": "Platform Developer I",
-      "question": "What is the purpose of the @TestSetup annotation?",
+      "id": 97,
+      "domain": "Sales & Service Cloud",
+      "question": "What is Territory Management used for?",
       "choices": {
-        "A": "To run tests in isolation",
-        "B": "To skip certain tests",
-        "C": "To create test data once and use it in multiple test methods",
-        "D": "To set governor limit overrides"
+        "A": "Managing office locations",
+        "B": "Assigning accounts and opportunities to territories for sales organization",
+        "C": "Tracking shipping zones",
+        "D": "Managing warehouse inventory"
       },
-      "correct_answer": "C",
-      "explanation": "@TestSetup methods create test data that is rolled back after each test method but available to all test methods in the class."
+      "correct_answer": "B",
+      "explanation": "Enterprise Territory Management organizes accounts into territories for better sales coverage and forecasting."
     },
     {
-      "id": 59,
-      "domain": "Platform Developer I",
-      "question": "Which keyword prevents a class from being extended?",
+      "id": 98,
+      "domain": "Sales & Service Cloud",
+      "question": "What is the purpose of Macro in Service Cloud?",
       "choices": {
-        "A": "static",
-        "B": "virtual",
-        "C": "abstract",
-        "D": "final"
-      },
-      "correct_answer": "D",
-      "explanation": "The 'final' keyword on a class prevents it from being extended. Final methods cannot be overridden in subclasses."
-    },
-    {
-      "id": 60,
-      "domain": "Platform Developer I",
-      "question": "What does SOSL allow that SOQL does not?",
-      "choices": {
-        "A": "Querying multiple objects simultaneously",
-        "B": "Using aggregate functions",
-        "C": "Filtering by date ranges",
-        "D": "Ordering results"
+        "A": "To automate repetitive tasks for agents with one click",
+        "B": "To create complex formulas",
+        "C": "To schedule bulk operations",
+        "D": "To generate reports"
       },
       "correct_answer": "A",
-      "explanation": "SOSL (Salesforce Object Search Language) can search across multiple objects in a single query, while SOQL queries one object at a time."
+      "explanation": "Macros allow agents to complete multiple actions (update fields, send emails, etc.) with a single click."
     },
     {
-      "id": 61,
-      "domain": "Platform Developer I",
-      "question": "Which interface must be implemented for a class to be used in a batch Apex job?",
+      "id": 99,
+      "domain": "Sales & Service Cloud",
+      "question": "What is Collaborative Forecasting used for?",
       "choices": {
-        "A": "Database.Batchable",
-        "B": "Queueable",
-        "C": "Schedulable",
-        "D": "Database.Stateful"
-      },
-      "correct_answer": "A",
-      "explanation": "Database.Batchable interface must be implemented with start(), execute(), and finish() methods for batch Apex."
-    },
-    {
-      "id": 62,
-      "domain": "Platform Developer I",
-      "question": "What is the maximum batch size for Database.executeBatch()?",
-      "choices": {
-        "A": "100",
-        "B": "200",
-        "C": "1000",
-        "D": "2000"
-      },
-      "correct_answer": "D",
-      "explanation": "The maximum batch size for batch Apex is 2000 records. The default is 200 if not specified."
-    },
-    {
-      "id": 63,
-      "domain": "Platform Developer I",
-      "question": "Which statement correctly describes a before trigger?",
-      "choices": {
-        "A": "The record has an ID assigned",
-        "B": "The record is already committed",
-        "C": "Related records can be modified directly",
-        "D": "The record can be modified without DML"
-      },
-      "correct_answer": "D",
-      "explanation": "In before triggers, you can modify field values on the trigger records directly without additional DML operations."
-    },
-    {
-      "id": 64,
-      "domain": "Platform Developer I",
-      "question": "What is the purpose of the @future annotation?",
-      "choices": {
-        "A": "To make a method run synchronously",
-        "B": "To schedule a method for a specific time",
-        "C": "To run a method asynchronously",
-        "D": "To cache method results"
-      },
-      "correct_answer": "C",
-      "explanation": "@future methods run asynchronously in their own thread, separate from the current transaction."
-    },
-    {
-      "id": 65,
-      "domain": "Platform Developer I",
-      "question": "Which access modifier allows a method to be called from a Visualforce page?",
-      "choices": {
-        "A": "private",
-        "B": "public",
-        "C": "global",
-        "D": "protected"
+        "A": "Weather predictions for events",
+        "B": "Predicting sales revenue based on opportunity data",
+        "C": "Forecasting case volume",
+        "D": "Predicting customer churn"
       },
       "correct_answer": "B",
-      "explanation": "Public methods in the controller class can be called from Visualforce pages. Global is not required unless the class is in a managed package."
+      "explanation": "Collaborative Forecasting predicts sales revenue based on opportunity pipeline data and allows managers to adjust forecasts."
     },
     {
-      "id": 66,
-      "domain": "Platform Developer I",
-      "question": "What happens when a validation rule fails in an after trigger?",
+      "id": 100,
+      "domain": "Sales & Service Cloud",
+      "question": "What is the purpose of Quick Text?",
       "choices": {
-        "A": "Only the failing record is rolled back",
-        "B": "The entire transaction is rolled back",
-        "C": "The error is logged but the record is saved",
-        "D": "The trigger continues processing other records"
+        "A": "To create SMS messages",
+        "B": "To store reusable text snippets for faster agent responses",
+        "C": "To translate text",
+        "D": "To compress large text fields"
       },
       "correct_answer": "B",
-      "explanation": "If a validation rule fails at any point, the entire transaction is rolled back, including all DML operations."
-    },
-    {
-      "id": 67,
-      "domain": "Platform Developer I",
-      "question": "Which method is used to add an error to a specific field in a trigger?",
-      "choices": {
-        "A": "record.addError(field, message)",
-        "B": "record.field.addError(message)",
-        "C": "ApexPages.addMessage()",
-        "D": "throw new DmlException()"
-      },
-      "correct_answer": "B",
-      "explanation": "record.field.addError('message') adds an error to a specific field, displaying it inline on the page layout."
-    },
-    {
-      "id": 68,
-      "domain": "Platform Developer I",
-      "question": "What is the heap size limit for synchronous Apex?",
-      "choices": {
-        "A": "3 MB",
-        "B": "6 MB",
-        "C": "12 MB",
-        "D": "24 MB"
-      },
-      "correct_answer": "B",
-      "explanation": "Synchronous Apex has a 6 MB heap size limit. Asynchronous Apex has 12 MB."
-    },
-    {
-      "id": 69,
-      "domain": "Platform Developer I",
-      "question": "Which SOQL clause is used to lock records for update?",
-      "choices": {
-        "A": "WITH SHARING",
-        "B": "FOR UPDATE",
-        "C": "FOR REFERENCE",
-        "D": "LOCK MODE"
-      },
-      "correct_answer": "B",
-      "explanation": "FOR UPDATE clause locks the queried records to prevent other transactions from modifying them until the current transaction completes."
-    },
-    {
-      "id": 70,
-      "domain": "Platform Developer I",
-      "question": "What does 'with sharing' keyword do in Apex?",
-      "choices": {
-        "A": "Enforces the current user's sharing rules",
-        "B": "Shares the class with other orgs",
-        "C": "Makes all records visible to the user",
-        "D": "Enables community user access"
-      },
-      "correct_answer": "A",
-      "explanation": "'with sharing' enforces the running user's sharing rules, record-level security, and field-level security."
-    },
-    {
-      "id": 71,
-      "domain": "Platform Developer I",
-      "question": "Which method signature is correct for a Queueable class?",
-      "choices": {
-        "A": "public void execute()",
-        "B": "public void run()",
-        "C": "public void execute(QueueableContext context)",
-        "D": "public void process()"
-      },
-      "correct_answer": "C",
-      "explanation": "Queueable interface requires execute(QueueableContext context) method implementation."
-    },
-    {
-      "id": 72,
-      "domain": "Platform Developer I",
-      "question": "What is the maximum number of records returned by a SOQL query without using OFFSET?",
-      "choices": {
-        "A": "1,000",
-        "B": "10,000",
-        "C": "50,000",
-        "D": "Unlimited"
-      },
-      "correct_answer": "C",
-      "explanation": "SOQL queries can return up to 50,000 records. For larger datasets, use batch Apex or queryMore()."
-    },
-    {
-      "id": 73,
-      "domain": "Platform Developer I",
-      "question": "Which annotation exposes an Apex method to Lightning components?",
-      "choices": {
-        "A": "@AuraEnabled",
-        "B": "@RemoteAction",
-        "C": "@InvocableMethod",
-        "D": "@RestResource"
-      },
-      "correct_answer": "A",
-      "explanation": "@AuraEnabled annotation exposes methods to both Aura components and Lightning Web Components (LWC)."
-    },
-    {
-      "id": 74,
-      "domain": "Platform Developer I",
-      "question": "What is the correct order of trigger execution?",
-      "choices": {
-        "A": "After triggers \u2192 Before triggers \u2192 Validation rules",
-        "B": "Before triggers \u2192 After triggers \u2192 Validation rules",
-        "C": "Validation rules \u2192 Before triggers \u2192 After triggers",
-        "D": "Before triggers \u2192 Validation rules \u2192 After triggers"
-      },
-      "correct_answer": "D",
-      "explanation": "The order is: Before triggers \u2192 System validation \u2192 Custom validation rules \u2192 After triggers \u2192 Assignment/Escalation rules."
-    },
-    {
-      "id": 75,
-      "domain": "Platform Developer I",
-      "question": "Which DML option allows partial success when inserting multiple records?",
-      "choices": {
-        "A": "Database.insert(records, true)",
-        "B": "Database.insert(records, false)",
-        "C": "insert records",
-        "D": "Database.insertImmediate(records)"
-      },
-      "correct_answer": "B",
-      "explanation": "Database.insert(records, false) allows partial success - successful records are committed while failed records return errors."
+      "explanation": "Quick Text stores predefined text snippets that agents can quickly insert into emails, chats, and other communications."
     }
   ]
 }
