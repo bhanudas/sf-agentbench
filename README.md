@@ -44,7 +44,7 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 
 - **🔧 CLI Agent Improvements** — Phase-specific timeouts, Gemini/Aider-specific prompts, progressive timeout warnings
 - **🤖 Multi-Provider LLM-as-Judge** — Auto-detection for Anthropic, Google, and OpenAI with fallback support
-- **📚 Expanded Test Bank** — 75 questions across 6 domains (added Platform Developer I)
+- **📚 Expanded Test Banks** — 200 total questions: Admin (100) + Developer (100)
 - **⚖️ Balanced Answer Distribution** — Eliminated positional bias (was 52% B, now ~25% per option)
 - **🏗️ New Tier-2 Tasks** — Account Territory Trigger + Opportunity Discount Calculator
 
@@ -66,15 +66,23 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 
 | Test Bank | Questions | Domains | Purpose |
 |-----------|-----------|---------|---------|
-| `salesforce_admin_test_bank.json` | 75 | 6 | Salesforce Admin & Developer certification topics |
+| `salesforce_admin_test_bank.json` | 100 | 5 | Salesforce Administrator certification topics |
+| `salesforce_developer_test_bank.json` | 100 | 6 | Platform Developer I certification topics |
 
-**Domains covered:**
-- Security & Access (CRUD, FLS, Sharing)
-- Data Management (SOQL, DML, Data Loader)
-- Automation (Flow, Process Builder, Triggers)
-- Reports & Dashboards
-- Sales & Service Cloud
-- Platform Developer I (Apex, Triggers, Governor Limits, Testing)
+**Admin Domains (20 questions each):**
+- Security & Access (CRUD, FLS, Sharing, Profiles, Permission Sets)
+- Data Management (SOQL, DML, Data Loader, Relationships)
+- Automation (Flow, Workflow, Approval Processes, Validation Rules)
+- Reports & Dashboards (Report Types, Charts, Dynamic Dashboards)
+- Sales & Service Cloud (Lead Management, Cases, Entitlements)
+
+**Developer Domains (16-20 questions each):**
+- Apex Fundamentals (Collections, Classes, Exceptions, Data Types)
+- Data Modeling & SOQL (Queries, Relationships, Governor Limits)
+- Triggers & Processing (Context Variables, Bulkification, Order of Execution)
+- Testing & Deployment (Test Classes, Code Coverage, Assertions)
+- Asynchronous Apex (Batch, Queueable, Future, Schedulable)
+- Integration & Security (REST, Callouts, Sharing, FLS)
 
 ### Coding Tasks
 
