@@ -26,7 +26,7 @@ console = Console()
 @dataclass
 class CLIAgentConfig:
     """Configuration for a CLI-based agent."""
-    
+
     id: str
     name: str
     command: list[str]  # e.g., ["claude", "--print"] or ["gemini"]
@@ -37,6 +37,16 @@ class CLIAgentConfig:
     env_vars: dict[str, str] = field(default_factory=dict)
     timeout_seconds: int = 1800  # 30 minutes default
     setup_commands: list[list[str]] = field(default_factory=list)
+    # Phase-specific timeouts (more granular control)
+    phase_timeouts: dict[str, int] = field(default_factory=lambda: {
+        "build": 600,   # 10 minutes for creating files
+        "deploy": 300,  # 5 minutes for deployment
+        "test": 300,    # 5 minutes for testing
+    })
+    # Max retries per phase
+    max_phase_retries: int = 2
+    # Custom prompt builder function name (if agent needs different prompts)
+    prompt_style: str = "default"  # "default", "gemini", "aider"
 
 
 # Pre-configured CLI agents
@@ -51,15 +61,22 @@ CLI_AGENTS = {
         model_flag="--model",
         default_model=None,  # Uses Claude's default
         timeout_seconds=1800,
+        phase_timeouts={"build": 600, "deploy": 300, "test": 300},
+        max_phase_retries=2,
+        prompt_style="default",
     ),
     "gemini-cli": CLIAgentConfig(
-        id="gemini-cli", 
+        id="gemini-cli",
         name="Gemini CLI",
-        command=["gemini", "-y"],  # -y for auto-accept actions
+        # -y for auto-accept, --sandbox=false to allow file writes
+        command=["gemini", "-y", "--sandbox=false"],
         prompt_flag="-p",
         model_flag="-m",
         default_model="gemini-2.5-pro",
-        timeout_seconds=1800,
+        timeout_seconds=2400,  # 40 minutes - Gemini often needs more time
+        phase_timeouts={"build": 900, "deploy": 600, "test": 600},  # More time per phase
+        max_phase_retries=3,  # More retries for Gemini
+        prompt_style="gemini",  # Use Gemini-specific prompts
     ),
     "aider": CLIAgentConfig(
         id="aider",
@@ -69,6 +86,9 @@ CLI_AGENTS = {
         model_flag="--model",
         default_model=None,
         timeout_seconds=1800,
+        phase_timeouts={"build": 600, "deploy": 300, "test": 300},
+        max_phase_retries=2,
+        prompt_style="aider",
     ),
     "codex": CLIAgentConfig(
         id="codex",
@@ -77,6 +97,7 @@ CLI_AGENTS = {
         prompt_flag=None,
         model_flag=None,
         timeout_seconds=1800,
+        prompt_style="default",
     ),
     "cline": CLIAgentConfig(
         id="cline",
@@ -85,6 +106,7 @@ CLI_AGENTS = {
         prompt_flag=None,
         model_flag=None,
         timeout_seconds=1800,
+        prompt_style="default",
     ),
 }
 
@@ -272,13 +294,25 @@ class CLIAgentRunner:
 
         return fixes_count
     
-    def build_prompt(self, task_readme: str, phase: str = "full") -> str:
+    def build_prompt(
+        self,
+        task_readme: str,
+        phase: str = "full",
+        prompt_style: str = "default",
+    ) -> str:
         """Build the prompt to give to the CLI agent.
-        
+
         Args:
             task_readme: The task requirements from README.md
             phase: One of 'full', 'build', 'deploy', 'test'
+            prompt_style: Prompt style - 'default', 'gemini', or 'aider'
         """
+        if prompt_style == "gemini":
+            return self._build_gemini_prompt(task_readme, phase)
+        elif prompt_style == "aider":
+            return self._build_aider_prompt(task_readme, phase)
+
+        # Default prompt style (optimized for Claude Code)
         if phase == "build":
             return f"""You are working on a Salesforce development task.
 
@@ -384,12 +418,187 @@ You MUST create these specific files with ALL logic inline:
 After all tests pass, say "TASK COMPLETE".
 """
 
+    def _build_gemini_prompt(self, task_readme: str, phase: str = "full") -> str:
+        """Build Gemini-optimized prompts with explicit step-by-step instructions."""
+        if phase == "build":
+            return f"""# Salesforce Development Task
+
+## Requirements
+{task_readme}
+
+## Environment Setup (Already Done)
+- Salesforce DX project is ready
+- Scratch org is authenticated (check with: sf org list)
+- Custom fields exist: Annual_Revenue__c, Lead_Score__c on Lead object
+- Test classes are deployed
+
+## YOUR TASK: Create Solution Files
+
+Create these EXACT files:
+
+### File 1: Validation Rule
+Path: `force-app/main/default/objects/Lead/validationRules/Annual_Revenue_Positive.validationRule-meta.xml`
+
+Create directories first:
+```bash
+mkdir -p force-app/main/default/objects/Lead/validationRules
+```
+
+Then create the file with content that blocks negative Annual Revenue values.
+
+### File 2: Record-Triggered Flow
+Path: `force-app/main/default/flows/Lead_Scoring.flow-meta.xml`
+
+The flow MUST:
+- Trigger: After Record Created or Updated on Lead
+- Calculate Lead_Score__c based on:
+  - +10 if Industry = 'Technology' or 'Finance'
+  - +20 if Annual_Revenue__c > 1000000
+  - +15 if NumberOfEmployees > 100
+- ALL logic must be INLINE (no subflows)
+
+## IMPORTANT FILE EXTENSIONS
+- Validation rules: `.validationRule-meta.xml` (NOT just .xml)
+- Flows: `.flow-meta.xml` (NOT just .flow or .xml)
+
+## When Done
+After creating both files, output: BUILD COMPLETE
+"""
+        elif phase == "deploy":
+            return """# Phase 2: Deploy to Salesforce
+
+## Step 1: Deploy
+Run this command:
+```bash
+sf project deploy start --source-dir force-app --wait 10
+```
+
+## If Deployment Fails:
+1. Read the error message carefully
+2. Common issues:
+   - Wrong file extension (must be .flow-meta.xml, .validationRule-meta.xml)
+   - Invalid XML syntax
+   - Missing required elements
+3. Fix the file and redeploy
+
+## When Done
+After successful deployment, output: DEPLOY COMPLETE
+"""
+        elif phase == "test":
+            return """# Phase 3: Run Tests
+
+## Step 1: Run Apex Tests
+```bash
+sf apex run test --test-level RunLocalTests --result-format human --wait 10
+```
+
+## If Tests Fail:
+1. Read the failure messages
+2. Check your Flow logic:
+   - Is scoring calculated correctly?
+   - Are all conditions checked?
+3. Check your Validation Rule:
+   - Does it block negative values?
+4. Fix, redeploy, and test again:
+```bash
+sf project deploy start --source-dir force-app --wait 10
+sf apex run test --test-level RunLocalTests --result-format human --wait 10
+```
+
+## When Done
+After ALL tests pass, output: TASK COMPLETE
+"""
+        else:  # full
+            return f"""# Salesforce Development Task
+
+## Requirements
+{task_readme}
+
+## Environment
+- Salesforce DX project ready
+- Scratch org authenticated
+- Custom fields exist: Annual_Revenue__c, Lead_Score__c on Lead
+
+## Create These Files
+
+### 1. Validation Rule
+Path: `force-app/main/default/objects/Lead/validationRules/Annual_Revenue_Positive.validationRule-meta.xml`
+
+Create directory: `mkdir -p force-app/main/default/objects/Lead/validationRules`
+
+### 2. Record-Triggered Flow
+Path: `force-app/main/default/flows/Lead_Scoring.flow-meta.xml`
+
+Flow requirements:
+- Trigger: After Record Created/Updated on Lead
+- Calculate Lead_Score__c:
+  - +10 for Technology/Finance industry
+  - +20 for Annual_Revenue__c > 1000000
+  - +15 for NumberOfEmployees > 100
+
+## Steps
+1. Create validation rule file
+2. Create flow file
+3. Deploy: `sf project deploy start --source-dir force-app`
+4. Fix any errors and redeploy
+5. Test: `sf apex run test --test-level RunLocalTests --result-format human`
+6. Fix any failures and repeat
+
+Output TASK COMPLETE when all tests pass.
+"""
+
+    def _build_aider_prompt(self, task_readme: str, phase: str = "full") -> str:
+        """Build Aider-optimized prompts focused on file creation."""
+        if phase == "build":
+            return f"""Create Salesforce metadata files for this task:
+
+{task_readme}
+
+Files to create:
+1. force-app/main/default/objects/Lead/validationRules/Annual_Revenue_Positive.validationRule-meta.xml
+   - Block negative Annual_Revenue__c values
+
+2. force-app/main/default/flows/Lead_Scoring.flow-meta.xml
+   - Record-triggered flow on Lead (after save)
+   - Calculate Lead_Score__c: +10 Tech/Finance, +20 Revenue>1M, +15 Employees>100
+
+When done say: BUILD COMPLETE
+"""
+        elif phase == "deploy":
+            return """Deploy the solution:
+
+Run: sf project deploy start --source-dir force-app
+
+Fix any deployment errors and redeploy until successful.
+
+When successful say: DEPLOY COMPLETE
+"""
+        elif phase == "test":
+            return """Run tests and fix failures:
+
+Run: sf apex run test --test-level RunLocalTests --result-format human
+
+If tests fail, fix the implementation, redeploy, and test again.
+
+When all tests pass say: TASK COMPLETE
+"""
+        else:
+            return f"""{task_readme}
+
+Create:
+1. Validation rule: force-app/main/default/objects/Lead/validationRules/Annual_Revenue_Positive.validationRule-meta.xml
+2. Flow: force-app/main/default/flows/Lead_Scoring.flow-meta.xml
+
+Then deploy (sf project deploy start) and run tests (sf apex run test).
+Say TASK COMPLETE when tests pass.
+"""
+
     def run_multi_phase(
         self,
         agent_config: CLIAgentConfig,
         task_readme: str,
         model: str | None = None,
-        max_retries: int = 3,
+        max_retries: int | None = None,
         on_output: Callable[[str], None] | None = None,
     ) -> CLIRunResult:
         """
@@ -407,7 +616,7 @@ After all tests pass, say "TASK COMPLETE".
             agent_config: Configuration for the CLI agent
             task_readme: The task requirements from README.md
             model: Model to use (overrides default)
-            max_retries: Max retries per phase
+            max_retries: Max retries per phase (defaults to agent config)
             on_output: Callback for real-time output
 
         Returns:
@@ -422,6 +631,9 @@ After all tests pass, say "TASK COMPLETE".
         total_duration = 0.0
         result = None
 
+        # Use agent-specific retry count if not overridden
+        retries_per_phase = max_retries if max_retries is not None else agent_config.max_phase_retries
+
         phases = [
             ("build", "BUILD COMPLETE"),
             ("deploy", "DEPLOY COMPLETE"),
@@ -429,39 +641,78 @@ After all tests pass, say "TASK COMPLETE".
         ]
 
         for i, (phase_name, completion_signal) in enumerate(phases):
-            console.print(f"\n[bold magenta]{'='*60}[/bold magenta]")
-            console.print(f"[bold magenta]PHASE: {phase_name.upper()}[/bold magenta]")
-            console.print(f"[bold magenta]{'='*60}[/bold magenta]")
+            phase_timeout = agent_config.phase_timeouts.get(phase_name, 600)
+            phase_success = False
+            retry_count = 0
 
-            if phase_name == "build":
-                prompt = self.build_prompt(task_readme, phase="build")
-            else:
-                prompt = self.build_prompt("", phase=phase_name)
+            while not phase_success and retry_count <= retries_per_phase:
+                if retry_count > 0:
+                    console.print(f"\n[yellow]Retry {retry_count}/{retries_per_phase} for {phase_name.upper()}[/yellow]")
 
-            # Run the agent for this phase
-            # Use --continue for subsequent phases to maintain session context
-            result = self.run_agent(
-                agent_config=agent_config,
-                prompt=prompt,
-                model=model,
-                on_output=on_output,
-                continue_session=(i > 0),  # Continue from previous phase
-                completion_signal=completion_signal,  # Phase-specific signal
-            )
+                console.print(f"\n[bold magenta]{'='*60}[/bold magenta]")
+                console.print(f"[bold magenta]PHASE: {phase_name.upper()} (timeout: {phase_timeout}s)[/bold magenta]")
+                console.print(f"[bold magenta]{'='*60}[/bold magenta]")
 
-            all_stdout.extend(result.stdout.split('\n'))
-            all_stderr.extend(result.stderr.split('\n'))
-            total_duration += result.duration_seconds
+                # Build prompt using agent's preferred style
+                if phase_name == "build":
+                    prompt = self.build_prompt(
+                        task_readme,
+                        phase="build",
+                        prompt_style=agent_config.prompt_style,
+                    )
+                else:
+                    prompt = self.build_prompt(
+                        "",
+                        phase=phase_name,
+                        prompt_style=agent_config.prompt_style,
+                    )
 
-            # Check if phase completed successfully
-            if completion_signal.upper() in result.stdout.upper():
-                console.print(f"[green]✓ {phase_name.upper()} phase complete[/green]")
-            elif result.timed_out:
-                console.print(f"[red]✗ {phase_name.upper()} phase timed out[/red]")
+                # Temporarily override timeout for this phase
+                original_timeout = agent_config.timeout_seconds
+                agent_config.timeout_seconds = phase_timeout
+
+                try:
+                    # Run the agent for this phase
+                    # Use --continue for subsequent phases to maintain session context
+                    result = self.run_agent(
+                        agent_config=agent_config,
+                        prompt=prompt,
+                        model=model,
+                        on_output=on_output,
+                        continue_session=(i > 0 or retry_count > 0),  # Continue from previous
+                        completion_signal=completion_signal,
+                    )
+                finally:
+                    agent_config.timeout_seconds = original_timeout
+
+                all_stdout.extend(result.stdout.split('\n'))
+                all_stderr.extend(result.stderr.split('\n'))
+                total_duration += result.duration_seconds
+
+                # Check if phase completed successfully
+                if completion_signal.upper() in result.stdout.upper():
+                    console.print(f"[green]✓ {phase_name.upper()} phase complete[/green]")
+                    phase_success = True
+                elif result.timed_out:
+                    console.print(f"[red]✗ {phase_name.upper()} phase timed out[/red]")
+                    retry_count += 1
+                    if retry_count > retries_per_phase:
+                        console.print(f"[red]Max retries exceeded for {phase_name.upper()}[/red]")
+                        break
+                else:
+                    # Check if we can detect implicit success (e.g., deployment succeeded)
+                    implicit_success = self._check_implicit_phase_success(phase_name, result.stdout)
+                    if implicit_success:
+                        console.print(f"[green]✓ {phase_name.upper()} phase implicitly complete[/green]")
+                        phase_success = True
+                    else:
+                        console.print(f"[yellow]⚠ {phase_name.upper()} phase ended without completion signal[/yellow]")
+                        # Continue anyway - the agent may have finished
+                        phase_success = True  # Don't retry if process exited normally
+
+            if not phase_success:
+                console.print(f"[red]Phase {phase_name.upper()} failed after all retries[/red]")
                 break
-            else:
-                console.print(f"[yellow]⚠ {phase_name.upper()} phase ended without completion signal[/yellow]")
-                # Continue anyway - the agent may have finished
 
         # Get final list of modified files
         completed_at = datetime.now()
@@ -480,6 +731,40 @@ After all tests pass, say "TASK COMPLETE".
             timed_out=result.timed_out if result else False,
             files_modified=files_modified,
         )
+
+    def _check_implicit_phase_success(self, phase_name: str, stdout: str) -> bool:
+        """Check for implicit success indicators when completion signal is missing."""
+        stdout_lower = stdout.lower()
+
+        if phase_name == "build":
+            # Check if files were created
+            return any(indicator in stdout_lower for indicator in [
+                "created file",
+                "wrote file",
+                "writing file",
+                ".flow-meta.xml",
+                ".validationrule-meta.xml",
+            ])
+        elif phase_name == "deploy":
+            # Check for deployment success indicators
+            return any(indicator in stdout_lower for indicator in [
+                "deploy succeeded",
+                "successfully deployed",
+                "deployment complete",
+                "source push succeeded",
+                "status: succeeded",
+            ])
+        elif phase_name == "test":
+            # Check for test success indicators
+            return any(indicator in stdout_lower for indicator in [
+                "test run complete",
+                "tests passed",
+                "0 failures",
+                "outcome: pass",
+                "all tests passed",
+            ])
+
+        return False
     
     def run_agent(
         self,
@@ -578,13 +863,31 @@ After all tests pass, say "TASK COMPLETE".
                     bufsize=1,
                 )
 
-            # Stream output in real-time
+            # Stream output in real-time with progressive warnings
             start_time = time.time()
+            timeout_seconds = agent_config.timeout_seconds
+            last_warning_time = 0
+            warning_intervals = [
+                (0.5, "50% of timeout elapsed"),
+                (0.75, "75% of timeout elapsed"),
+                (0.9, "90% of timeout elapsed - wrapping up soon"),
+            ]
+            warnings_shown = set()
 
             while True:
+                elapsed = time.time() - start_time
+                elapsed_ratio = elapsed / timeout_seconds if timeout_seconds > 0 else 0
+
+                # Show progressive timeout warnings
+                for threshold, message in warning_intervals:
+                    if elapsed_ratio >= threshold and threshold not in warnings_shown:
+                        remaining = int(timeout_seconds - elapsed)
+                        console.print(f"\n[yellow]⏱ {message} ({remaining}s remaining)[/yellow]")
+                        warnings_shown.add(threshold)
+
                 # Check timeout
-                if time.time() - start_time > agent_config.timeout_seconds:
-                    console.print(f"\n[yellow]⏱ Timeout after {agent_config.timeout_seconds}s[/yellow]")
+                if elapsed > timeout_seconds:
+                    console.print(f"\n[yellow]⏱ Timeout after {timeout_seconds}s[/yellow]")
                     self._process.terminate()
                     timed_out = True
                     break
@@ -608,6 +911,20 @@ After all tests pass, say "TASK COMPLETE".
                             console.print(f"\n[green]✓ Agent signaled completion ({signal_to_check})[/green]")
                             self._process.terminate()
                             break
+
+                        # Also check for error indicators that might mean we should retry
+                        error_indicators = [
+                            "deployment failed",
+                            "error:",
+                            "fatal:",
+                            "cannot find",
+                            "does not exist",
+                        ]
+                        line_lower = line.lower()
+                        for indicator in error_indicators:
+                            if indicator in line_lower:
+                                console.print(f"[yellow]⚠ Detected potential error: {line.strip()[:100]}[/yellow]")
+                                break
 
                 time.sleep(0.1)
 
