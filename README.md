@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/bhanudas/sf-agentbench)
+[![Version](https://img.shields.io/badge/version-0.2.1-green.svg)](https://github.com/bhanudas/sf-agentbench)
 
 ---
 
@@ -40,7 +40,15 @@ Salesforce development is a hybrid practice requiring:
 
 SF-AgentBench addresses these unique challenges with a purpose-built evaluation framework.
 
-### ✨ What's New in v0.2.0
+### ✨ What's New in v0.2.1
+
+- **🔧 CLI Agent Improvements** — Phase-specific timeouts, Gemini/Aider-specific prompts, progressive timeout warnings
+- **🤖 Multi-Provider LLM-as-Judge** — Auto-detection for Anthropic, Google, and OpenAI with fallback support
+- **📚 Expanded Test Bank** — 75 questions across 6 domains (added Platform Developer I)
+- **⚖️ Balanced Answer Distribution** — Eliminated positional bias (was 52% B, now ~25% per option)
+- **🏗️ New Tier-2 Tasks** — Account Territory Trigger + Opportunity Discount Calculator
+
+### What's in v0.2.0
 
 - **🎮 Interactive REPL Mode** — Claude Code-style terminal with real-time log streaming
 - **📚 Q&A Benchmarking** — Test LLM knowledge on Salesforce concepts
@@ -58,7 +66,7 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 
 | Test Bank | Questions | Domains | Purpose |
 |-----------|-----------|---------|---------|
-| `salesforce_admin_test_bank.json` | 50 | 5 | Salesforce Admin certification topics |
+| `salesforce_admin_test_bank.json` | 75 | 6 | Salesforce Admin & Developer certification topics |
 
 **Domains covered:**
 - Security & Access (CRUD, FLS, Sharing)
@@ -66,6 +74,7 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 - Automation (Flow, Process Builder, Triggers)
 - Reports & Dashboards
 - Sales & Service Cloud
+- Platform Developer I (Apex, Triggers, Governor Limits, Testing)
 
 ### Coding Tasks
 
@@ -74,6 +83,8 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 | **Tier 1** | `apex-contact-trigger` | Basic trigger with validation |
 | **Tier 2** | `lead-scoring-validation` | Lead assignment with scoring logic |
 | **Tier 2** | `case-escalation-flow` | Screen Flow with escalation rules |
+| **Tier 2** | `account-territory-trigger` | Trigger + Handler pattern with region-based territory assignment |
+| **Tier 2** | `opportunity-discount-calculator` | @InvocableMethod with tiered discount logic |
 
 ### Rubrics (LLM Judge Criteria)
 
@@ -381,9 +392,29 @@ sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 8
 ### How It Works
 
 1. **Rubric Definition** — YAML files define weighted evaluation criteria
-2. **LLM Judge** — Claude or Gemini analyzes code against criteria
+2. **LLM Judge** — Multi-provider support (Anthropic, Google, OpenAI) with auto-detection
 3. **Scoring** — Each criterion gets 0.0-1.0, weighted average for overall
-4. **Logging** — Full prompts and responses stored for review
+4. **Fallback** — Heuristic evaluation when API calls fail (supports Apex, Flows, Validation Rules)
+5. **Logging** — Full prompts and responses stored for review
+
+### Supported Providers
+
+The rubric evaluator automatically detects the provider from the model name:
+
+| Provider | Model Patterns | Example |
+|----------|---------------|---------|
+| **Anthropic** | `claude-*` | `claude-sonnet-4-20250514` |
+| **Google** | `gemini-*` | `gemini-2.0-flash` |
+| **OpenAI** | `gpt-*`, `o1*` | `gpt-4o`, `o1` |
+
+Configure in `sf-agentbench.yaml`:
+```yaml
+rubric:
+  model: claude-sonnet-4-20250514  # Auto-detects Anthropic
+  provider: auto  # Or explicitly: anthropic, google, openai
+  timeout_seconds: 120
+  fallback_to_heuristic: true
+```
 
 ### Rubric Structure
 
@@ -823,6 +854,31 @@ sf-agentbench qa-run test.json -m claude-sonnet-4-20250514  # Not "claude-sonnet
 
 Gemini "thinking" models (`gemini-2.5-pro`, `gemini-3.0-thinking`) return extended reasoning instead of direct answers. Use `gemini-2.0-flash` for Q&A testing.
 
+#### "Q&A returns UNKNOWN with 0.0s response time"
+
+This usually indicates missing Python dependencies for the LLM providers:
+
+```bash
+# Install required packages
+pip install google-genai anthropic openai
+```
+
+#### "CLI agent deployment failures / timeouts"
+
+CLI agents (Gemini CLI, Aider) may need longer timeouts and specific prompts. Configure in your agent config:
+
+```yaml
+cli_agents:
+  gemini:
+    phase_timeouts:
+      build: 900    # 15 minutes for complex tasks
+      deploy: 600   # 10 minutes for deployment
+      test: 300     # 5 minutes for testing
+    prompt_style: gemini  # Use Gemini-specific prompts
+    extra_args:
+      - "--sandbox=false"
+```
+
 #### "Cross-process monitoring not working"
 
 Ensure both terminals are running from the same project directory:
@@ -920,7 +976,7 @@ mypy src/
 - [x] 5-layer evaluation pipeline
 - [x] Sample Tier 1 & 2 tasks
 
-### Phase 2: Intelligence ✅ (v0.2.0)
+### Phase 2: Intelligence ✅ (v0.2.0 - v0.2.1)
 - [x] Q&A benchmarking framework
 - [x] LLM-as-a-Judge with rubric scoring
 - [x] Multi-model support (Claude, Gemini, OpenAI)
@@ -929,6 +985,12 @@ mypy src/
 - [x] Cost tracking and estimation
 - [x] Multi-judge consensus
 - [x] Cross-process monitoring
+- [x] **v0.2.1:** Multi-provider LLM-as-Judge (Anthropic, Google, OpenAI)
+- [x] **v0.2.1:** CLI agent timeout handling with phase-specific configs
+- [x] **v0.2.1:** Expanded test bank (75 questions, 6 domains)
+- [x] **v0.2.1:** Balanced answer distribution (eliminated positional bias)
+- [x] **v0.2.1:** Platform Developer I certification questions
+- [x] **v0.2.1:** New Tier-2 coding tasks (territory trigger, discount calculator)
 
 ### Phase 3: Scale (Planned)
 - [ ] Scratch Org pool management
@@ -960,7 +1022,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  <strong>SF-AgentBench v0.2.0</strong> — Bridging AI Agents and Enterprise Platform Development
+  <strong>SF-AgentBench v0.2.1</strong> — Bridging AI Agents and Enterprise Platform Development
 </p>
 
 <p align="center">
