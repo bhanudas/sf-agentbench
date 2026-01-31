@@ -17,6 +17,7 @@ class ModelProvider(str, Enum):
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
     GOOGLE = "google"
+    KIMI = "kimi"
     CUSTOM = "custom"
 
 
@@ -143,6 +144,25 @@ BUILTIN_MODELS: dict[str, dict[str, Any]] = {
         "name": "Gemini 3.0 Pro",
         "api_key_env": "GOOGLE_API_KEY",
         "context_window": 2000000,
+    },
+    # Kimi (Moonshot AI) models
+    "kimi-k2": {
+        "provider": ModelProvider.KIMI,
+        "name": "Kimi K2",
+        "api_key_env": "KIMI_API_KEY",
+        "context_window": 128000,
+    },
+    "kimi-k2-0905": {
+        "provider": ModelProvider.KIMI,
+        "name": "Kimi K2 (0905)",
+        "api_key_env": "KIMI_API_KEY",
+        "context_window": 128000,
+    },
+    "kimi-k2-thinking": {
+        "provider": ModelProvider.KIMI,
+        "name": "Kimi K2 Thinking",
+        "api_key_env": "KIMI_API_KEY",
+        "context_window": 128000,
     },
 }
 

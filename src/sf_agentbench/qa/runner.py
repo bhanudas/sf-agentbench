@@ -685,6 +685,8 @@ class QAAPIRunner:
             self.provider = "google"
         elif "claude" in model.lower() or "sonnet" in model.lower() or "opus" in model.lower():
             self.provider = "anthropic"
+        elif "kimi" in model.lower():
+            self.provider = "kimi"
         else:
             self.provider = "unknown"
         
@@ -702,6 +704,7 @@ class QAAPIRunner:
         # API clients (lazy loaded)
         self._gemini_client = None
         self._anthropic_client = None
+        self._kimi_client = None
         
         # Logging
         self.logger: logging.Logger | None = None
@@ -764,6 +767,29 @@ class QAAPIRunner:
             except ImportError:
                 raise ImportError("Please install anthropic: pip install anthropic")
         return self._anthropic_client
+    
+    def _get_kimi_client(self):
+        """Get or create Kimi (OpenAI-compatible) client."""
+        if self._kimi_client is None:
+            try:
+                import openai
+                from sf_agentbench.agents.auth import get_kimi_credentials
+                
+                api_key = get_kimi_credentials()
+                if not api_key:
+                    import os
+                    api_key = os.environ.get("KIMI_API_KEY")
+                
+                if not api_key:
+                    raise ValueError("No Kimi API key found")
+                
+                self._kimi_client = openai.OpenAI(
+                    api_key=api_key,
+                    base_url="https://kimi-k2.ai/api/v1"
+                )
+            except ImportError:
+                raise ImportError("Please install openai: pip install openai")
+        return self._kimi_client
     
     def _get_max_output_tokens(self) -> int:
         """Get appropriate max_output_tokens based on model type.
@@ -832,6 +858,24 @@ class QAAPIRunner:
         
         return text.strip(), input_tokens, output_tokens
     
+    def _call_kimi(self, prompt: str) -> tuple[str, int, int]:
+        """Call Kimi K2 API (OpenAI-compatible) and return (response, input_tokens, output_tokens)."""
+        client = self._get_kimi_client()
+        
+        response = client.chat.completions.create(
+            model=self.model,
+            max_tokens=100,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        
+        text = response.choices[0].message.content if response.choices else ""
+        
+        input_tokens = response.usage.prompt_tokens if response.usage else 0
+        output_tokens = response.usage.completion_tokens if response.usage else 0
+        
+        return text.strip() if text else "", input_tokens, output_tokens
+    
     def ask_question(self, question: Question) -> QAResult:
         """Ask a single question using API."""
         formatted_q = question.format_for_prompt()
@@ -849,6 +893,8 @@ class QAAPIRunner:
                 response, input_tokens, output_tokens = self._call_gemini(prompt)
             elif self.provider == "anthropic":
                 response, input_tokens, output_tokens = self._call_anthropic(prompt)
+            elif self.provider == "kimi":
+                response, input_tokens, output_tokens = self._call_kimi(prompt)
             else:
                 response = "ERROR: Unknown provider"
         except Exception as e:

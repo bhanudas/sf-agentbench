@@ -4,6 +4,7 @@ from sf_agentbench.agents.base import BaseAgent
 from sf_agentbench.agents.claude import ClaudeAgent
 from sf_agentbench.agents.openai import OpenAIAgent
 from sf_agentbench.agents.gemini import GeminiAgent
+from sf_agentbench.agents.kimi import KimiAgent
 from sf_agentbench.config import AgentConfig, MODEL_REGISTRY, ModelProvider
 
 
@@ -32,6 +33,8 @@ def create_agent(config: AgentConfig, verbose: bool = False) -> BaseAgent:
             "gpt": ModelProvider.OPENAI,
             "gemini": ModelProvider.GOOGLE,
             "google": ModelProvider.GOOGLE,
+            "kimi": ModelProvider.KIMI,
+            "moonshot": ModelProvider.KIMI,
         }
         provider = provider_map.get(config.type.lower(), ModelProvider.CUSTOM)
     
@@ -61,6 +64,14 @@ def create_agent(config: AgentConfig, verbose: bool = False) -> BaseAgent:
         return GeminiAgent(
             model=config.model,
             api_key_env=api_key_env or "GOOGLE_API_KEY",
+            max_iterations=config.max_iterations,
+            timeout_seconds=config.timeout_seconds,
+            verbose=verbose,
+        )
+    elif provider == ModelProvider.KIMI:
+        return KimiAgent(
+            model=config.model,
+            api_key_env=api_key_env or "KIMI_API_KEY",
             max_iterations=config.max_iterations,
             timeout_seconds=config.timeout_seconds,
             verbose=verbose,

@@ -46,6 +46,13 @@ PROVIDER_INFO = {
         "supports_oauth": True,
         "test_endpoint": "https://generativelanguage.googleapis.com/v1beta/models",
     },
+    "kimi": {
+        "name": "Kimi (Moonshot AI)",
+        "env_var": "KIMI_API_KEY",
+        "get_url": "https://platform.moonshot.cn/console/api-keys",
+        "supports_oauth": False,
+        "test_endpoint": "https://api.moonshot.cn/v1/models",
+    },
 }
 
 
@@ -95,6 +102,32 @@ def get_openai_credentials() -> str | None:
     
     # 3. System keychain (macOS)
     api_key = _get_from_keychain("sf-agentbench", "openai-api-key")
+    if api_key:
+        return api_key
+    
+    return None
+
+
+def get_kimi_credentials() -> str | None:
+    """Get Kimi API key from various sources."""
+    # 1. Environment variable
+    api_key = os.getenv("KIMI_API_KEY")
+    if api_key:
+        return api_key
+    
+    # 2. Cached credentials file
+    creds_file = CREDENTIALS_DIR / "kimi.json"
+    if creds_file.exists():
+        try:
+            data = json.loads(creds_file.read_text())
+            key = data.get("api_key")
+            if key:
+                return key
+        except Exception:
+            pass
+    
+    # 3. System keychain (macOS)
+    api_key = _get_from_keychain("sf-agentbench", "kimi-api-key")
     if api_key:
         return api_key
     

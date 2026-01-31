@@ -52,6 +52,8 @@ coverage.xml
 
 # Environments
 .env
+.env.local
+.env.*
 .venv
 env/
 venv/
@@ -84,3 +86,4 @@ logs/
 temp/
 node_modules/
 web/dist/
+credentials/

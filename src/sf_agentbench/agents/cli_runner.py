@@ -108,6 +108,19 @@ CLI_AGENTS = {
         timeout_seconds=1800,
         prompt_style="default",
     ),
+    "kimi-code": CLIAgentConfig(
+        id="kimi-code",
+        name="Kimi Code",
+        # -y (--yolo/--yes) for auto-approve, similar to Claude's --dangerously-skip-permissions
+        command=["kimi", "-y"],
+        prompt_flag="-p",
+        model_flag="-m",
+        default_model=None,  # Uses Kimi's default model
+        timeout_seconds=1800,
+        phase_timeouts={"build": 600, "deploy": 300, "test": 300},
+        max_phase_retries=2,
+        prompt_style="default",
+    ),
 }
 
 
