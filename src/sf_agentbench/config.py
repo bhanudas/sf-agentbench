@@ -145,6 +145,12 @@ BUILTIN_MODELS: dict[str, dict[str, Any]] = {
         "api_key_env": "GOOGLE_API_KEY",
         "context_window": 2000000,
     },
+    "gemini-3-flash-preview": {
+        "provider": ModelProvider.GOOGLE,
+        "name": "Gemini 3 Flash Preview",
+        "api_key_env": "GOOGLE_API_KEY",
+        "context_window": 1000000,
+    },
     # Kimi (Moonshot AI) models
     "kimi-k2": {
         "provider": ModelProvider.KIMI,

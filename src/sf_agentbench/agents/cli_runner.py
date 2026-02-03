@@ -47,6 +47,10 @@ class CLIAgentConfig:
     max_phase_retries: int = 2
     # Custom prompt builder function name (if agent needs different prompts)
     prompt_style: str = "default"  # "default", "gemini", "aider"
+    # Maximum feedback iterations (deployment/test error -> fix loop)
+    max_feedback_iterations: int = 5
+    # Whether the agent supports --continue for session continuity
+    supports_continue: bool = False
 
 
 # Pre-configured CLI agents
@@ -64,6 +68,8 @@ CLI_AGENTS = {
         phase_timeouts={"build": 600, "deploy": 300, "test": 300},
         max_phase_retries=2,
         prompt_style="default",
+        max_feedback_iterations=5,
+        supports_continue=True,  # Claude Code supports --continue for session continuity
     ),
     "gemini-cli": CLIAgentConfig(
         id="gemini-cli",
@@ -120,6 +126,8 @@ CLI_AGENTS = {
         phase_timeouts={"build": 600, "deploy": 300, "test": 300},
         max_phase_retries=2,
         prompt_style="default",
+        max_feedback_iterations=5,
+        supports_continue=True,  # Kimi Code supports --continue for session continuity
     ),
 }
 
@@ -306,6 +314,552 @@ class CLIAgentRunner:
                 fixes_count += 1
 
         return fixes_count
+
+    def _run_deployment(self) -> tuple[bool, str, str]:
+        """
+        Run Salesforce deployment and return results.
+        
+        Returns:
+            Tuple of (success, stdout, error_message)
+        """
+        if not self.work_dir or not self.scratch_org:
+            return False, "", "Work directory or scratch org not set"
+        
+        console.print("  [dim]Running deployment...[/dim]")
+        
+        result = subprocess.run(
+            [
+                "sf", "project", "deploy", "start",
+                "--source-dir", "force-app",
+                "--target-org", self.scratch_org,
+                "--wait", "10",
+                "--json"
+            ],
+            capture_output=True,
+            text=True,
+            cwd=self.work_dir,
+        )
+        
+        stdout = result.stdout
+        stderr = result.stderr
+        
+        # Try to parse JSON response
+        try:
+            data = json.loads(stdout)
+            if data.get("status") == 0:
+                console.print("  [green]✓ Deployment successful[/green]")
+                return True, stdout, ""
+            else:
+                # Extract error messages
+                errors = []
+                if "result" in data:
+                    result_data = data["result"]
+                    if "details" in result_data:
+                        details = result_data["details"]
+                        if "componentFailures" in details:
+                            for failure in details["componentFailures"]:
+                                problem = failure.get("problem", "Unknown error")
+                                component = failure.get("fullName", "Unknown component")
+                                errors.append(f"- {component}: {problem}")
+                
+                if not errors:
+                    errors = [data.get("message", "Deployment failed")]
+                
+                error_msg = "\n".join(errors)
+                console.print(f"  [red]✗ Deployment failed: {len(errors)} error(s)[/red]")
+                return False, stdout, error_msg
+        except json.JSONDecodeError:
+            # Non-JSON output - check return code
+            if result.returncode == 0:
+                console.print("  [green]✓ Deployment successful[/green]")
+                return True, stdout, ""
+            else:
+                error_msg = stderr or stdout or "Deployment failed with unknown error"
+                console.print(f"  [red]✗ Deployment failed[/red]")
+                return False, stdout, error_msg
+
+    def _run_tests(self) -> tuple[bool, str, str]:
+        """
+        Run Apex tests and return results.
+        
+        Returns:
+            Tuple of (success, stdout, failure_details)
+        """
+        if not self.work_dir or not self.scratch_org:
+            return False, "", "Work directory or scratch org not set"
+        
+        console.print("  [dim]Running Apex tests...[/dim]")
+        
+        result = subprocess.run(
+            [
+                "sf", "apex", "run", "test",
+                "--target-org", self.scratch_org,
+                "--test-level", "RunLocalTests",
+                "--result-format", "json",
+                "--wait", "10"
+            ],
+            capture_output=True,
+            text=True,
+            cwd=self.work_dir,
+        )
+        
+        stdout = result.stdout
+        stderr = result.stderr
+        
+        # Try to parse JSON response
+        try:
+            data = json.loads(stdout)
+            summary = data.get("result", {}).get("summary", {})
+            outcome = summary.get("outcome", "").lower()
+            
+            if outcome == "passed":
+                passing = summary.get("passing", 0)
+                console.print(f"  [green]✓ All tests passed ({passing} tests)[/green]")
+                return True, stdout, ""
+            else:
+                # Extract failure details
+                failures = []
+                tests = data.get("result", {}).get("tests", [])
+                for test in tests:
+                    if test.get("Outcome") == "Fail":
+                        method = test.get("MethodName", "Unknown")
+                        message = test.get("Message", "No message")
+                        stack = test.get("StackTrace", "")
+                        failures.append(f"- {method}: {message}")
+                        if stack:
+                            # Include first few lines of stack trace
+                            stack_lines = stack.split("\n")[:3]
+                            for line in stack_lines:
+                                failures.append(f"    {line}")
+                
+                if not failures:
+                    failures = [f"Tests failed: {summary.get('failing', 0)} failures"]
+                
+                failure_msg = "\n".join(failures)
+                console.print(f"  [red]✗ Tests failed: {summary.get('failing', 0)} failure(s)[/red]")
+                return False, stdout, failure_msg
+        except json.JSONDecodeError:
+            # Non-JSON output - check return code
+            if result.returncode == 0:
+                console.print("  [green]✓ Tests passed[/green]")
+                return True, stdout, ""
+            else:
+                failure_msg = stderr or stdout or "Tests failed with unknown error"
+                console.print(f"  [red]✗ Tests failed[/red]")
+                return False, stdout, failure_msg
+
+    def _build_fix_prompt(
+        self,
+        error_type: str,
+        error_message: str,
+        prompt_style: str = "default",
+    ) -> str:
+        """
+        Build a prompt asking the agent to fix an error.
+        
+        Args:
+            error_type: "deployment" or "test"
+            error_message: The error details
+            prompt_style: Prompt style - 'default', 'gemini', or 'aider'
+        
+        Returns:
+            Fix prompt for the agent
+        """
+        if error_type == "deployment":
+            if prompt_style == "gemini":
+                return f"""# Deployment Failed - Please Fix
+
+The deployment to Salesforce failed with the following error(s):
+
+```
+{error_message}
+```
+
+## Common Issues
+
+1. **Wrong file extension**: Validation rules must end in `.validationRule-meta.xml`, flows in `.flow-meta.xml`
+2. **Invalid XML syntax**: Check for unclosed tags, missing quotes
+3. **Missing required fields**: Check Salesforce metadata documentation
+4. **Invalid formula**: Check field API names and formula syntax
+
+## Your Task
+
+1. Read the error messages above
+2. Fix the affected file(s)
+3. When done, say "READY TO DEPLOY"
+"""
+            elif prompt_style == "aider":
+                return f"""Deployment failed with errors:
+
+{error_message}
+
+Fix the files and say "READY TO DEPLOY" when done.
+"""
+            else:  # default (Claude)
+                return f"""## Deployment Failed
+
+The deployment to Salesforce failed with the following error(s):
+
+{error_message}
+
+Please analyze these errors and fix your metadata files. Common issues include:
+- Incorrect file extensions (should be .validationRule-meta.xml, .flow-meta.xml)
+- Invalid XML syntax
+- Missing required elements in the metadata
+- Invalid field API names or formula references
+
+Fix the issues and say "READY TO DEPLOY" when you're done.
+"""
+        else:  # test failures
+            if prompt_style == "gemini":
+                return f"""# Tests Failed - Please Fix
+
+The Apex tests failed with the following error(s):
+
+```
+{error_message}
+```
+
+## Your Task
+
+1. Analyze the test failure messages
+2. Fix your implementation (validation rule, flow, or Apex code)
+3. The system will redeploy and rerun tests automatically
+4. When done fixing, say "READY TO TEST"
+"""
+            elif prompt_style == "aider":
+                return f"""Tests failed:
+
+{error_message}
+
+Fix the implementation and say "READY TO TEST" when done.
+"""
+            else:  # default (Claude)
+                return f"""## Tests Failed
+
+The Apex tests failed with the following error(s):
+
+{error_message}
+
+Please analyze these test failures and fix your implementation. The tests verify:
+- Validation rules block invalid data correctly
+- Flows calculate field values correctly
+- Apex code handles edge cases properly
+
+Fix the issues and say "READY TO TEST" when you're done.
+"""
+
+    def run_with_feedback(
+        self,
+        agent_config: CLIAgentConfig,
+        task_readme: str,
+        model: str | None = None,
+        max_iterations: int | None = None,
+        on_output: Callable[[str], None] | None = None,
+    ) -> CLIRunResult:
+        """
+        Run a CLI agent with automatic deployment/test feedback loop.
+        
+        This method:
+        1. Asks agent to create files (BUILD phase)
+        2. Runs deployment and captures errors
+        3. If deployment fails, sends error back to agent
+        4. Repeats until deployment succeeds or max iterations
+        5. Runs tests and similarly loops on failures
+        
+        Args:
+            agent_config: Configuration for the CLI agent
+            task_readme: The task requirements from README.md
+            model: Model to use (overrides default)
+            max_iterations: Max feedback iterations (defaults to agent config)
+            on_output: Callback for real-time output
+        
+        Returns:
+            CLIRunResult with combined execution details
+        """
+        started_at = datetime.now()
+        all_stdout = []
+        all_stderr = []
+        total_duration = 0.0
+        
+        # Use agent-specific iteration count if not overridden
+        iterations_limit = max_iterations or agent_config.max_feedback_iterations
+        
+        console.print(f"\n[bold cyan]{'='*60}[/bold cyan]")
+        console.print(f"[bold cyan]FEEDBACK LOOP MODE (max {iterations_limit} iterations)[/bold cyan]")
+        console.print(f"[bold cyan]{'='*60}[/bold cyan]")
+        
+        # Phase 1: BUILD - Ask agent to create files
+        console.print(f"\n[bold magenta]PHASE 1: BUILD[/bold magenta]")
+        
+        build_prompt = self._build_feedback_initial_prompt(
+            task_readme,
+            prompt_style=agent_config.prompt_style,
+        )
+        
+        result = self.run_agent(
+            agent_config=agent_config,
+            prompt=build_prompt,
+            model=model,
+            on_output=on_output,
+            continue_session=False,
+            completion_signal="READY TO DEPLOY",
+        )
+        
+        all_stdout.append(result.stdout)
+        all_stderr.append(result.stderr)
+        total_duration += result.duration_seconds
+        
+        if result.timed_out:
+            console.print("[red]BUILD phase timed out[/red]")
+            return self._create_feedback_result(
+                agent_config, started_at, total_duration,
+                all_stdout, all_stderr, result, timed_out=True
+            )
+        
+        # Normalize metadata files before deployment
+        self._normalize_metadata_files(self.work_dir)
+        
+        # Phase 2: DEPLOY loop
+        console.print(f"\n[bold magenta]PHASE 2: DEPLOY (with feedback loop)[/bold magenta]")
+        
+        deploy_success = False
+        iteration = 0
+        
+        while not deploy_success and iteration < iterations_limit:
+            iteration += 1
+            console.print(f"\n[dim]Deploy attempt {iteration}/{iterations_limit}[/dim]")
+            
+            success, stdout, error_msg = self._run_deployment()
+            all_stdout.append(stdout)
+            
+            if success:
+                deploy_success = True
+                console.print(f"[green]✓ Deployment succeeded on attempt {iteration}[/green]")
+            else:
+                if iteration >= iterations_limit:
+                    console.print(f"[red]✗ Max iterations reached, deployment still failing[/red]")
+                    break
+                
+                # Send error back to agent
+                console.print(f"[yellow]Sending deployment error to agent for fixing...[/yellow]")
+                
+                fix_prompt = self._build_fix_prompt(
+                    "deployment",
+                    error_msg,
+                    prompt_style=agent_config.prompt_style,
+                )
+                
+                # Use --continue for session continuity if supported
+                result = self.run_agent(
+                    agent_config=agent_config,
+                    prompt=fix_prompt,
+                    model=model,
+                    on_output=on_output,
+                    continue_session=agent_config.supports_continue,
+                    completion_signal="READY TO DEPLOY",
+                )
+                
+                all_stdout.append(result.stdout)
+                all_stderr.append(result.stderr)
+                total_duration += result.duration_seconds
+                
+                if result.timed_out:
+                    console.print("[red]Fix phase timed out[/red]")
+                    return self._create_feedback_result(
+                        agent_config, started_at, total_duration,
+                        all_stdout, all_stderr, result, timed_out=True
+                    )
+                
+                # Normalize again after fixes
+                self._normalize_metadata_files(self.work_dir)
+        
+        if not deploy_success:
+            console.print("[red]Deployment failed after all attempts[/red]")
+            return self._create_feedback_result(
+                agent_config, started_at, total_duration,
+                all_stdout, all_stderr, result
+            )
+        
+        # Phase 3: TEST loop
+        console.print(f"\n[bold magenta]PHASE 3: TEST (with feedback loop)[/bold magenta]")
+        
+        test_success = False
+        test_iteration = 0
+        remaining_iterations = iterations_limit - iteration + 1  # Allow remaining iterations for tests
+        
+        while not test_success and test_iteration < remaining_iterations:
+            test_iteration += 1
+            console.print(f"\n[dim]Test attempt {test_iteration}/{remaining_iterations}[/dim]")
+            
+            success, stdout, failure_msg = self._run_tests()
+            all_stdout.append(stdout)
+            
+            if success:
+                test_success = True
+                console.print(f"[green]✓ All tests passed on attempt {test_iteration}[/green]")
+            else:
+                if test_iteration >= remaining_iterations:
+                    console.print(f"[red]✗ Max iterations reached, tests still failing[/red]")
+                    break
+                
+                # Send failure back to agent
+                console.print(f"[yellow]Sending test failures to agent for fixing...[/yellow]")
+                
+                fix_prompt = self._build_fix_prompt(
+                    "test",
+                    failure_msg,
+                    prompt_style=agent_config.prompt_style,
+                )
+                
+                result = self.run_agent(
+                    agent_config=agent_config,
+                    prompt=fix_prompt,
+                    model=model,
+                    on_output=on_output,
+                    continue_session=agent_config.supports_continue,
+                    completion_signal="READY TO TEST",
+                )
+                
+                all_stdout.append(result.stdout)
+                all_stderr.append(result.stderr)
+                total_duration += result.duration_seconds
+                
+                if result.timed_out:
+                    console.print("[red]Fix phase timed out[/red]")
+                    return self._create_feedback_result(
+                        agent_config, started_at, total_duration,
+                        all_stdout, all_stderr, result, timed_out=True
+                    )
+                
+                # Normalize and redeploy after fixes
+                self._normalize_metadata_files(self.work_dir)
+                
+                # Redeploy the fixes
+                console.print("  [dim]Redeploying fixes...[/dim]")
+                deploy_ok, _, deploy_err = self._run_deployment()
+                if not deploy_ok:
+                    console.print(f"  [yellow]⚠ Redeploy failed: {deploy_err[:100]}[/yellow]")
+        
+        # Final result
+        console.print(f"\n[bold cyan]{'='*60}[/bold cyan]")
+        if test_success:
+            console.print("[bold green]TASK COMPLETE - All tests passed![/bold green]")
+        elif deploy_success:
+            console.print("[bold yellow]PARTIAL SUCCESS - Deployed but tests failed[/bold yellow]")
+        else:
+            console.print("[bold red]TASK FAILED - Could not deploy successfully[/bold red]")
+        console.print(f"[bold cyan]{'='*60}[/bold cyan]")
+        
+        return self._create_feedback_result(
+            agent_config, started_at, total_duration,
+            all_stdout, all_stderr, result
+        )
+
+    def _build_feedback_initial_prompt(
+        self,
+        task_readme: str,
+        prompt_style: str = "default",
+    ) -> str:
+        """Build the initial BUILD prompt for feedback loop mode."""
+        if prompt_style == "gemini":
+            return f"""# Salesforce Development Task
+
+## Requirements
+
+{task_readme}
+
+## Environment Setup (Already Done)
+
+- Salesforce DX project is ready
+- Scratch org is authenticated
+- Custom fields exist on the Lead object
+- Test classes are already deployed
+
+## YOUR TASK: Create Solution Files
+
+Create the Salesforce metadata files to implement the requirements.
+
+### File Extensions (CRITICAL)
+
+- Validation rules: `.validationRule-meta.xml`
+- Flows: `.flow-meta.xml`
+- Apex classes: `.cls` + `.cls-meta.xml`
+- Apex triggers: `.trigger` + `.trigger-meta.xml`
+
+### When Done
+
+After creating all files, say "READY TO DEPLOY"
+
+The system will automatically deploy and run tests, sending you any errors to fix.
+"""
+        elif prompt_style == "aider":
+            return f"""{task_readme}
+
+Create the required Salesforce metadata files.
+Use correct extensions: .validationRule-meta.xml, .flow-meta.xml
+
+Say "READY TO DEPLOY" when done. The system will deploy and test automatically.
+"""
+        else:  # default (Claude)
+            return f"""You are working on a Salesforce development task.
+
+## Task Requirements
+
+{task_readme}
+
+## Your Environment
+
+- You are in a Salesforce DX project directory
+- A scratch org is already authenticated and set as default
+- Custom fields and test classes are already deployed
+- You need to implement the solution
+
+## Salesforce Metadata File Conventions
+
+IMPORTANT: Use the correct file extensions:
+
+- **Validation Rules**: `force-app/main/default/objects/<Object>/validationRules/<Name>.validationRule-meta.xml`
+- **Record-Triggered Flows**: `force-app/main/default/flows/<Name>.flow-meta.xml`
+- **Apex Classes**: `force-app/main/default/classes/<Name>.cls` + `.cls-meta.xml`
+- **Apex Triggers**: `force-app/main/default/triggers/<Name>.trigger` + `.trigger-meta.xml`
+
+## Your Task
+
+Create all the necessary metadata files to implement the requirements.
+
+**DO NOT** run deployment or tests yourself - the system will handle that automatically and send you any errors to fix.
+
+When you have created all required files, say "READY TO DEPLOY".
+"""
+
+    def _create_feedback_result(
+        self,
+        agent_config: CLIAgentConfig,
+        started_at: datetime,
+        total_duration: float,
+        all_stdout: list[str],
+        all_stderr: list[str],
+        last_result: CLIRunResult,
+        timed_out: bool = False,
+    ) -> CLIRunResult:
+        """Create a CLIRunResult from feedback loop execution."""
+        completed_at = datetime.now()
+        files_modified = self._get_modified_files()
+        
+        return CLIRunResult(
+            agent_id=agent_config.id,
+            scratch_org=self.scratch_org,
+            work_dir=self.work_dir,
+            started_at=started_at,
+            completed_at=completed_at,
+            duration_seconds=total_duration,
+            exit_code=last_result.exit_code if last_result else 1,
+            stdout="\n".join(all_stdout),
+            stderr="\n".join(all_stderr),
+            timed_out=timed_out,
+            files_modified=files_modified,
+        )
     
     def build_prompt(
         self,

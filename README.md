@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-0.2.2-green.svg)](https://github.com/bhanudas/sf-agentbench)
+[![Version](https://img.shields.io/badge/version-0.2.3-green.svg)](https://github.com/bhanudas/sf-agentbench)
 
 ---
 
@@ -34,6 +34,7 @@
 SF-AgentBench is a rigorous benchmarking framework designed to evaluate AI agents—such as Claude Code, Gemini CLI, or Aider—on their ability to design and build Salesforce solutions. While existing benchmarks like SWE-bench effectively assess code generation in file-based languages (Python, Java), they fail to capture the architectural complexity of Platform-as-a-Service (PaaS) environments like Salesforce.
 
 Salesforce development is a hybrid practice requiring:
+
 - **Declarative metadata** orchestration
 - **Proprietary programming languages** (Apex, SOQL, LWC)
 - **Stateful database interactions** within a multi-tenant environment
@@ -41,7 +42,13 @@ Salesforce development is a hybrid practice requiring:
 
 SF-AgentBench addresses these unique challenges with a purpose-built evaluation framework.
 
-### ✨ What's New in v0.2.2
+### ✨ What's New in v0.2.3
+
+- **🤖 Kimi K2 Integration** — Full support for Moonshot AI's Kimi K2 models with OpenAI-compatible API
+- **🧠 Kimi K2 Thinking** — Extended reasoning model for complex Salesforce architecture problems
+- **⚡ Gemini 3 Flash Preview** — Google's latest fast model with 1M context window
+
+### What's in v0.2.2
 
 - **🌐 Web Interface** — Modern React dashboard for reviewing runs, launching benchmarks, and real-time monitoring
 - **📊 Visual Analytics** — Agent comparison charts, score breakdowns, and performance metrics
@@ -72,12 +79,13 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 
 ### Test Banks (Q&A)
 
-| Test Bank | Questions | Domains | Purpose |
-|-----------|-----------|---------|---------|
-| `salesforce_admin_test_bank.json` | 100 | 5 | Salesforce Administrator certification topics |
-| `salesforce_developer_test_bank.json` | 100 | 6 | Platform Developer I certification topics |
+| Test Bank                             | Questions | Domains | Purpose                                       |
+| ------------------------------------- | --------- | ------- | --------------------------------------------- |
+| `salesforce_admin_test_bank.json`     | 100       | 5       | Salesforce Administrator certification topics |
+| `salesforce_developer_test_bank.json` | 100       | 6       | Platform Developer I certification topics     |
 
 **Admin Domains (20 questions each):**
+
 - Security & Access (CRUD, FLS, Sharing, Profiles, Permission Sets)
 - Data Management (SOQL, DML, Data Loader, Relationships)
 - Automation (Flow, Workflow, Approval Processes, Validation Rules)
@@ -85,6 +93,7 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 - Sales & Service Cloud (Lead Management, Cases, Entitlements)
 
 **Developer Domains (16-20 questions each):**
+
 - Apex Fundamentals (Collections, Classes, Exceptions, Data Types)
 - Data Modeling & SOQL (Queries, Relationships, Governor Limits)
 - Triggers & Processing (Context Variables, Bulkification, Order of Execution)
@@ -94,29 +103,30 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 
 ### Coding Tasks
 
-| Tier | Task | Description |
-|------|------|-------------|
-| **Tier 1** | `apex-contact-trigger` | Basic trigger with validation |
-| **Tier 2** | `lead-scoring-validation` | Lead assignment with scoring logic |
-| **Tier 2** | `case-escalation-flow` | Screen Flow with escalation rules |
-| **Tier 2** | `account-territory-trigger` | Trigger + Handler pattern with region-based territory assignment |
-| **Tier 2** | `opportunity-discount-calculator` | @InvocableMethod with tiered discount logic |
+| Tier       | Task                              | Description                                                      |
+| ---------- | --------------------------------- | ---------------------------------------------------------------- |
+| **Tier 1** | `apex-contact-trigger`            | Basic trigger with validation                                    |
+| **Tier 2** | `lead-scoring-validation`         | Lead assignment with scoring logic                               |
+| **Tier 2** | `case-escalation-flow`            | Screen Flow with escalation rules                                |
+| **Tier 2** | `account-territory-trigger`       | Trigger + Handler pattern with region-based territory assignment |
+| **Tier 2** | `opportunity-discount-calculator` | @InvocableMethod with tiered discount logic                      |
 
 ### Rubrics (LLM Judge Criteria)
 
-| Rubric | Criteria | Purpose |
-|--------|----------|---------|
-| `salesforce_best_practices.yaml` | 6 | Bulkification, security, tests, readability |
-| `security_audit.yaml` | 4 | CRUD/FLS, injection, hardcoded IDs |
-| `qa_accuracy.yaml` | 2 | Answer correctness, reasoning quality |
+| Rubric                           | Criteria | Purpose                                     |
+| -------------------------------- | -------- | ------------------------------------------- |
+| `salesforce_best_practices.yaml` | 6        | Bulkification, security, tests, readability |
+| `security_audit.yaml`            | 4        | CRUD/FLS, injection, hardcoded IDs          |
+| `qa_accuracy.yaml`               | 2        | Answer correctness, reasoning quality       |
 
 ### Supported Models
 
-| Provider | Models | Best For |
-|----------|--------|----------|
-| **Anthropic** | `claude-sonnet-4-20250514`, `claude-opus-4-20250514` | Highest accuracy, code quality |
-| **Google** | `gemini-2.0-flash`, `gemini-2.5-pro`, `gemini-3.0-thinking` | Fast Q&A, cost-effective |
-| **OpenAI** | `gpt-4o`, `o1` | General purpose |
+| Provider      | Models                                                         | Best For                       |
+| ------------- | -------------------------------------------------------------- | ------------------------------ |
+| **Anthropic** | `claude-sonnet-4-20250514`, `claude-opus-4-20250514`           | Highest accuracy, code quality |
+| **Google**    | `gemini-2.0-flash`, `gemini-2.5-pro`, `gemini-3-flash-preview` | Fast Q&A, cost-effective       |
+| **Kimi**      | `kimi-k2`, `kimi-k2-0905`, `kimi-k2-thinking`                  | Long context, reasoning        |
+| **OpenAI**    | `gpt-4o`, `o1`                                                 | General purpose                |
 
 ---
 
@@ -124,12 +134,12 @@ SF-AgentBench addresses these unique challenges with a purpose-built evaluation 
 
 ### Prerequisites
 
-| Requirement | Version | Required For |
-|-------------|---------|--------------|
-| Python | 3.10+ | Core framework |
-| Salesforce CLI (`sf`) | Latest | Coding benchmarks |
-| DevHub Org | - | Scratch org creation |
-| API Keys | - | LLM features |
+| Requirement           | Version | Required For         |
+| --------------------- | ------- | -------------------- |
+| Python                | 3.10+   | Core framework       |
+| Salesforce CLI (`sf`) | Latest  | Coding benchmarks    |
+| DevHub Org            | -       | Scratch org creation |
+| API Keys              | -       | LLM features         |
 
 ### Step 1: Clone & Setup Environment
 
@@ -160,6 +170,7 @@ sf-agentbench --help
 ### Step 3: Configure API Keys
 
 **Option A: Interactive Setup (Recommended)**
+
 ```bash
 # Set up Anthropic (Claude) API key
 sf-agentbench auth set anthropic
@@ -168,22 +179,30 @@ sf-agentbench auth set anthropic
 # Set up Google (Gemini) API key
 sf-agentbench auth set google
 # Enter your API key when prompted
+
+# Set up Kimi (Moonshot AI) API key
+sf-agentbench auth set kimi
+# Enter your API key when prompted
 ```
 
 **Option B: Environment Variables**
+
 ```bash
 # Add to your shell profile (.bashrc, .zshrc, etc.)
 export ANTHROPIC_API_KEY="sk-ant-api03-..."
 export GOOGLE_API_KEY="AIzaSy..."
 export OPENAI_API_KEY="sk-..."
+export KIMI_API_KEY="sk-..."
 ```
 
 **Option C: Configuration File**
+
 ```yaml
 # sf-agentbench.yaml
 api_keys:
   anthropic: "sk-ant-api03-..."
   google: "AIzaSy..."
+  kimi: "sk-..."
 ```
 
 ### Step 4: Verify API Keys
@@ -194,6 +213,7 @@ sf-agentbench auth status
 #   ✓ Anthropic: Configured (keychain)
 #   ✓ Google: Configured (environment)
 #   ✗ OpenAI: Not configured
+#   ✓ Kimi: Configured (keychain)
 ```
 
 ### Step 5: (Optional) Salesforce CLI Setup
@@ -287,15 +307,15 @@ The frontend will be available at `http://localhost:5173` and proxies API reques
 
 ### Features
 
-| Page | URL | Description |
-|------|-----|-------------|
-| **Dashboard** | `/` | Summary cards, agent performance charts, recent runs |
-| **Run Browser** | `/runs` | Filterable table of all benchmark runs |
-| **Run Detail** | `/runs/:id` | 5-layer score breakdown, radar chart, evaluation details |
-| **Live Monitor** | `/runs/:id/live` | Real-time WebSocket event stream during runs |
-| **Run Launcher** | `/launch` | Start new benchmarks with task/agent selection |
-| **Q&A Tests** | `/qa` | Browse Q&A runs, model comparison charts |
-| **Comparison** | `/compare` | Multi-agent radar charts and detailed comparisons |
+| Page             | URL              | Description                                              |
+| ---------------- | ---------------- | -------------------------------------------------------- |
+| **Dashboard**    | `/`              | Summary cards, agent performance charts, recent runs     |
+| **Run Browser**  | `/runs`          | Filterable table of all benchmark runs                   |
+| **Run Detail**   | `/runs/:id`      | 5-layer score breakdown, radar chart, evaluation details |
+| **Live Monitor** | `/runs/:id/live` | Real-time WebSocket event stream during runs             |
+| **Run Launcher** | `/launch`        | Start new benchmarks with task/agent selection           |
+| **Q&A Tests**    | `/qa`            | Browse Q&A runs, model comparison charts                 |
+| **Comparison**   | `/compare`       | Multi-agent radar charts and detailed comparisons        |
 
 ### API Endpoints
 
@@ -425,10 +445,10 @@ The REPL provides real-time monitoring of benchmarks running in any terminal.
 
 ### Two Modes
 
-| Mode | Command | Use Case |
-|------|---------|----------|
-| **Interactive** | `sf-agentbench interactive` | Run commands in same terminal |
-| **Watch** | `sf-agentbench interactive --watch` | Monitor benchmarks from another terminal |
+| Mode            | Command                             | Use Case                                 |
+| --------------- | ----------------------------------- | ---------------------------------------- |
+| **Interactive** | `sf-agentbench interactive`         | Run commands in same terminal            |
+| **Watch**       | `sf-agentbench interactive --watch` | Monitor benchmarks from another terminal |
 
 ### Starting the Monitor
 
@@ -442,19 +462,19 @@ sf-agentbench interactive --watch
 
 ### Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `status` | Show current benchmark status |
-| `logs [filter]` | Filter logs (e.g., `logs qa`, `logs claude`) |
-| `costs` | Show cost breakdown by model |
-| `workers` | Show worker pool status |
-| `pause [id]` | Pause work unit(s) |
-| `resume [id]` | Resume paused work |
-| `cancel <id>` | Cancel a work unit |
-| `rubric list` | List available rubrics |
-| `rubric show <name>` | Show rubric details |
-| `help` | Show all commands |
-| `quit` | Exit |
+| Command              | Description                                  |
+| -------------------- | -------------------------------------------- |
+| `status`             | Show current benchmark status                |
+| `logs [filter]`      | Filter logs (e.g., `logs qa`, `logs claude`) |
+| `costs`              | Show cost breakdown by model                 |
+| `workers`            | Show worker pool status                      |
+| `pause [id]`         | Pause work unit(s)                           |
+| `resume [id]`        | Resume paused work                           |
+| `cancel <id>`        | Cancel a work unit                           |
+| `rubric list`        | List available rubrics                       |
+| `rubric show <name>` | Show rubric details                          |
+| `help`               | Show all commands                            |
+| `quit`               | Exit                                         |
 
 ### Cross-Process Monitoring
 
@@ -484,17 +504,19 @@ sf-agentbench qa-run salesforce_admin_test_bank.json -m gemini-2.0-flash -w 8
 
 The rubric evaluator automatically detects the provider from the model name:
 
-| Provider | Model Patterns | Example |
-|----------|---------------|---------|
-| **Anthropic** | `claude-*` | `claude-sonnet-4-20250514` |
-| **Google** | `gemini-*` | `gemini-2.0-flash` |
-| **OpenAI** | `gpt-*`, `o1*` | `gpt-4o`, `o1` |
+| Provider      | Model Patterns | Example                       |
+| ------------- | -------------- | ----------------------------- |
+| **Anthropic** | `claude-*`     | `claude-sonnet-4-20250514`    |
+| **Google**    | `gemini-*`     | `gemini-2.0-flash`            |
+| **Kimi**      | `kimi-*`       | `kimi-k2`, `kimi-k2-thinking` |
+| **OpenAI**    | `gpt-*`, `o1*` | `gpt-4o`, `o1`                |
 
 Configure in `sf-agentbench.yaml`:
+
 ```yaml
 rubric:
-  model: claude-sonnet-4-20250514  # Auto-detects Anthropic
-  provider: auto  # Or explicitly: anthropic, google, openai
+  model: claude-sonnet-4-20250514 # Auto-detects Anthropic
+  provider: auto # Or explicitly: anthropic, google, openai
   timeout_seconds: 120
   fallback_to_heuristic: true
 ```
@@ -581,7 +603,7 @@ model: gemini-2.0-flash
 
 # Salesforce settings
 devhub_username: admin@mydevhub.org
-scratch_org_duration: 7  # days
+scratch_org_duration: 7 # days
 cleanup_orgs: true
 
 # Task directories
@@ -591,8 +613,8 @@ results_dir: ./results
 # Worker configuration
 workers:
   max_workers: 8
-  qa_workers: 8        # Parallel Q&A workers
-  coding_workers: 2    # Parallel coding workers (resource-intensive)
+  qa_workers: 8 # Parallel Q&A workers
+  coding_workers: 2 # Parallel coding workers (resource-intensive)
 
 # Cost tracking
 cost_tracking:
@@ -604,7 +626,7 @@ cost_tracking:
 judges:
   default_model: claude-opus-4-20250514
   verbose_logging: true
-  consensus_method: average  # average, majority, min, max
+  consensus_method: average # average, majority, min, max
 
 # Evaluation weights (for coding benchmarks)
 evaluation_weights:
@@ -622,13 +644,15 @@ logging:
 
 ### Environment Variables
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `ANTHROPIC_API_KEY` | Claude API access | `sk-ant-api03-...` |
-| `GOOGLE_API_KEY` | Gemini API access | `AIzaSy...` |
-| `OPENAI_API_KEY` | OpenAI API access | `sk-...` |
-| `SF_DEVHUB_USERNAME` | Default DevHub org | `admin@mydevhub.org` |
-| `SF_AGENTBENCH_CONFIG` | Config file path | `./custom-config.yaml` |
+| Variable               | Purpose                  | Example                     |
+| ---------------------- | ------------------------ | --------------------------- |
+| `ANTHROPIC_API_KEY`    | Claude API access        | `sk-ant-api03-...`          |
+| `GOOGLE_API_KEY`       | Gemini API access        | `AIzaSy...`                 |
+| `OPENAI_API_KEY`       | OpenAI API access        | `sk-...`                    |
+| `KIMI_API_KEY`         | Kimi K2 API access       | `sk-...`                    |
+| `KIMI_API_BASE_URL`    | Custom Kimi API endpoint | `https://kimi-k2.ai/api/v1` |
+| `SF_DEVHUB_USERNAME`   | Default DevHub org       | `admin@mydevhub.org`        |
+| `SF_AGENTBENCH_CONFIG` | Config file path         | `./custom-config.yaml`      |
 
 ---
 
@@ -766,12 +790,12 @@ from sf_agentbench.judges.base import Judge, JudgeResult, Rubric
 
 class MyProviderJudge(Judge):
     """Judge implementation for My Provider."""
-    
+
     def __init__(self, model: str, api_key: str | None = None, **kwargs):
         super().__init__(model=model, **kwargs)
         self.api_key = api_key or os.getenv("MY_PROVIDER_API_KEY")
         # Initialize your client
-        
+
     def evaluate(
         self,
         code: str,
@@ -781,10 +805,10 @@ class MyProviderJudge(Judge):
     ) -> JudgeResult:
         # Build prompt using self._build_prompt(code, requirements, rubric)
         prompt = self._build_prompt(code, requirements, rubric)
-        
+
         # Call your API
         response = self._call_api(prompt)
-        
+
         # Parse response into JudgeResult
         return self._parse_response(response, rubric)
 ```
@@ -814,11 +838,11 @@ MODEL_PROVIDERS = {
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      SF-AgentBench v0.2.0                           │
+│                      SF-AgentBench v0.2.3                           │
 ├─────────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
 │  │    REPL      │  │   Worker     │  │      LLM Judges          │  │
-│  │   Console    │  │    Pool      │  │  (Claude, Gemini)        │  │
+│  │   Console    │  │    Pool      │  │  (Claude, Gemini, Kimi)  │  │
 │  └──────────────┘  └──────────────┘  └──────────────────────────┘  │
 │         │                 │                      │                  │
 │         └─────────────────┴──────────────────────┘                  │
@@ -853,15 +877,15 @@ MODEL_PROVIDERS = {
 
 ### Key Components
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| **CLI** | `src/sf_agentbench/cli.py` | Command-line interface |
-| **QA Runner** | `src/sf_agentbench/qa/runner.py` | Q&A test execution |
-| **Judges** | `src/sf_agentbench/judges/` | LLM-as-a-Judge evaluation |
-| **REPL** | `src/sf_agentbench/repl/` | Interactive terminal |
-| **Events** | `src/sf_agentbench/events/` | Cross-process communication |
-| **Workers** | `src/sf_agentbench/workers/` | Parallel execution pool |
-| **Storage** | `src/sf_agentbench/storage/` | Results persistence |
+| Component     | Location                         | Purpose                     |
+| ------------- | -------------------------------- | --------------------------- |
+| **CLI**       | `src/sf_agentbench/cli.py`       | Command-line interface      |
+| **QA Runner** | `src/sf_agentbench/qa/runner.py` | Q&A test execution          |
+| **Judges**    | `src/sf_agentbench/judges/`      | LLM-as-a-Judge evaluation   |
+| **REPL**      | `src/sf_agentbench/repl/`        | Interactive terminal        |
+| **Events**    | `src/sf_agentbench/events/`      | Cross-process communication |
+| **Workers**   | `src/sf_agentbench/workers/`     | Parallel execution pool     |
+| **Storage**   | `src/sf_agentbench/storage/`     | Results persistence         |
 
 ---
 
@@ -960,10 +984,10 @@ CLI agents (Gemini CLI, Aider) may need longer timeouts and specific prompts. Co
 cli_agents:
   gemini:
     phase_timeouts:
-      build: 900    # 15 minutes for complex tasks
-      deploy: 600   # 10 minutes for deployment
-      test: 300     # 5 minutes for testing
-    prompt_style: gemini  # Use Gemini-specific prompts
+      build: 900 # 15 minutes for complex tasks
+      deploy: 600 # 10 minutes for deployment
+      test: 300 # 5 minutes for testing
+    prompt_style: gemini # Use Gemini-specific prompts
     extra_args:
       - "--sandbox=false"
 ```
@@ -1017,13 +1041,13 @@ We welcome contributions! Here's how to get started:
 
 ### Areas for Contribution
 
-| Area | What's Needed |
-|------|---------------|
-| **Test Banks** | More Q&A questions, new certification domains |
-| **Coding Tasks** | Tier 3 & 4 tasks, LWC challenges |
-| **Rubrics** | Industry-specific evaluation criteria |
-| **Providers** | New LLM integrations (Cohere, Mistral, etc.) |
-| **Documentation** | Tutorials, examples, translations |
+| Area              | What's Needed                                          |
+| ----------------- | ------------------------------------------------------ |
+| **Test Banks**    | More Q&A questions, new certification domains          |
+| **Coding Tasks**  | Tier 3 & 4 tasks, LWC challenges                       |
+| **Rubrics**       | Industry-specific evaluation criteria                  |
+| **Providers**     | New LLM integrations (Cohere, Mistral, DeepSeek, etc.) |
+| **Documentation** | Tutorials, examples, translations                      |
 
 ### Development Setup
 
@@ -1060,12 +1084,14 @@ mypy src/
 ## Roadmap
 
 ### Phase 1: Foundation ✅
+
 - [x] ACI tool wrappers for core `sf` commands
 - [x] Basic harness for task loading and evaluation
 - [x] 5-layer evaluation pipeline
 - [x] Sample Tier 1 & 2 tasks
 
 ### Phase 2: Intelligence ✅ (v0.2.0 - v0.2.1)
+
 - [x] Q&A benchmarking framework
 - [x] LLM-as-a-Judge with rubric scoring
 - [x] Multi-model support (Claude, Gemini, OpenAI)
@@ -1082,13 +1108,16 @@ mypy src/
 - [x] **v0.2.1:** New Tier-2 coding tasks (territory trigger, discount calculator)
 
 ### Phase 3: Scale (In Progress)
+
 - [ ] Scratch Org pool management
 - [ ] Distributed worker nodes
 - [x] **v0.2.2:** Web dashboard with React frontend and FastAPI backend
+- [x] **v0.2.3:** Kimi K2 integration (Moonshot AI) with thinking model support
 - [ ] Public leaderboard
 - [ ] 10+ Tier 3 tasks
 
 ### Phase 4: Research (Planned)
+
 - [ ] Agent behavior analysis
 - [ ] Failure pattern detection
 - [ ] Automated task generation
@@ -1111,7 +1140,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  <strong>SF-AgentBench v0.2.2</strong> — Bridging AI Agents and Enterprise Platform Development
+  <strong>SF-AgentBench v0.2.3</strong> — Bridging AI Agents and Enterprise Platform Development
 </p>
 
 <p align="center">

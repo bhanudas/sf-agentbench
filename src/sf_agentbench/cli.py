@@ -952,7 +952,9 @@ def benchmark(
 @click.argument("task_id")
 @click.option("--devhub", "-d", help="DevHub username")
 @click.option("--model", "-m", help="Model to use (overrides CLI default)")
-@click.option("--multi-phase", "-p", is_flag=True, help="Use multi-phase prompting (build → deploy → test)")
+@click.option("--multi-phase", "-p", is_flag=True, help="Use multi-phase prompting (build → deploy → test) [deprecated]")
+@click.option("--no-feedback", is_flag=True, help="Disable feedback loop (use single-shot mode)")
+@click.option("--max-iterations", "-i", type=int, default=5, help="Max feedback iterations (default: 5)")
 @click.option("--no-cleanup", is_flag=True, help="Keep scratch org and files after run")
 @click.option("--timeout", "-t", type=int, default=1800, help="Timeout in seconds (default: 1800)")
 @click.pass_context
@@ -963,20 +965,23 @@ def run_cli(
     devhub: str | None,
     model: str | None,
     multi_phase: bool,
+    no_feedback: bool,
+    max_iterations: int,
     no_cleanup: bool,
     timeout: int,
 ) -> None:
     """Run a benchmark using a CLI-based AI agent (e.g., claude, gemini, aider).
     
     This launches the actual CLI tool in a monitored subprocess with its own
-    scratch org. The agent's terminal output is captured and displayed in real-time.
+    scratch org. By default, uses a feedback loop that automatically deploys,
+    captures errors, and sends them back to the agent for fixing.
     
     \b
     Examples:
       sf-agentbench run-cli claude-code lead-scoring-validation
       sf-agentbench run-cli gemini-cli lead-scoring-validation -m gemini-2.0-flash
-      sf-agentbench run-cli gemini-cli lead-scoring-validation -m gemini-3-thinking
-      sf-agentbench run-cli aider case-escalation-flow -d my-devhub
+      sf-agentbench run-cli kimi-code lead-scoring-validation --max-iterations 3
+      sf-agentbench run-cli aider case-escalation-flow --no-feedback
     """
     import time
     from datetime import datetime, timezone
@@ -1028,7 +1033,14 @@ def run_cli(
     tier = task.tier.value if hasattr(task.tier, 'value') else str(task.tier)
     
     selected_model = model or agent_config.default_model or "default"
-    mode = "Multi-phase" if multi_phase else "Single-phase"
+    
+    # Determine mode
+    if no_feedback:
+        mode = "Single-shot (no feedback)"
+    elif multi_phase:
+        mode = "Multi-phase [deprecated]"
+    else:
+        mode = f"Feedback loop (max {max_iterations} iterations)"
     
     console.print("\n" + "=" * 70)
     console.print("[bold cyan]SF-AGENTBENCH - CLI AGENT BENCHMARK[/bold cyan]")
@@ -1061,8 +1073,23 @@ def run_cli(
             console.print(f"[dim]{line.rstrip()}[/dim]")
         
         # Step 3: Run agent
-        if multi_phase:
+        if no_feedback:
+            # Legacy single-shot mode (no feedback loop)
+            prompt = runner.build_prompt(task_readme)
+            console.print(f"  [dim]Prompt length: {len(prompt)} chars[/dim]")
+            console.print(f"\n[bold]Step 3: Running {agent_config.name} (single-shot)...[/bold]")
+            console.print("[dim]Terminal output will appear below. Press Ctrl+C to stop.[/dim]\n")
+            
+            cli_result = runner.run_agent(
+                agent_config,
+                prompt,
+                model=model,
+                on_output=on_output if config.verbose else None,
+            )
+        elif multi_phase:
+            # Deprecated multi-phase mode
             console.print(f"  [dim]Mode: Multi-phase (build → deploy → test)[/dim]")
+            console.print("[yellow]Note: --multi-phase is deprecated. Use default feedback loop instead.[/yellow]")
             console.print(f"\n[bold]Step 3: Running {agent_config.name} (multi-phase)...[/bold]")
             console.print("[dim]Terminal output will appear below. Press Ctrl+C to stop.[/dim]\n")
             
@@ -1073,15 +1100,16 @@ def run_cli(
                 on_output=on_output if config.verbose else None,
             )
         else:
-            prompt = runner.build_prompt(task_readme)
-            console.print(f"  [dim]Prompt length: {len(prompt)} chars[/dim]")
-            console.print(f"\n[bold]Step 3: Running {agent_config.name}...[/bold]")
+            # Default: Feedback loop mode
+            console.print(f"\n[bold]Step 3: Running {agent_config.name} (feedback loop)...[/bold]")
+            console.print(f"[dim]Agent will create files, then system deploys/tests with error feedback.[/dim]")
             console.print("[dim]Terminal output will appear below. Press Ctrl+C to stop.[/dim]\n")
             
-            cli_result = runner.run_agent(
+            cli_result = runner.run_with_feedback(
                 agent_config,
-                prompt,
+                task_readme,
                 model=model,
+                max_iterations=max_iterations,
                 on_output=on_output if config.verbose else None,
             )
         
