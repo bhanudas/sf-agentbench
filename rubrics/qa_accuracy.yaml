@@ -1,0 +1,54 @@
+# Q&A Accuracy Rubric
+# Evaluates LLM responses to Salesforce knowledge questions
+
+name: Q&A Accuracy
+version: "1.0"
+description: |
+  Evaluates the quality and accuracy of LLM responses to 
+  Salesforce certification-style questions.
+judge_model: claude-opus-4-20250514
+
+criteria:
+  - name: Answer Correctness
+    weight: 0.40
+    description: |
+      Did the LLM select the correct answer?
+      Is the answer consistent with official Salesforce documentation?
+    scoring_guide:
+      1.0: "Correct answer selected"
+      0.5: "Partially correct or close answer"
+      0.0: "Incorrect answer"
+
+  - name: Reasoning Quality
+    weight: 0.25
+    description: |
+      Did the LLM explain its reasoning?
+      Is the explanation accurate and helpful?
+      Does it reference relevant concepts?
+    scoring_guide:
+      1.0: "Clear, accurate explanation with proper reasoning"
+      0.7: "Good explanation with minor inaccuracies"
+      0.5: "Basic explanation"
+      0.2: "Confused or incorrect reasoning"
+      0.0: "No explanation or completely wrong"
+
+  - name: Concept Understanding
+    weight: 0.20
+    description: |
+      Does the response show understanding of underlying concepts?
+      Are related features/limitations mentioned?
+    scoring_guide:
+      1.0: "Demonstrates deep understanding"
+      0.5: "Shows basic understanding"
+      0.0: "Shows misunderstanding"
+
+  - name: Response Format
+    weight: 0.15
+    description: |
+      Is the answer clearly formatted?
+      Was the answer letter extracted correctly?
+      Is the response concise?
+    scoring_guide:
+      1.0: "Clear format, easy to extract answer"
+      0.5: "Somewhat unclear format"
+      0.0: "Confusing format, hard to determine answer"

@@ -1,0 +1,33 @@
+{
+  "description": "Expected answers for mini_test_bank.json",
+  "test_bank": "mini_test_bank.json",
+  "expected_answers": {
+    "e2e-001": {
+      "correct_answer": "C",
+      "expected_model_answer": "C",
+      "notes": "Should correctly identify that SFDX uses latest API version"
+    },
+    "e2e-002": {
+      "correct_answer": "A",
+      "expected_model_answer": "A",
+      "notes": "100 SOQL queries is a well-known limit"
+    },
+    "e2e-003": {
+      "correct_answer": "B",
+      "expected_model_answer": "B",
+      "notes": "@InvocableMethod is the correct annotation"
+    },
+    "e2e-004": {
+      "correct_answer": "A",
+      "expected_model_answer": "A",
+      "notes": "'with sharing' enforces sharing rules"
+    },
+    "e2e-005": {
+      "correct_answer": "B",
+      "expected_model_answer": "B",
+      "notes": "200 records per trigger batch is standard"
+    }
+  },
+  "expected_minimum_accuracy": 0.8,
+  "notes": "A well-functioning model should get at least 4/5 (80%) correct"
+}

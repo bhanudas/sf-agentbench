@@ -1,0 +1,74 @@
+# Security Audit Rubric
+# Focused security evaluation for Salesforce code
+
+name: Security Audit
+version: "1.0"
+description: |
+  Security-focused evaluation for sensitive operations and data handling.
+  Use this rubric for code that handles sensitive data or external integrations.
+judge_model: claude-opus-4-20250514
+
+criteria:
+  - name: CRUD/FLS Enforcement
+    weight: 0.25
+    description: |
+      Are object-level and field-level security checks enforced?
+      Is WITH SECURITY_ENFORCED or Schema methods used?
+      Are checks applied before all DML operations?
+    scoring_guide:
+      1.0: "All CRUD/FLS checks properly implemented"
+      0.5: "Partial checks, some gaps"
+      0.0: "No CRUD/FLS enforcement"
+
+  - name: SOQL Injection Prevention
+    weight: 0.20
+    description: |
+      Are bind variables used for all dynamic values?
+      Is String.escapeSingleQuotes used where needed?
+      Are dynamic SOQL patterns safe?
+    scoring_guide:
+      1.0: "All dynamic queries use bind variables or proper escaping"
+      0.5: "Some queries safe, others vulnerable"
+      0.0: "Direct string concatenation in SOQL"
+
+  - name: Data Exposure
+    weight: 0.20
+    description: |
+      Is sensitive data properly protected?
+      Are API responses sanitized?
+      Is PII handled according to regulations?
+    scoring_guide:
+      1.0: "No sensitive data exposed, proper encryption/masking"
+      0.5: "Minor exposure risks"
+      0.0: "Sensitive data exposed in logs, responses, or UI"
+
+  - name: Sharing Rules Compliance
+    weight: 0.15
+    description: |
+      Does the code respect sharing rules?
+      Is 'with sharing' or 'without sharing' used appropriately?
+      Are system-mode operations justified?
+    scoring_guide:
+      1.0: "Proper sharing keywords, system-mode justified"
+      0.5: "Some sharing concerns"
+      0.0: "Ignores sharing model"
+
+  - name: Hardcoded Credentials
+    weight: 0.10
+    description: |
+      Are there any hardcoded IDs, passwords, or API keys?
+      Are Named Credentials or Custom Settings used?
+    scoring_guide:
+      1.0: "No hardcoded values, uses Named Credentials"
+      0.5: "Some hardcoded IDs but no secrets"
+      0.0: "Hardcoded credentials or sensitive values"
+
+  - name: Input Validation
+    weight: 0.10
+    description: |
+      Is user input validated before processing?
+      Are there checks for null, empty, and malformed data?
+    scoring_guide:
+      1.0: "Comprehensive input validation"
+      0.5: "Basic validation"
+      0.0: "No input validation"

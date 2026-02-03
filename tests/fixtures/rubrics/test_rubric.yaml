@@ -1,0 +1,26 @@
+# Minimal test rubric for E2E testing
+# Fast to evaluate with fewer criteria
+
+name: Test Rubric
+version: "1.0"
+description: Minimal rubric for E2E testing
+judge_model: claude-sonnet-4-20250514  # Faster/cheaper for tests
+
+criteria:
+  - name: Code Quality
+    weight: 0.5
+    description: |
+      Is the code well-structured and readable?
+    scoring_guide:
+      1.0: "Excellent quality"
+      0.5: "Acceptable quality"
+      0.0: "Poor quality"
+
+  - name: Best Practices
+    weight: 0.5
+    description: |
+      Does the code follow basic best practices?
+    scoring_guide:
+      1.0: "Follows best practices"
+      0.5: "Some issues"
+      0.0: "Major violations"

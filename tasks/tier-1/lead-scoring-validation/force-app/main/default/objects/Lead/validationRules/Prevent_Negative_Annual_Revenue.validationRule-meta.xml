@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Prevent_Negative_Annual_Revenue</fullName>
+    <active>true</active>
+    <description>Prevents saving a Lead if Annual Revenue is less than 0</description>
+    <errorConditionFormula>Annual_Revenue__c &lt; 0</errorConditionFormula>
+    <errorMessage>Annual Revenue cannot be negative</errorMessage>
+    <errorDisplayField>Annual_Revenue__c</errorDisplayField>
+</ValidationRule>

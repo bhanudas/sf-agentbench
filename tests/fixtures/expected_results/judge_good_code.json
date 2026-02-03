@@ -1,0 +1,46 @@
+{
+  "description": "Expected judge output for good_apex.cls",
+  "expected_score_range": {
+    "min": 0.8,
+    "max": 1.0
+  },
+  "expected_criteria_scores": {
+    "Bulkification": {
+      "min": 0.9,
+      "max": 1.0,
+      "notes": "All operations are bulkified, no SOQL/DML in loops"
+    },
+    "Security Best Practices": {
+      "min": 0.9,
+      "max": 1.0,
+      "notes": "CRUD/FLS checks present, WITH SECURITY_ENFORCED used"
+    },
+    "Test Quality": {
+      "min": 0.7,
+      "max": 1.0,
+      "notes": "Not a test class, but @TestVisible indicates testing support"
+    },
+    "Code Readability": {
+      "min": 0.9,
+      "max": 1.0,
+      "notes": "Well-documented, clear naming, organized structure"
+    },
+    "Error Handling": {
+      "min": 0.8,
+      "max": 1.0,
+      "notes": "Custom exception, try-catch blocks, input validation"
+    },
+    "Platform Patterns": {
+      "min": 0.9,
+      "max": 1.0,
+      "notes": "Follows invocable pattern correctly"
+    }
+  },
+  "expected_strengths": [
+    "Bulkified operations",
+    "CRUD/FLS enforcement",
+    "Clear documentation",
+    "Well-structured code"
+  ],
+  "expected_improvements": []
+}

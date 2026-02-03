@@ -1,0 +1,10 @@
+{
+  "orgName": "SF-AgentBench - Case Escalation",
+  "edition": "Developer",
+  "features": ["ServiceCloud"],
+  "settings": {
+    "caseSettings": {
+      "systemUserEmail": "admin@example.com"
+    }
+  }
+}

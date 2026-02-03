@@ -1,0 +1,78 @@
+{
+  "name": "Mini Test Bank",
+  "description": "5 questions for fast E2E testing",
+  "version": "1.0",
+  "certification": "E2E Test",
+  "questions": [
+    {
+      "id": "e2e-001",
+      "question": "What is the default API version for a new Salesforce DX project?",
+      "options": {
+        "A": "45.0",
+        "B": "50.0",
+        "C": "The latest available version",
+        "D": "40.0"
+      },
+      "correct_answer": "C",
+      "domain": "Development",
+      "difficulty": "easy",
+      "explanation": "SFDX projects use the latest API version by default."
+    },
+    {
+      "id": "e2e-002",
+      "question": "Which governor limit applies to SOQL queries?",
+      "options": {
+        "A": "100 queries per transaction",
+        "B": "150 queries per transaction",
+        "C": "50 queries per transaction",
+        "D": "200 queries per transaction"
+      },
+      "correct_answer": "A",
+      "domain": "Governor Limits",
+      "difficulty": "medium",
+      "explanation": "The synchronous SOQL query limit is 100 per transaction."
+    },
+    {
+      "id": "e2e-003",
+      "question": "What keyword makes an Apex class available for Flow actions?",
+      "options": {
+        "A": "@FlowAction",
+        "B": "@InvocableMethod",
+        "C": "@FlowMethod",
+        "D": "@Invocable"
+      },
+      "correct_answer": "B",
+      "domain": "Apex",
+      "difficulty": "easy",
+      "explanation": "@InvocableMethod makes a method callable from Flow."
+    },
+    {
+      "id": "e2e-004",
+      "question": "Which sharing keyword runs code with the current user's permissions?",
+      "options": {
+        "A": "with sharing",
+        "B": "without sharing",
+        "C": "inherited sharing",
+        "D": "user sharing"
+      },
+      "correct_answer": "A",
+      "domain": "Security",
+      "difficulty": "medium",
+      "explanation": "'with sharing' enforces the current user's sharing rules."
+    },
+    {
+      "id": "e2e-005",
+      "question": "What is the maximum number of records that can be processed in a single trigger execution?",
+      "options": {
+        "A": "100",
+        "B": "200",
+        "C": "500",
+        "D": "1000"
+      },
+      "correct_answer": "B",
+      "domain": "Triggers",
+      "difficulty": "easy",
+      "explanation": "Triggers process up to 200 records per batch."
+    }
+  ]
+}

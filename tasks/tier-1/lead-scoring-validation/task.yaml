@@ -1,0 +1,12 @@
+id: lead-scoring-validation
+name: Lead Scoring Validation Rule
+description: Create a validation rule and record-triggered flow for lead scoring
+tier: tier-1
+categories:
+  - schema
+  - validation
+  - flow
+time_limit_minutes: 20
+scratch_def: config/project-scratch-def.json
+evaluation_tests:
+  - LeadScoringTest
