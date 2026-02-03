@@ -8,6 +8,7 @@ import {
   Moon,
   Sun,
   Settings,
+  Wand2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/runs', label: 'Runs', icon: List },
   { path: '/launch', label: 'Launch', icon: PlayCircle },
+  { path: '/prompt', label: 'Prompt Runner', icon: Wand2 },
   { path: '/qa', label: 'Q&A Tests', icon: MessageSquare },
   { path: '/compare', label: 'Compare', icon: GitCompare },
 ]

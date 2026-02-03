@@ -366,6 +366,76 @@ class MetricsEventData(BaseModel):
 
 
 # =============================================================================
+# Prompt Runner Schemas
+# =============================================================================
+
+
+class PromptRunCreate(BaseModel):
+    """Schema for creating a new prompt run."""
+
+    prompt: str = Field(..., min_length=10, description="Salesforce development prompt/challenge")
+    iterations: int = Field(..., description="Number of iterations (1, 5, 10, or 25)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "prompt": "Create an Apex trigger that prevents duplicate Contacts by email",
+                "iterations": 5,
+            }
+        }
+
+
+class PromptRunStatus(str, Enum):
+    """Status of a prompt run."""
+
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class PromptRunResponse(BaseModel):
+    """Schema for prompt run response data."""
+
+    run_id: str
+    prompt: str
+    iterations: int
+    current_iteration: int = 0
+    status: PromptRunStatus
+    started_at: datetime
+    completed_at: datetime | None = None
+    duration_seconds: float = 0.0
+    error: str | None = None
+
+
+class PromptRunDetailResponse(PromptRunResponse):
+    """Schema for detailed prompt run response including logs."""
+
+    logs: list[str] = []
+    iteration_results: list[dict[str, Any]] = []
+
+
+class PromptRunListResponse(BaseModel):
+    """Schema for paginated prompt run list response."""
+
+    runs: list[PromptRunResponse]
+    total: int
+    limit: int
+    offset: int
+
+
+class PromptLogEvent(BaseModel):
+    """Schema for a log event from a prompt run."""
+
+    timestamp: datetime
+    level: str
+    message: str
+    iteration: int | None = None
+    details: dict[str, Any] = {}
+
+
+# =============================================================================
 # Health Check
 # =============================================================================
 

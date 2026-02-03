@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from sf_agentbench import __version__
-from sf_agentbench.web.routes import runs_router, qa_router, tasks_router, ws_router
+from sf_agentbench.web.routes import runs_router, qa_router, tasks_router, ws_router, prompt_runner_router
 from sf_agentbench.web.schemas import HealthResponse
 
 
@@ -60,6 +60,7 @@ def create_app(
     app.include_router(qa_router, prefix="/api")
     app.include_router(tasks_router, prefix="/api")
     app.include_router(ws_router, prefix="/api")
+    app.include_router(prompt_runner_router, prefix="/api")
 
     # Health check endpoint
     @app.get("/api/health", response_model=HealthResponse, tags=["health"])
@@ -88,6 +89,7 @@ def create_app(
                 "config": "/api/config",
                 "health": "/api/health",
                 "websocket": "/api/ws",
+                "prompt_runs": "/api/prompt-runs",
             },
         }
 

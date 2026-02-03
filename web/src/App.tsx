@@ -8,6 +8,7 @@ import { RunLauncher } from '@/pages/RunLauncher'
 import { QABrowser } from '@/pages/QABrowser'
 import { QARunDetail } from '@/pages/QARunDetail'
 import { Comparison } from '@/pages/Comparison'
+import { PromptRunner } from '@/pages/PromptRunner'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="qa" element={<QABrowser />} />
         <Route path="qa/:runId" element={<QARunDetail />} />
         <Route path="compare" element={<Comparison />} />
+        <Route path="prompt" element={<PromptRunner />} />
       </Route>
     </Routes>
   )

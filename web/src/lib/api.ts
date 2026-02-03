@@ -170,3 +170,41 @@ export async function getConfig(): Promise<Config> {
 export async function healthCheck(): Promise<{ status: string; version: string }> {
   return fetchAPI('/health')
 }
+
+// Prompt Runner API
+
+import type {
+  PromptRun,
+  PromptRunDetail,
+  PromptRunListResponse,
+} from '@/types/api'
+
+export async function createPromptRun(data: {
+  prompt: string
+  iterations: number
+}): Promise<PromptRun> {
+  return fetchAPI('/prompt-runs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function listPromptRuns(params?: {
+  limit?: number
+  offset?: number
+}): Promise<PromptRunListResponse> {
+  const searchParams = new URLSearchParams()
+  if (params?.limit) searchParams.set('limit', params.limit.toString())
+  if (params?.offset) searchParams.set('offset', params.offset.toString())
+
+  const query = searchParams.toString()
+  return fetchAPI<PromptRunListResponse>(`/prompt-runs${query ? `?${query}` : ''}`)
+}
+
+export async function getPromptRun(runId: string): Promise<PromptRunDetail> {
+  return fetchAPI<PromptRunDetail>(`/prompt-runs/${runId}`)
+}
+
+export async function cancelPromptRun(runId: string): Promise<void> {
+  await fetchAPI(`/prompt-runs/${runId}/cancel`, { method: 'POST' })
+}

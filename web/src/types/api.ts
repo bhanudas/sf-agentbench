@@ -319,3 +319,46 @@ export interface WSProgressEvent {
   total: number
   message: string
 }
+
+// Prompt Runner Types
+
+export interface PromptRun {
+  run_id: string
+  prompt: string
+  iterations: number
+  current_iteration: number
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled'
+  started_at: string
+  completed_at: string | null
+  duration_seconds: number
+  error: string | null
+}
+
+export interface PromptRunDetail extends PromptRun {
+  logs: string[]
+  iteration_results: PromptIterationResult[]
+}
+
+export interface PromptIterationResult {
+  iteration: number
+  exit_code?: number
+  duration_seconds?: number
+  timed_out?: boolean
+  files_modified?: string[]
+  error?: string
+}
+
+export interface PromptLogEvent {
+  timestamp: string
+  level: string
+  message: string
+  iteration: number | null
+  details?: Record<string, unknown>
+}
+
+export interface PromptRunListResponse {
+  runs: PromptRun[]
+  total: number
+  limit: number
+  offset: number
+}
